@@ -1,0 +1,128 @@
+---
+// Página de inicio de sesión para usuarios normales
+// Solo accesible si el usuario no está autenticado
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { User, Mail, Lock } from "lucide-react";
+
+export const prerender = false;
+---
+
+<PublicLayout title="Iniciar Sesión">
+    <div class="min-h-[80vh] flex items-center justify-center px-6 py-24">
+        <div class="max-w-md w-full">
+            <div class="text-center mb-10">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4">
+                    Bienvenido
+                </h2>
+                <h1 class="text-4xl font-serif italic mb-2">Iniciar Sesión</h1>
+                <p class="text-slate-400 text-sm">
+                    Accede a tu cuenta para gestionar tus pedidos
+                </p>
+            </div>
+
+            <div class="bg-white border border-slate-100 shadow-sm p-8">
+                <form id="login-form" class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                            Correo Electrónico
+                        </label>
+                        <div class="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                class="w-full border border-slate-200 p-3 pl-12 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition"
+                                placeholder="tu@email.com"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                            Contraseña
+                        </label>
+                        <div class="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                            <input
+                                type="password"
+                                name="password"
+                                required
+                                class="w-full border border-slate-200 p-3 pl-12 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                    </div>
+
+                    <div id="error-msg" class="text-red-500 text-xs italic text-center hidden"></div>
+
+                    <button
+                        type="submit"
+                        id="submit-btn"
+                        class="w-full bg-brand-navy text-white py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all duration-300"
+                    >
+                        Entrar
+                    </button>
+                </form>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                    <p class="text-sm text-slate-500">
+                        ¿No tienes cuenta?
+                        <a href="/registro" class="text-brand-gold font-bold hover:underline ml-1">
+                            Crear cuenta
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</PublicLayout>
+
+<script>
+    import { supabase } from "../lib/supabase";
+
+    const form = document.getElementById("login-form") as HTMLFormElement;
+    const errorMsg = document.getElementById("error-msg");
+    const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+
+    // Verificar si ya está autenticado
+    async function checkAuth() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            // Si ya está logueado, redirigir a inicio
+            window.location.href = "/";
+        }
+    }
+    checkAuth();
+
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        // Deshabilitar botón mientras procesa
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Procesando...";
+        
+        const formData = new FormData(form);
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) {
+            if (errorMsg) {
+                errorMsg.textContent = "Credenciales incorrectas. Verifica tu email y contraseña.";
+                errorMsg.classList.remove("hidden");
+            }
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Entrar";
+        } else {
+            // Redirigir a la página anterior o a inicio
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get("redirect") || "/";
+            window.location.href = redirect;
+        }
+    });
+</script>

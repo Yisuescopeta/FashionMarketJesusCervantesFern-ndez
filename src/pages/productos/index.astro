@@ -1,0 +1,59 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import ProductCard from '../../components/product/ProductCard.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: products } = await supabase
+  .from('products')
+  .select('*, categories(name)');
+
+const { data: categories } = await supabase.from('categories').select('*');
+
+// Placeholders for demo
+const placeholders = [
+  { id: '1', name: 'Traje Slim Fit Lana', price: 59900, slug: 'traje-slim-fit-lana', image: 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800', category: 'Trajes' },
+  { id: '2', name: 'Camisa Oxford Blanca', price: 8900, slug: 'camisa-oxford-blanca', image: 'https://images.unsplash.com/photo-1598033129183-c4f50c7176c8?q=80&w=800', category: 'Camisas' }
+];
+
+const displayProducts = (products && products.length > 0) ? products.map(p => ({
+  id: p.id,
+  name: p.name,
+  price: p.price,
+  slug: p.slug,
+  image: p.images[0] || 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
+  category: p.categories?.name || 'Varios'
+})) : placeholders;
+---
+
+<PublicLayout title="Catálogo Completo">
+  <div class="max-w-7xl mx-auto px-6 py-24">
+    <div class="text-center mb-24">
+      <h2 class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4">Colección Permanente</h2>
+      <h1 class="text-6xl font-serif italic">Catálogo</h1>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-12">
+      <aside class="w-full md:w-64 space-y-12">
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-widest mb-6 border-b border-slate-100 pb-2">Categorías</h3>
+          <ul class="space-y-4">
+            <li>
+              <a href="/productos" class="text-sm font-medium hover:text-brand-gold transition-colors italic border-b-2 border-brand-navy">Todas las piezas</a>
+            </li>
+            {categories?.map(cat => (
+              <li>
+                <a href={`/categoria/${cat.slug}`} class="text-sm text-slate-500 hover:text-brand-navy transition-colors">{cat.name}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+
+      <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+        {displayProducts.map(product => (
+          <ProductCard {...product} />
+        ))}
+      </div>
+    </div>
+  </div>
+</PublicLayout>

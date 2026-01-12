@@ -1,0 +1,253 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { supabase } from '../../lib/supabase';
+import { Package, ShoppingCart, Users, TrendingUp, ArrowUpRight, ArrowDownRight, DollarSign, Eye, Zap } from 'lucide-react';
+
+export const prerender = false;
+
+// Estadísticas de productos
+const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
+const { count: categoryCount } = await supabase.from('categories').select('*', { count: 'exact', head: true });
+const { count: lowStockCount } = await supabase.from('products').select('*', { count: 'exact', head: true }).lt('stock', 10);
+const { count: saleProductsCount } = await supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_on_sale', true);
+
+// Estadísticas de pedidos (si existen)
+const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
+const { data: recentOrders } = await supabase
+  .from('orders')
+  .select('*, profiles(full_name, email)')
+  .order('created_at', { ascending: false })
+  .limit(5);
+
+// Productos más recientes
+const { data: recentProducts } = await supabase
+  .from('products')
+  .select('*, categories(name)')
+  .order('created_at', { ascending: false })
+  .limit(5);
+
+// Calcular valor total del inventario
+const { data: allProducts } = await supabase.from('products').select('price, stock');
+const inventoryValue = allProducts?.reduce((acc, p) => acc + (p.price * p.stock), 0) || 0;
+
+// Configuración de ofertas
+const { data: siteSettings } = await supabase.from('site_settings').select('*').eq('id', 'main').single();
+---
+
+<AdminLayout title="Dashboard">
+  <!-- Estadísticas Principales -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Productos -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-sm font-medium text-slate-500">Total Productos</p>
+          <p class="text-3xl font-bold text-slate-800 mt-1">{productCount || 0}</p>
+          <p class="text-xs text-slate-400 mt-2">en {categoryCount || 0} categorías</p>
+        </div>
+        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+          <Package className="w-6 h-6 text-blue-600" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Valor Inventario -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-sm font-medium text-slate-500">Valor Inventario</p>
+          <p class="text-3xl font-bold text-slate-800 mt-1">{(inventoryValue / 100).toLocaleString('es-ES', { minimumFractionDigits: 0 })}€</p>
+          <p class="text-xs text-emerald-500 mt-2 flex items-center gap-1">
+            <ArrowUpRight className="w-3 h-3" />
+            Stock disponible
+          </p>
+        </div>
+        <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+          <DollarSign className="w-6 h-6 text-emerald-600" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Pedidos -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-sm font-medium text-slate-500">Pedidos Totales</p>
+          <p class="text-3xl font-bold text-slate-800 mt-1">{orderCount || 0}</p>
+          <p class="text-xs text-slate-400 mt-2">histórico completo</p>
+        </div>
+        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+          <ShoppingCart className="w-6 h-6 text-purple-600" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock Bajo -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-sm font-medium text-slate-500">Stock Bajo</p>
+          <p class="text-3xl font-bold text-slate-800 mt-1">{lowStockCount || 0}</p>
+          <p class="text-xs text-amber-500 mt-2 flex items-center gap-1">
+            {lowStockCount && lowStockCount > 0 ? (
+              <>
+                <ArrowDownRight className="w-3 h-3" />
+                Requiere atención
+              </>
+            ) : (
+              <span class="text-emerald-500">✓ Todo en orden</span>
+            )}
+          </p>
+        </div>
+        <div class={`w-12 h-12 rounded-xl flex items-center justify-center ${lowStockCount && lowStockCount > 0 ? 'bg-amber-100' : 'bg-emerald-100'}`}>
+          <TrendingUp className={`w-6 h-6 ${lowStockCount && lowStockCount > 0 ? 'text-amber-600' : 'text-emerald-600'}`} />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de Ofertas Flash -->
+  <div class={`rounded-2xl p-6 mb-8 ${siteSettings?.show_flash_sales ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-slate-200'}`}>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class={`w-14 h-14 rounded-xl flex items-center justify-center ${siteSettings?.show_flash_sales ? 'bg-white/20' : 'bg-slate-300'}`}>
+          <Zap className={`w-7 h-7 ${siteSettings?.show_flash_sales ? 'text-white' : 'text-slate-500'}`} />
+        </div>
+        <div>
+          <h3 class={`text-xl font-bold ${siteSettings?.show_flash_sales ? 'text-white' : 'text-slate-600'}`}>
+            Ofertas Flash {siteSettings?.show_flash_sales ? 'ACTIVAS' : 'INACTIVAS'}
+          </h3>
+          <p class={`text-sm ${siteSettings?.show_flash_sales ? 'text-white/80' : 'text-slate-500'}`}>
+            {saleProductsCount || 0} productos en oferta
+          </p>
+        </div>
+      </div>
+      <a 
+        href="/admin/ofertas" 
+        class={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${siteSettings?.show_flash_sales ? 'bg-white text-orange-600 hover:bg-white/90' : 'bg-slate-800 text-white hover:bg-slate-700'}`}
+      >
+        Gestionar Ofertas
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Acciones Rápidas -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Acciones Rápidas</h3>
+        <div class="space-y-3">
+          <a href="/admin/productos/nuevo" class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-all group border border-amber-100">
+            <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Package className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p class="font-bold text-slate-800">Añadir Producto</p>
+              <p class="text-xs text-slate-500">Crear nuevo producto</p>
+            </div>
+          </a>
+          
+          <a href="/admin/productos" class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-all group border border-blue-100">
+            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Eye className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p class="font-bold text-slate-800">Ver Inventario</p>
+              <p class="text-xs text-slate-500">Gestionar productos</p>
+            </div>
+          </a>
+          
+          <a href="/admin/ofertas" class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 transition-all group border border-orange-100">
+            <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p class="font-bold text-slate-800">Ofertas Flash</p>
+              <p class="text-xs text-slate-500">Gestionar descuentos</p>
+            </div>
+          </a>
+          
+          <a href="/" target="_blank" class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 transition-all group border border-emerald-100">
+            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Eye className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p class="font-bold text-slate-800">Ver Tienda</p>
+              <p class="text-xs text-slate-500">Como usuario</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Productos Recientes -->
+    <div class="lg:col-span-2">
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-bold text-slate-800">Productos Recientes</h3>
+          <a href="/admin/productos" class="text-sm text-amber-600 hover:text-amber-700 font-medium">Ver todos →</a>
+        </div>
+        
+        {recentProducts && recentProducts.length > 0 ? (
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-slate-100">
+                  <th class="text-left py-3 px-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Producto</th>
+                  <th class="text-left py-3 px-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Categoría</th>
+                  <th class="text-right py-3 px-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Precio</th>
+                  <th class="text-right py-3 px-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Stock</th>
+                  <th class="text-right py-3 px-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentProducts.map(product => (
+                  <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                    <td class="py-3 px-2">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
+                          {product.images?.[0] ? (
+                            <img src={product.images[0]} alt="" class="w-full h-full object-cover" />
+                          ) : (
+                            <div class="w-full h-full flex items-center justify-center text-slate-300">
+                              <Package className="w-5 h-5" />
+                            </div>
+                          )}
+                        </div>
+                        <span class="font-medium text-slate-800 text-sm truncate max-w-[150px]">{product.name}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 px-2">
+                      <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">{product.categories?.name || '-'}</span>
+                    </td>
+                    <td class="py-3 px-2 text-right">
+                      <span class="font-bold text-slate-800">{(product.price / 100).toFixed(2)}€</span>
+                    </td>
+                    <td class="py-3 px-2 text-right">
+                      <span class={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${product.stock < 10 ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                        {product.stock}
+                      </span>
+                    </td>
+                    <td class="py-3 px-2 text-right">
+                      <a href={`/admin/productos/${product.id}`} class="text-amber-600 hover:text-amber-700 text-xs font-bold">
+                        Editar
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div class="text-center py-12">
+            <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p class="text-slate-500">No hay productos aún</p>
+            <a href="/admin/productos/nuevo" class="inline-block mt-4 text-amber-600 hover:text-amber-700 font-bold text-sm">
+              Añadir primer producto →
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</AdminLayout>

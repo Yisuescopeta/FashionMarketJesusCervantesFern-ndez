@@ -1,0 +1,143 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { ShoppingBag, LogOut, Package, Tag, Users, Eye, BarChart3, Settings, PlusCircle, Zap } from 'lucide-react';
+
+interface Props {
+  title: string;
+  activeSection?: string;
+}
+
+const { title, activeSection = '' } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+// Determinar qué sección está activa
+const isActive = (path: string) => currentPath === path || currentPath.startsWith(path + '/');
+---
+
+<BaseLayout title={`Admin | ${title}`}>
+  <div class="flex min-h-screen bg-slate-900">
+    <!-- Sidebar Profesional -->
+    <aside class="w-72 bg-gradient-to-b from-slate-900 to-slate-800 text-white flex flex-col fixed h-full border-r border-slate-700/50">
+      <!-- Logo y Branding -->
+      <div class="p-6 border-b border-slate-700/50">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
+            <Settings className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 class="text-lg font-bold tracking-tight">FashionMarket</h1>
+            <p class="text-[10px] uppercase tracking-widest text-amber-400 font-bold">Panel Admin</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón Ver Tienda -->
+      <div class="px-4 py-4">
+        <a 
+          href="/" 
+          target="_blank"
+          class="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40"
+        >
+          <Eye className="w-4 h-4" />
+          <span>Ver Tienda (Usuario)</span>
+        </a>
+      </div>
+      
+      <!-- Navegación Principal -->
+      <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+        <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-3 pt-4 pb-2">Principal</p>
+        
+        <a href="/admin" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive('/admin') && !isActive('/admin/productos') && !isActive('/admin/ofertas') && !isActive('/admin/pedidos') ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'hover:bg-white/5 text-slate-300 hover:text-white'}`}>
+          <BarChart3 className="w-5 h-5" />
+          <span class="font-medium">Dashboard</span>
+        </a>
+
+        <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-3 pt-6 pb-2">Catálogo</p>
+        
+        <a href="/admin/productos" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive('/admin/productos') ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'hover:bg-white/5 text-slate-300 hover:text-white'}`}>
+          <Package className="w-5 h-5" />
+          <span class="font-medium">Productos</span>
+        </a>
+        
+        <a href="/admin/productos/nuevo" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all ml-4">
+          <PlusCircle className="w-4 h-4" />
+          <span class="text-sm">Añadir Producto</span>
+        </a>
+        
+        <a href="/admin/ofertas" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive('/admin/ofertas') ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'hover:bg-white/5 text-orange-400/70 hover:text-orange-400'}`}>
+          <Zap className="w-5 h-5" />
+          <span class="font-medium">Ofertas Flash</span>
+        </a>
+
+        <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-3 pt-6 pb-2">Ventas</p>
+        
+        <a href="/admin/pedidos" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive('/admin/pedidos') ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'hover:bg-white/5 text-slate-300 hover:text-white'}`}>
+          <ShoppingBag className="w-5 h-5" />
+          <span class="font-medium">Pedidos</span>
+        </a>
+        
+        <a href="/admin/clientes" class={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive('/admin/clientes') ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'hover:bg-white/5 text-slate-300 hover:text-white'}`}>
+          <Users className="w-5 h-5" />
+          <span class="font-medium">Clientes</span>
+        </a>
+      </nav>
+
+      <!-- Footer del Sidebar -->
+      <div class="p-4 border-t border-slate-700/50 space-y-2">
+        <div class="flex items-center gap-3 px-3 py-2">
+          <div class="w-9 h-9 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+            A
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold text-white truncate">Administrador</p>
+            <p class="text-[10px] text-emerald-400 font-medium">● Online</p>
+          </div>
+        </div>
+        <button 
+          id="logout-btn"
+          class="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-medium text-sm transition-all border border-red-500/20"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Cerrar Sesión</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-72 bg-slate-100 min-h-screen">
+      <!-- Header Superior -->
+      <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-8 py-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800">{title}</h2>
+            <p class="text-sm text-slate-500">Panel de Administración</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <!-- Acciones Rápidas -->
+            <a 
+              href="/admin/productos/nuevo" 
+              class="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm transition-all shadow-lg shadow-amber-500/20"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Nuevo Producto</span>
+            </a>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Contenido Principal -->
+      <div class="p-8">
+        <slot />
+      </div>
+    </main>
+  </div>
+</BaseLayout>
+
+<script>
+  import { supabase } from '../lib/supabase';
+  
+  document.getElementById('logout-btn')?.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  });
+</script>

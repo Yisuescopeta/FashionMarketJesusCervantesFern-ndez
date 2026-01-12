@@ -1,0 +1,166 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import ProductCard from '../components/product/ProductCard.astro';
+import { supabase } from '../lib/supabase';
+
+export const prerender = false;
+
+// Obtener configuración del sitio (para saber si mostrar ofertas)
+const { data: siteSettings } = await supabase
+  .from('site_settings')
+  .select('*')
+  .eq('id', 'main')
+  .single();
+
+const showFlashSales = siteSettings?.show_flash_sales || false;
+const flashSalesTitle = siteSettings?.flash_sales_title || '¡Ofertas Flash!';
+const flashSalesSubtitle = siteSettings?.flash_sales_subtitle || 'Descuentos por tiempo limitado';
+
+// Obtener productos en oferta (solo si las ofertas están activadas)
+let saleProducts: any[] = [];
+if (showFlashSales) {
+  const { data: sales } = await supabase
+    .from('products')
+    .select('*, categories(name)')
+    .eq('is_on_sale', true)
+    .eq('is_active', true)
+    .limit(4);
+  
+  saleProducts = (sales || []).map(p => ({
+    id: p.id,
+    name: p.name,
+    price: p.sale_price || p.price,
+    originalPrice: p.price,
+    slug: p.slug,
+    image: p.images?.[0] || 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
+    category: p.categories?.name || 'Oferta',
+    isOnSale: true
+  }));
+}
+
+// Obtener productos destacados
+const { data: products } = await supabase
+  .from('products')
+  .select('*, categories(name)')
+  .eq('is_active', true)
+  .limit(4);
+
+// Placeholder si la BD está vacía
+const placeholders = [
+  {
+    id: '1',
+    name: 'Camisa Oxford Blanca',
+    price: 4900,
+    slug: 'camisa-oxford-blanca',
+    image: 'https://images.unsplash.com/photo-1598033129183-c4f50c7176c8?q=80&w=800',
+    category: 'Camisas'
+  },
+  {
+    id: '2',
+    name: 'Camiseta Básica Negra',
+    price: 2500,
+    slug: 'camiseta-basica-negra',
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800',
+    category: 'Camisetas'
+  }
+];
+
+const displayProducts = (products && products.length > 0) ? products.map(p => ({
+  id: p.id,
+  name: p.name,
+  price: p.price,
+  slug: p.slug,
+  image: p.images?.[0] || 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
+  category: p.categories?.name || 'Novedad'
+})) : placeholders;
+---
+
+<PublicLayout title="Inicio">
+  <!-- Hero Section -->
+  <section class="relative h-[80vh] flex items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img 
+        src="https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?q=80&w=2000" 
+        alt="Fashion Hero" 
+        class="w-full h-full object-cover brightness-[0.7]"
+      />
+    </div>
+    
+    <div class="relative z-10 text-center text-white px-6">
+      <h2 class="text-[10px] uppercase tracking-[0.5em] mb-4 font-bold">Nueva Colección 2026</h2>
+      <h1 class="text-5xl md:text-7xl font-serif mb-8 max-w-4xl mx-auto leading-tight italic">
+        Elegancia Atemporal para el Hombre Moderno
+      </h1>
+      <a href="/productos" class="inline-block bg-white text-brand-navy px-10 py-4 font-bold tracking-[0.2em] uppercase text-sm hover:bg-brand-gold hover:text-white transition-all duration-500">
+        Descubrir Catálogo
+      </a>
+    </div>
+  </section>
+
+  <!-- Sección de Ofertas Flash (solo visible si está activada en admin) -->
+  {showFlashSales && saleProducts.length > 0 && (
+    <section class="bg-gradient-to-r from-red-600 to-orange-500 py-16">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+          <span class="inline-block bg-white/20 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+            🔥 Tiempo Limitado
+          </span>
+          <h2 class="text-4xl md:text-5xl font-serif text-white mb-2">{flashSalesTitle}</h2>
+          <p class="text-white/80">{flashSalesSubtitle}</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {saleProducts.map(product => (
+            <a href={`/productos/${product.slug}`} class="bg-white rounded-lg overflow-hidden shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 group">
+              <div class="relative">
+                <img src={product.image} alt={product.name} class="w-full h-48 object-cover" />
+                <span class="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 text-xs font-bold rounded">
+                  OFERTA
+                </span>
+              </div>
+              <div class="p-4">
+                <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">{product.category}</p>
+                <h3 class="font-bold text-brand-navy group-hover:text-red-600 transition-colors">{product.name}</h3>
+                <div class="mt-2 flex items-center gap-2">
+                  <span class="text-red-600 font-bold text-lg">
+                    {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(product.price / 100)}
+                  </span>
+                  <span class="text-slate-400 line-through text-sm">
+                    {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(product.originalPrice / 100)}
+                  </span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Featured Products -->
+  <section class="max-w-7xl mx-auto px-6 py-24">
+    <div class="flex justify-between items-end mb-12">
+      <div>
+        <h2 class="text-[10px] uppercase tracking-[0.2em] text-brand-gold font-bold mb-2">Selección Exclusiva</h2>
+        <h3 class="text-4xl font-serif">Piezas Maestras</h3>
+      </div>
+      <a href="/productos" class="text-sm font-bold border-b-2 border-brand-navy pb-1 hover:text-brand-gold hover:border-brand-gold transition-colors italic">Ver todo</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      {displayProducts.map(product => (
+        <ProductCard {...product} />
+      ))}
+    </div>
+  </section>
+
+  <!-- Brand Story -->
+  <section class="bg-brand-navy text-white py-24">
+    <div class="max-w-3xl mx-auto text-center px-6">
+      <h2 class="text-4xl font-serif mb-8 italic">"La sencillez es la máxima sofisticación"</h2>
+      <p class="text-slate-400 leading-relaxed text-lg">
+        En FashionMarket, creemos que la moda masculina no se trata de seguir tendencias efímeras, sino de construir un armario sólido basado en la calidad excepcional y el diseño inteligente. Cada prenda es seleccionada bajo los más altos estándares de sastrería europea.
+      </p>
+    </div>
+  </section>
+</PublicLayout>

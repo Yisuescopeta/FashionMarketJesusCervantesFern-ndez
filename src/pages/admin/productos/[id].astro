@@ -1,0 +1,425 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabase } from "../../../lib/supabase";
+import { ArrowLeft, Save, Trash2, Eye, Upload, X, Zap } from 'lucide-react';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+
+const { data: product } = await supabase
+    .from("products")
+    .select("*, categories(name)")
+    .eq("id", id)
+    .single();
+
+if (!product) {
+    return Astro.redirect("/admin/productos");
+}
+
+const { data: categories } = await supabase.from("categories").select("*");
+---
+
+<AdminLayout title="Editar Producto">
+    <!-- Header con navegación -->
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+            <a href="/admin/productos" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                <ArrowLeft className="w-5 h-5 text-slate-600" />
+            </a>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">{product.name}</h1>
+                <p class="text-sm text-slate-500">ID: {id}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href={`/productos/${product.slug}`} target="_blank" class="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors text-sm font-medium">
+                <Eye className="w-4 h-4" />
+                Ver en tienda
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Formulario Principal -->
+        <div class="lg:col-span-2 space-y-6">
+            <form id="edit-form" data-id={id} data-images={JSON.stringify(product.images || [])}>
+                <!-- Información Básica -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6">Información Básica</h3>
+                    
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Nombre del Producto *</label>
+                            <input
+                                name="name"
+                                type="text"
+                                required
+                                value={product.name}
+                                class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                            />
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Categoría *</label>
+                                <select name="category_id" class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none">
+                                    {categories?.map((cat) => (
+                                        <option value={cat.id} selected={cat.id === product.category_id}>
+                                            {cat.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Material</label>
+                                <input
+                                    name="material"
+                                    type="text"
+                                    value={product.material || ''}
+                                    placeholder="Ej: Algodón 100%"
+                                    class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Descripción</label>
+                            <textarea
+                                name="description"
+                                rows="4"
+                                class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none"
+                            >{product.description}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Precios y Stock -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6">Precios y Stock</h3>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Precio (céntimos) *</label>
+                            <input
+                                name="price"
+                                type="number"
+                                step="1"
+                                required
+                                value={product.price}
+                                class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none"
+                            />
+                            <p class="text-xs text-slate-400 mt-1">{(product.price / 100).toFixed(2)}€</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Stock *</label>
+                            <input
+                                name="stock"
+                                type="number"
+                                required
+                                value={product.stock}
+                                class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">SKU</label>
+                            <input
+                                name="sku"
+                                type="text"
+                                value={product.sku || ''}
+                                placeholder="Opcional"
+                                class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Precio comparación</label>
+                            <input
+                                name="compare_at_price"
+                                type="number"
+                                value={product.compare_at_price || ''}
+                                placeholder="Opcional"
+                                class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Oferta Flash -->
+                <div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                                <Zap className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800">Oferta Flash</h3>
+                                <p class="text-sm text-slate-500">Incluir en sección de ofertas</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_on_sale" class="sr-only peer" checked={product.is_on_sale} />
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                        </label>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Precio de Oferta (céntimos)</label>
+                        <input
+                            name="sale_price"
+                            type="number"
+                            value={product.sale_price || ''}
+                            placeholder="Precio especial para la oferta"
+                            class="w-full border border-orange-200 rounded-lg p-3 focus:ring-2 focus:ring-orange-500 outline-none bg-white"
+                        />
+                        {product.sale_price && (
+                            <p class="text-xs text-orange-600 mt-1">Precio oferta: {(product.sale_price / 100).toFixed(2)}€</p>
+                        )}
+                    </div>
+                </div>
+
+                <!-- Imágenes -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6">Imágenes del Producto</h3>
+                    
+                    <div id="images-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        {product.images?.map((img: string, index: number) => (
+                            <div class="relative aspect-square bg-slate-100 rounded-lg overflow-hidden group" data-url={img}>
+                                <img src={img} alt="" class="w-full h-full object-cover" />
+                                <button type="button" class="remove-image-btn absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-amber-500 transition-colors cursor-pointer">
+                        <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                        <p class="text-slate-500 text-sm">Arrastra imágenes aquí o haz clic para subir</p>
+                        <input type="file" id="file-input" multiple accept="image/*" class="hidden" />
+                    </div>
+                    <div id="new-previews" class="grid grid-cols-4 gap-4 mt-4"></div>
+                </div>
+
+                <!-- Estado y Visibilidad -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6">Estado</h3>
+                    
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-slate-800">Producto Activo</p>
+                            <p class="text-sm text-slate-500">Visible en la tienda para los clientes</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_active" class="sr-only peer" checked={product.is_active} />
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                        <div>
+                            <p class="font-medium text-slate-800">Producto Destacado</p>
+                            <p class="text-sm text-slate-500">Mostrar en secciones destacadas</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_featured" class="sr-only peer" checked={product.is_featured} />
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex gap-4">
+                    <button
+                        type="submit"
+                        class="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-xl font-bold text-sm transition-colors"
+                    >
+                        <Save className="w-4 h-4" />
+                        Guardar Cambios
+                    </button>
+                    <button
+                        type="button"
+                        id="delete-btn"
+                        class="flex items-center justify-center gap-2 px-8 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white rounded-xl font-bold text-sm transition-colors"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Eliminar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Panel Lateral -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Preview -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Vista Previa</h3>
+                <div class="aspect-square bg-slate-100 rounded-lg overflow-hidden mb-4">
+                    {product.images?.[0] ? (
+                        <img src={product.images[0]} alt="" class="w-full h-full object-cover" />
+                    ) : (
+                        <div class="w-full h-full flex items-center justify-center text-slate-300">
+                            Sin imagen
+                        </div>
+                    )}
+                </div>
+                <p class="font-bold text-slate-800">{product.name}</p>
+                <p class="text-sm text-slate-500">{product.categories?.name}</p>
+                <p class="text-lg font-bold text-amber-600 mt-2">{(product.price / 100).toFixed(2)}€</p>
+            </div>
+
+            <!-- Info Rápida -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Información</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Creado:</span>
+                        <span class="font-medium">{new Date(product.created_at).toLocaleDateString('es-ES')}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Actualizado:</span>
+                        <span class="font-medium">{new Date(product.updated_at).toLocaleDateString('es-ES')}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Slug:</span>
+                        <span class="font-medium text-xs">{product.slug}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</AdminLayout>
+
+<script>
+    import { supabase } from "../../../lib/supabase";
+    import { slugify } from "../../../lib/utils";
+
+    const form = document.getElementById("edit-form") as HTMLFormElement;
+    const deleteBtn = document.getElementById("delete-btn");
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("file-input") as HTMLInputElement;
+    const newPreviews = document.getElementById("new-previews");
+    const productId = form?.dataset.id;
+    
+    let currentImages: string[] = JSON.parse(form?.dataset.images || '[]');
+    let newFiles: File[] = [];
+
+    // Eliminar imagen existente
+    document.querySelectorAll('.remove-image-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const container = (btn as HTMLElement).closest('[data-url]');
+            const url = container?.getAttribute('data-url');
+            if (url) {
+                currentImages = currentImages.filter(img => img !== url);
+                container?.remove();
+            }
+        });
+    });
+
+    // Drag & Drop
+    dropZone?.addEventListener("click", () => fileInput?.click());
+    dropZone?.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("border-amber-500", "bg-amber-50");
+    });
+    dropZone?.addEventListener("dragleave", () => {
+        dropZone.classList.remove("border-amber-500", "bg-amber-50");
+    });
+    dropZone?.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("border-amber-500", "bg-amber-50");
+        handleFiles(Array.from(e.dataTransfer?.files || []));
+    });
+    fileInput?.addEventListener("change", () => {
+        handleFiles(Array.from(fileInput.files || []));
+    });
+
+    function handleFiles(files: File[]) {
+        newFiles = [...newFiles, ...files];
+        renderNewPreviews();
+    }
+
+    function renderNewPreviews() {
+        if (!newPreviews) return;
+        newPreviews.innerHTML = "";
+        newFiles.forEach((file, index) => {
+            const url = URL.createObjectURL(file);
+            const div = document.createElement("div");
+            div.className = "relative aspect-square bg-slate-100 rounded-lg overflow-hidden";
+            div.innerHTML = `
+                <img src="${url}" class="w-full h-full object-cover" />
+                <button type="button" class="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs" onclick="window.removeNewImage(${index})">×</button>
+                <span class="absolute bottom-0 left-0 right-0 bg-emerald-500 text-white text-[10px] text-center py-1">NUEVA</span>
+            `;
+            newPreviews.appendChild(div);
+        });
+    }
+
+    (window as any).removeNewImage = (index: number) => {
+        newFiles.splice(index, 1);
+        renderNewPreviews();
+    };
+
+    // Guardar cambios
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = 'Guardando...';
+
+        // Subir nuevas imágenes
+        const uploadedUrls: string[] = [];
+        for (const file of newFiles) {
+            const fileName = `${Date.now()}-${file.name}`;
+            const { data, error } = await supabase.storage
+                .from("products-images")
+                .upload(fileName, file);
+
+            if (data) {
+                const { data: { publicUrl } } = supabase.storage.from("products-images").getPublicUrl(fileName);
+                uploadedUrls.push(publicUrl);
+            }
+        }
+
+        const allImages = [...currentImages, ...uploadedUrls];
+        const salePrice = formData.get("sale_price");
+
+        const { error } = await supabase
+            .from("products")
+            .update({
+                name: formData.get("name"),
+                description: formData.get("description"),
+                price: parseInt(formData.get("price") as string),
+                stock: parseInt(formData.get("stock") as string),
+                category_id: formData.get("category_id"),
+                material: formData.get("material") || null,
+                sku: formData.get("sku") || null,
+                compare_at_price: formData.get("compare_at_price") ? parseInt(formData.get("compare_at_price") as string) : null,
+                is_on_sale: formData.get("is_on_sale") === "on",
+                sale_price: salePrice ? parseInt(salePrice as string) : null,
+                is_active: formData.get("is_active") === "on",
+                is_featured: formData.get("is_featured") === "on",
+                images: allImages,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", productId);
+
+        if (!error) {
+            window.location.href = "/admin/productos";
+        } else {
+            alert("Error: " + error.message);
+            if (submitBtn) submitBtn.textContent = 'Guardar Cambios';
+        }
+    });
+
+    // Eliminar producto
+    deleteBtn?.addEventListener("click", async () => {
+        if (confirm("¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.")) {
+            const { error } = await supabase.from("products").delete().eq("id", productId);
+            if (!error) {
+                window.location.href = "/admin/productos";
+            } else {
+                alert("Error al eliminar: " + error.message);
+            }
+        }
+    });
+</script>

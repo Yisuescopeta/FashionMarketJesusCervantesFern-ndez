@@ -1,0 +1,200 @@
+---
+// Página de registro para nuevos usuarios
+// Los usuarios nuevos siempre tienen rol 'customer' por defecto (definido en la BD)
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { User, Mail, Lock, UserPlus } from "lucide-react";
+
+export const prerender = false;
+---
+
+<PublicLayout title="Crear Cuenta">
+    <div class="min-h-[80vh] flex items-center justify-center px-6 py-24">
+        <div class="max-w-md w-full">
+            <div class="text-center mb-10">
+                <h2 class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4">
+                    Únete a Nosotros
+                </h2>
+                <h1 class="text-4xl font-serif italic mb-2">Crear Cuenta</h1>
+                <p class="text-slate-400 text-sm">
+                    Regístrate para disfrutar de una experiencia personalizada
+                </p>
+            </div>
+
+            <div class="bg-white border border-slate-100 shadow-sm p-8">
+                <form id="register-form" class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                            Nombre Completo
+                        </label>
+                        <div class="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                            <input
+                                type="text"
+                                name="fullName"
+                                required
+                                class="w-full border border-slate-200 p-3 pl-12 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition"
+                                placeholder="Tu nombre"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                            Correo Electrónico
+                        </label>
+                        <div class="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                class="w-full border border-slate-200 p-3 pl-12 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition"
+                                placeholder="tu@email.com"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                            Contraseña
+                        </label>
+                        <div class="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                            <input
+                                type="password"
+                                name="password"
+                                required
+                                minlength="8"
+                                class="w-full border border-slate-200 p-3 pl-12 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition"
+                                placeholder="Mínimo 8 caracteres"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                            Confirmar Contraseña
+                        </label>
+                        <div class="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                            <input
+                                type="password"
+                                name="confirmPassword"
+                                required
+                                minlength="8"
+                                class="w-full border border-slate-200 p-3 pl-12 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition"
+                                placeholder="Repite tu contraseña"
+                            />
+                        </div>
+                    </div>
+
+                    <div id="error-msg" class="text-red-500 text-xs italic text-center hidden"></div>
+                    <div id="success-msg" class="text-green-600 text-xs italic text-center hidden"></div>
+
+                    <button
+                        type="submit"
+                        id="submit-btn"
+                        class="w-full bg-brand-navy text-white py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all duration-300 flex items-center justify-center space-x-2"
+                    >
+                        <UserPlus className="w-5 h-5" />
+                        <span>Crear Cuenta</span>
+                    </button>
+                </form>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                    <p class="text-sm text-slate-500">
+                        ¿Ya tienes cuenta?
+                        <a href="/login" class="text-brand-gold font-bold hover:underline ml-1">
+                            Iniciar sesión
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</PublicLayout>
+
+<script>
+    import { supabase } from "../lib/supabase";
+
+    const form = document.getElementById("register-form") as HTMLFormElement;
+    const errorMsg = document.getElementById("error-msg");
+    const successMsg = document.getElementById("success-msg");
+    const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+
+    // Verificar si ya está autenticado
+    async function checkAuth() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            window.location.href = "/";
+        }
+    }
+    checkAuth();
+
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const fullName = formData.get("fullName") as string;
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+        const confirmPassword = formData.get("confirmPassword") as string;
+
+        // Validación de contraseñas
+        if (password !== confirmPassword) {
+            if (errorMsg) {
+                errorMsg.textContent = "Las contraseñas no coinciden.";
+                errorMsg.classList.remove("hidden");
+            }
+            return;
+        }
+
+        if (password.length < 8) {
+            if (errorMsg) {
+                errorMsg.textContent = "La contraseña debe tener al menos 8 caracteres.";
+                errorMsg.classList.remove("hidden");
+            }
+            return;
+        }
+
+        // Deshabilitar botón mientras procesa
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Creando cuenta...</span>';
+        errorMsg?.classList.add("hidden");
+
+        // Registro con Supabase - el trigger creará el perfil con rol 'customer'
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName,
+                },
+            },
+        });
+
+        if (error) {
+            if (errorMsg) {
+                if (error.message.includes("already registered")) {
+                    errorMsg.textContent = "Este email ya está registrado. Intenta iniciar sesión.";
+                } else {
+                    errorMsg.textContent = "Error al crear la cuenta. Inténtalo de nuevo.";
+                }
+                errorMsg.classList.remove("hidden");
+            }
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Crear Cuenta</span>';
+        } else {
+            if (successMsg) {
+                successMsg.textContent = "¡Cuenta creada! Revisa tu email para confirmar tu cuenta.";
+                successMsg.classList.remove("hidden");
+            }
+            form.reset();
+            
+            // Redirigir después de 3 segundos
+            setTimeout(() => {
+                window.location.href = "/login";
+            }, 3000);
+        }
+    });
+</script>

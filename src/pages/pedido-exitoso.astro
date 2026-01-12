@@ -1,0 +1,68 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { CheckCircle } from "lucide-react";
+
+export const prerender = false;
+---
+
+<PublicLayout title="Pedido Confirmado">
+    <div class="max-w-2xl mx-auto px-6 py-24 text-center">
+        <div class="mb-8">
+            <CheckCircle className="w-20 h-20 mx-auto text-green-500" />
+        </div>
+        
+        <h2 class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4">
+            Pago Completado
+        </h2>
+        <h1 class="text-5xl font-serif italic mb-6">¡Gracias por tu compra!</h1>
+        
+        <p class="text-slate-500 mb-8 leading-relaxed">
+            Tu pedido ha sido procesado correctamente. Recibirás un email de confirmación 
+            con los detalles de tu compra y la información de envío.
+        </p>
+
+        <div id="order-details" class="bg-slate-50 p-8 mb-8 text-left hidden">
+            <h3 class="font-serif text-xl italic mb-4">Detalles del pedido</h3>
+            <p class="text-sm text-slate-500">
+                <span class="font-bold text-slate-700">ID de sesión:</span>
+                <span id="session-id" class="font-mono text-xs"></span>
+            </p>
+        </div>
+
+        <div class="space-x-4">
+            <a 
+                href="/productos" 
+                class="inline-block bg-brand-navy text-white px-8 py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all"
+            >
+                Seguir Comprando
+            </a>
+            <a 
+                href="/" 
+                class="inline-block border border-slate-200 text-slate-600 px-8 py-4 font-bold uppercase tracking-widest text-sm hover:border-brand-navy hover:text-brand-navy transition-all"
+            >
+                Volver al Inicio
+            </a>
+        </div>
+    </div>
+</PublicLayout>
+
+<script>
+    import { cartItems } from "../stores/cart";
+
+    // Limpiar el carrito después de un pago exitoso
+    cartItems.set([]);
+
+    // Mostrar el ID de sesión si está disponible
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    
+    if (sessionId) {
+        const orderDetails = document.getElementById('order-details');
+        const sessionIdElem = document.getElementById('session-id');
+        
+        if (orderDetails && sessionIdElem) {
+            orderDetails.classList.remove('hidden');
+            sessionIdElem.textContent = sessionId;
+        }
+    }
+</script>
