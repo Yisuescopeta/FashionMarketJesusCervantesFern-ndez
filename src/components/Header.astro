@@ -1,0 +1,49 @@
+---
+import { ShoppingBag } from "lucide-react";
+import CartIcon from "./islands/CartIcon";
+import UserMenu from "./islands/UserMenu";
+---
+
+<header
+  class="fixed top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 z-40 transition-all"
+>
+  <div class="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
+    <a href="/" class="text-2xl font-serif tracking-tight font-bold">
+      FASHION<span class="text-brand-gold">MARKET</span>
+    </a>
+
+    <nav
+      class="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide uppercase"
+    >
+      <a href="/productos" class="hover:text-brand-gold transition-colors"
+        >Catálogo</a
+      >
+      <a
+        href="/categoria/sastreria-premium"
+        class="hover:text-brand-gold transition-colors">Sastrería</a
+      >
+    </nav>
+
+    <div class="flex items-center space-x-4">
+      <UserMenu client:load />
+      <div class="h-6 w-px bg-slate-200 mx-2"></div>
+      <button
+        id="cart-button"
+        class="relative p-2 hover:bg-slate-50 rounded-full transition-colors"
+        aria-label="Carrito de compra"
+      >
+        <ShoppingBag className="w-6 h-6" />
+        <CartIcon client:load />
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  import { isCartOpen } from "../stores/cart";
+
+  const cartButton = document.getElementById("cart-button");
+  cartButton?.addEventListener("click", () => {
+    isCartOpen.set(true);
+  });
+</script>

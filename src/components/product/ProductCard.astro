@@ -1,0 +1,48 @@
+---
+import { formatPrice } from "../../lib/utils";
+
+interface Props {
+  id: string;
+  name: string;
+  price: number;
+  slug: string;
+  image: string;
+  category: string;
+}
+
+const { id, name, price, slug, image, category } = Astro.props;
+---
+
+<div class="group">
+  <div class="relative overflow-hidden bg-slate-100 aspect-[3/4] mb-4">
+    <a href={`/productos/${slug}`} class="block w-full h-full">
+      <img
+        src={image}
+        alt={name}
+        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+    </a>
+    <div
+      class="absolute bottom-4 left-4 right-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
+    >
+      <a
+        href={`/productos/${slug}`}
+        class="block w-full bg-white/90 backdrop-blur-sm text-brand-navy text-center py-3 text-[10px] uppercase font-bold tracking-widest hover:bg-white transition"
+      >
+        Ver Detalle
+      </a>
+    </div>
+  </div>
+  <div class="space-y-1 px-1">
+    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">
+      {category}
+    </p>
+    <a
+      href={`/productos/${slug}`}
+      class="block group-hover:text-brand-gold transition-colors"
+    >
+      <h3 class="font-serif text-lg leading-tight">{name}</h3>
+    </a>
+    <p class="font-medium text-slate-700">{formatPrice(price)}</p>
+  </div>
+</div>

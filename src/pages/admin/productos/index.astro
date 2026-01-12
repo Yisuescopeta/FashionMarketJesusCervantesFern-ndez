@@ -1,0 +1,66 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { supabase } from '../../../lib/supabase';
+import { formatPrice } from '../../../lib/utils';
+
+export const prerender = false;
+
+const { data: products } = await supabase.from('products').select('*, categories(name)');
+---
+
+<AdminLayout title="Inventario de Productos">
+  <div class="flex justify-between items-center mb-12">
+    <p class="text-slate-500 italic">Gestiona el catálogo de tu tienda desde aquí.</p>
+    <a href="/admin/productos/nuevo" class="bg-brand-navy text-white px-6 py-3 font-bold uppercase tracking-widest text-xs hover:bg-black transition">
+      Nuevo Producto
+    </a>
+  </div>
+
+  <div class="bg-white border border-slate-100 shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-slate-50 border-b border-slate-100">
+        <tr>
+          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-slate-500">Producto</th>
+          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-slate-500">Categoría</th>
+          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-slate-500">Precio</th>
+          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-slate-500">Stock</th>
+          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-slate-500 text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {products?.map(product => (
+          <tr class="hover:bg-slate-50/50 transition-colors">
+            <td class="px-6 py-4">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-16 bg-slate-100 overflow-hidden">
+                  <img src={product.images[0]} alt="" class="w-full h-full object-cover" />
+                </div>
+                <span class="font-medium">{product.name}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-slate-500">{product.categories?.name}</td>
+            <td class="px-6 py-4 font-medium">{formatPrice(product.price)}</td>
+            <td class="px-6 py-4">
+              <span class={`px-2 py-1 text-[10px] font-bold uppercase rounded ${product.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {product.stock} unidades
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <div class="flex justify-end space-x-4 text-xs font-bold uppercase tracking-widest">
+                <a href={`/admin/productos/${product.id}`} class="text-brand-gold hover:underline">Editar</a>
+                <button class="text-red-500 hover:underline">Borrar</button>
+              </div>
+            </td>
+          </tr>
+        ))}
+        {(!products || products.length === 0) && (
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">
+              No hay productos registrados.
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</AdminLayout>

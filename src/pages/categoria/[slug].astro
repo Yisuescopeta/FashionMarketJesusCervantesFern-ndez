@@ -1,0 +1,42 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import ProductCard from '../../components/product/ProductCard.astro';
+import { supabase } from '../../lib/supabase';
+
+export async function getStaticPaths() {
+  const { data: categories } = await supabase.from('categories').select('slug');
+  return categories?.map(cat => ({ params: { slug: cat.slug } })) || [];
+}
+
+const { slug } = Astro.params;
+
+const { data: category } = await supabase.from('categories').select('*').eq('slug', slug).single();
+const { data: products } = await supabase.from('products').select('*, categories(name)').eq('category_id', category?.id);
+---
+
+<PublicLayout title={category?.name || 'Categoría'}>
+  <div class="max-w-7xl mx-auto px-6 py-24">
+    <div class="text-center mb-24">
+      <h2 class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4">Explorar Colección</h2>
+      <h1 class="text-6xl font-serif italic">{category?.name}</h1>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+      {products?.map(product => (
+        <ProductCard 
+          id={product.id}
+          name={product.name}
+          price={product.price}
+          slug={product.slug}
+          image={product.images[0]}
+          category={product.categories?.name}
+        />
+      ))}
+      {(!products || products.length === 0) && (
+        <div class="col-span-full text-center py-24 italic text-slate-400">
+          No hay productos en esta categoría por el momento.
+        </div>
+      )}
+    </div>
+  </div>
+</PublicLayout>

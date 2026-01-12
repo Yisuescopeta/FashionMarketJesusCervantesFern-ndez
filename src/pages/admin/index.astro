@@ -1,0 +1,52 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { supabase } from '../../lib/supabase';
+
+export const prerender = false;
+
+// Mock stats for dashboard
+const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
+const { count: categoryCount } = await supabase.from('categories').select('*', { count: 'exact', head: true });
+---
+
+<AdminLayout title="Dashboard de Control">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+    <div class="bg-white p-6 border border-slate-100 shadow-sm">
+      <p class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Total Productos</p>
+      <p class="text-4xl font-serif text-brand-navy">{productCount || 0}</p>
+    </div>
+    <div class="bg-white p-6 border border-slate-100 shadow-sm">
+      <p class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Categorías Activas</p>
+      <p class="text-4xl font-serif text-brand-navy">{categoryCount || 0}</p>
+    </div>
+    <div class="bg-white p-6 border border-slate-100 shadow-sm">
+      <p class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Ventas del Mes</p>
+      <p class="text-4xl font-serif text-brand-navy">0.00€</p>
+      <span class="text-[10px] text-slate-400 italic">(Demo)</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <div class="bg-white p-8 border border-slate-100 shadow-sm">
+      <h3 class="text-xl font-serif font-bold mb-6">Acciones Rápidas</h3>
+      <div class="space-y-4">
+        <a href="/admin/productos/nuevo" class="block bg-slate-50 p-4 hover:bg-slate-100 transition border-l-4 border-brand-gold">
+          <p class="font-bold text-xs uppercase tracking-widest">Publicar Nueva Prenda</p>
+          <p class="text-slate-500 text-sm italic">Sube imágenes y define el stock real.</p>
+        </a>
+        <a href="/admin/productos" class="block bg-slate-50 p-4 hover:bg-slate-100 transition border-l-4 border-brand-navy">
+          <p class="font-bold text-xs uppercase tracking-widest">Gestionar Inventario</p>
+          <p class="text-slate-500 text-sm italic">Edita o elimina productos existentes.</p>
+        </a>
+      </div>
+    </div>
+    
+    <div class="bg-white p-8 border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
+      <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+      </div>
+      <h3 class="font-serif font-bold italic mb-2">Más funcionalidades próximamente</h3>
+      <p class="text-slate-400 text-sm">Gestión de clientes y cupones de descuento.</p>
+    </div>
+  </div>
+</AdminLayout>

@@ -1,0 +1,188 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabase } from "../../../lib/supabase";
+
+export const prerender = false;
+
+const { id } = Astro.params;
+
+const { data: product } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+if (!product) {
+    return Astro.redirect("/admin/productos");
+}
+
+const { data: categories } = await supabase.from("categories").select("*");
+---
+
+<AdminLayout title="Editar Producto">
+    <div class="max-w-4xl">
+        <form
+            id="edit-form"
+            class="space-y-8 bg-white p-8 border border-slate-100 shadow-sm"
+            data-id={id}
+        >
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-2">
+                    <label
+                        class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        >Nombre del Producto</label
+                    >
+                    <input
+                        name="name"
+                        type="text"
+                        required
+                        value={product.name}
+                        class="w-full border-slate-200 p-3 focus:ring-brand-gold focus:border-brand-gold outline-none"
+                    />
+                </div>
+                <div class="space-y-2">
+                    <label
+                        class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        >Categoría</label
+                    >
+                    <select
+                        name="category_id"
+                        class="w-full border-slate-200 p-3 outline-none"
+                    >
+                        {
+                            categories?.map((cat) => (
+                                <option
+                                    value={cat.id}
+                                    selected={cat.id === product.category_id}
+                                >
+                                    {cat.name}
+                                </option>
+                            ))
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label
+                    class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                    >Descripción</label
+                >
+                <textarea
+                    name="description"
+                    rows="4"
+                    class="w-full border-slate-200 p-3 outline-none"
+                    >{product.description}</textarea
+                >
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-2">
+                    <label
+                        class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        >Precio (en céntimos)</label
+                    >
+                    <input
+                        name="price"
+                        type="number"
+                        step="1"
+                        required
+                        value={product.price}
+                        class="w-full border-slate-200 p-3 outline-none"
+                    />
+                </div>
+                <div class="space-y-2">
+                    <label
+                        class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        >Stock</label
+                    >
+                    <input
+                        name="stock"
+                        type="number"
+                        required
+                        value={product.stock}
+                        class="w-full border-slate-200 p-3 outline-none"
+                    />
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <label
+                    class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                    >Imágenes Actuales</label
+                >
+                <div class="grid grid-cols-4 gap-4">
+                    {
+                        product.images?.map((img: string) => (
+                            <div class="aspect-square bg-slate-100 relative group">
+                                <img
+                                    src={img}
+                                    class="w-full h-full object-cover"
+                                />
+                            </div>
+                        ))
+                    }
+                </div>
+            </div>
+
+            <div class="flex space-x-4">
+                <button
+                    type="submit"
+                    class="flex-1 bg-brand-navy text-white py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition"
+                >
+                    Actualizar Producto
+                </button>
+                <button
+                    type="button"
+                    id="delete-btn"
+                    class="px-8 bg-red-50 text-red-600 font-bold uppercase tracking-widest text-xs hover:bg-red-600 hover:text-white transition"
+                >
+                    Eliminar
+                </button>
+            </div>
+        </form>
+    </div>
+</AdminLayout>
+
+<script>
+    import { supabase } from "../../../lib/supabase";
+
+    const form = document.getElementById("edit-form") as HTMLFormElement;
+    const deleteBtn = document.getElementById("delete-btn");
+    const productId = form?.dataset.id;
+
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+
+        const { error } = await supabase
+            .from("products")
+            .update({
+                name: formData.get("name"),
+                description: formData.get("description"),
+                price: parseInt(formData.get("price") as string),
+                stock: parseInt(formData.get("stock") as string),
+                category_id: formData.get("category_id"),
+            })
+            .eq("id", productId);
+
+        if (!error) {
+            window.location.href = "/admin/productos";
+        } else {
+            alert("Error: " + error.message);
+        }
+    });
+
+    deleteBtn?.addEventListener("click", async () => {
+        if (confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+            const { error } = await supabase
+                .from("products")
+                .delete()
+                .eq("id", productId);
+
+            if (!error) {
+                window.location.href = "/admin/productos";
+            }
+        }
+    });
+</script>

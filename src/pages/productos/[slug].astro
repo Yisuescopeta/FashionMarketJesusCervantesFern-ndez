@@ -1,0 +1,69 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import AddToCartButton from '../../components/islands/AddToCartButton';
+import { supabase } from '../../lib/supabase';
+import { formatPrice } from '../../lib/utils';
+
+export async function getStaticPaths() {
+  const { data: products } = await supabase.from('products').select('slug');
+  
+  if (!products || products.length === 0) {
+    return [{ params: { slug: 'traje-slim-fit-lana' } }];
+  }
+
+  return products.map((product) => ({
+    params: { slug: product.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+
+const { data: product } = await supabase
+  .from('products')
+  .select('*, categories(name)')
+  .eq('slug', slug)
+  .single();
+
+const placeholderProduct = {
+  id: '1',
+  name: 'Traje Slim Fit Lana Italiana',
+  price: 59900,
+  description: 'Un traje impecable confeccionado con la mejor lana italiana...',
+  images: ['https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800'],
+  stock: 12,
+  categories: { name: 'Trajes' }
+};
+
+const p = product || placeholderProduct;
+---
+
+<PublicLayout title={p.name}>
+  <div class="max-w-7xl mx-auto px-6 py-12">
+    <nav class="flex text-xs uppercase tracking-widest text-slate-400 mb-12 space-x-2">
+      <a href="/" class="hover:text-brand-navy">Inicio</a>
+      <span>/</span>
+      <a href="/productos" class="hover:text-brand-navy">Catálogo</a>
+      <span>/</span>
+      <span class="text-brand-navy font-bold">{p.categories?.name}</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+      <div class="space-y-4">
+        <div class="aspect-[3/4] bg-slate-100 overflow-hidden">
+          <img src={p.images[0]} alt={p.name} class="w-full h-full object-cover" />
+        </div>
+      </div>
+
+      <div class="flex flex-col justify-center">
+        <div class="mb-8 border-b border-slate-100 pb-8">
+          <h1 class="text-4xl md:text-5xl font-serif mb-4 italic">{p.name}</h1>
+          <p class="text-2xl font-medium text-brand-gold">{formatPrice(p.price)}</p>
+        </div>
+
+        <p class="text-slate-600 leading-relaxed italic mb-12">{p.description}</p>
+
+        <AddToCartButton client:load id={p.id} name={p.name} price={p.price} image={p.images[0]} />
+      </div>
+    </div>
+  </div>
+</PublicLayout>

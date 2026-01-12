@@ -1,0 +1,90 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import ProductCard from '../components/product/ProductCard.astro';
+import { supabase } from '../lib/supabase';
+
+// SSG: Fetch products at build time
+const { data: products } = await supabase
+  .from('products')
+  .select('*, categories(name)')
+  .limit(4);
+
+// Placeholder if DB is empty
+const placeholders = [
+  {
+    id: '1',
+    name: 'Traje Slim Fit Lana Italiana',
+    price: 59900,
+    slug: 'traje-slim-fit-lana',
+    image: 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
+    category: 'Trajes'
+  },
+  {
+    id: '2',
+    name: 'Camisa Oxford Blanca Premium',
+    price: 8900,
+    slug: 'camisa-oxford-blanca',
+    image: 'https://images.unsplash.com/photo-1598033129183-c4f50c7176c8?q=80&w=800',
+    category: 'Camisas'
+  }
+];
+
+const displayProducts = (products && products.length > 0) ? products.map(p => ({
+  id: p.id,
+  name: p.name,
+  price: p.price,
+  slug: p.slug,
+  image: p.images[0] || 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
+  category: p.categories?.name || 'Novedad'
+})) : placeholders;
+---
+
+<PublicLayout title="Inicio">
+  <!-- Hero Section -->
+  <section class="relative h-[80vh] flex items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img 
+        src="https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?q=80&w=2000" 
+        alt="Fashion Hero" 
+        class="w-full h-full object-cover brightness-[0.7]"
+      />
+    </div>
+    
+    <div class="relative z-10 text-center text-white px-6">
+      <h2 class="text-[10px] uppercase tracking-[0.5em] mb-4 font-bold">Nueva Colección 2026</h2>
+      <h1 class="text-5xl md:text-7xl font-serif mb-8 max-w-4xl mx-auto leading-tight italic">
+        Elegancia Atemporal para el Hombre Moderno
+      </h1>
+      <a href="/productos" class="inline-block bg-white text-brand-navy px-10 py-4 font-bold tracking-[0.2em] uppercase text-sm hover:bg-brand-gold hover:text-white transition-all duration-500">
+        Descubrir Catálogo
+      </a>
+    </div>
+  </section>
+
+  <!-- Featured Products -->
+  <section class="max-w-7xl mx-auto px-6 py-24">
+    <div class="flex justify-between items-end mb-12">
+      <div>
+        <h2 class="text-[10px] uppercase tracking-[0.2em] text-brand-gold font-bold mb-2">Selección Exclusiva</h2>
+        <h3 class="text-4xl font-serif">Piezas Maestras</h3>
+      </div>
+      <a href="/productos" class="text-sm font-bold border-b-2 border-brand-navy pb-1 hover:text-brand-gold hover:border-brand-gold transition-colors italic">Ver todo</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+      {displayProducts.map(product => (
+        <ProductCard {...product} />
+      ))}
+    </div>
+  </section>
+
+  <!-- Brand Story -->
+  <section class="bg-brand-navy text-white py-24">
+    <div class="max-w-3xl mx-auto text-center px-6">
+      <h2 class="text-4xl font-serif mb-8 italic">"La sencillez es la máxima sofisticación"</h2>
+      <p class="text-slate-400 leading-relaxed text-lg">
+        En FashionMarket, creemos que la moda masculina no se trata de seguir tendencias efímeras, sino de construir un armario sólido basado en la calidad excepcional y el diseño inteligente. Cada prenda es seleccionada bajo los más altos estándares de sastrería europea.
+      </p>
+    </div>
+  </section>
+</PublicLayout>
