@@ -3,15 +3,28 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
 import ProductCard from '../../components/product/ProductCard.astro';
 import { supabase } from '../../lib/supabase';
 
-export async function getStaticPaths() {
-  const { data: categories } = await supabase.from('categories').select('slug');
-  return categories?.map(cat => ({ params: { slug: cat.slug } })) || [];
-}
+export const prerender = false;
 
 const { slug } = Astro.params;
 
-const { data: category } = await supabase.from('categories').select('*').eq('slug', slug).single();
-const { data: products } = await supabase.from('products').select('*, categories(name)').eq('category_id', category?.id);
+// Obtener la categoría
+const { data: category } = await supabase
+  .from('categories')
+  .select('*')
+  .eq('slug', slug)
+  .single();
+
+// Si no existe la categoría, mostrar error
+if (!category) {
+  return Astro.redirect('/productos');
+}
+
+// Obtener productos de esta categoría
+const { data: products } = await supabase
+  .from('products')
+  .select('*, categories(name)')
+  .eq('category_id', category.id)
+  .eq('is_active', true);
 ---
 
 <PublicLayout title={category?.name || 'Categoría'}>
