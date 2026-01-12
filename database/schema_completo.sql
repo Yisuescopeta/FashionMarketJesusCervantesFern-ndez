@@ -27,11 +27,13 @@ drop table if exists orders cascade;
 drop table if exists products cascade;
 drop table if exists categories cascade;
 drop table if exists profiles cascade;
+drop table if exists site_settings cascade;
 
 -- Eliminar funciones existentes
 drop function if exists is_admin() cascade;
 drop function if exists handle_new_user() cascade;
 drop function if exists prevent_role_self_elevation() cascade;
+drop function if exists decrease_stock() cascade;
 
 -- ============================================
 -- 3. TABLA DE CATEGORÍAS
@@ -94,9 +96,24 @@ create table products (
     colors text[] default '{}', -- Colores disponibles
     material text,
     is_featured boolean default false,
+    is_on_sale boolean default false, -- Para ofertas flash
+    sale_price integer check (sale_price is null or sale_price > 0), -- Precio de oferta
     is_active boolean default true,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- ============================================
+-- 6. TABLA DE CONFIGURACIÓN DEL SITIO
+-- ============================================
+-- Configuración global del sitio, incluyendo el interruptor de ofertas
+create table site_settings (
+    id text primary key default 'main',
+    show_flash_sales boolean default false, -- Interruptor de ofertas flash
+    flash_sales_title text default 'Ofertas Flash',
+    flash_sales_subtitle text default 'Descuentos por tiempo limitado',
+    updated_at timestamp with time zone default timezone('utc'::text, now()),
+    updated_by uuid references profiles(id)
 );
 
 -- Índices para productos
@@ -227,6 +244,7 @@ alter table profiles enable row level security;
 alter table products enable row level security;
 alter table orders enable row level security;
 alter table order_items enable row level security;
+alter table site_settings enable row level security;
 
 -- ============================================
 -- 11.1 POLÍTICAS PARA CATEGORÍAS
@@ -320,6 +338,51 @@ create policy "Admin gestiona items" on order_items
     for all using (is_admin());
 
 -- ============================================
+-- 11.6 POLÍTICAS PARA CONFIGURACIÓN DEL SITIO
+-- ============================================
+-- Cualquiera puede leer la configuración (para saber si mostrar ofertas)
+create policy "Lectura pública de configuración" on site_settings
+    for select using (true);
+
+-- Solo admins pueden modificar la configuración
+create policy "Admin gestiona configuración" on site_settings
+    for all using (is_admin());
+
+-- ============================================
+-- 11.7 FUNCIÓN DE CONTROL DE STOCK ATÓMICO
+-- ============================================
+-- Esta función reduce el stock de forma atómica y previene venta sin stock
+create or replace function decrease_stock(product_id uuid, quantity integer)
+returns boolean as $$
+declare
+    current_stock integer;
+begin
+    -- Obtener stock actual con bloqueo
+    select stock into current_stock
+    from products
+    where id = product_id
+    for update;
+    
+    -- Verificar si hay suficiente stock
+    if current_stock is null then
+        raise exception 'Producto no encontrado';
+    end if;
+    
+    if current_stock < quantity then
+        raise exception 'Stock insuficiente. Disponible: %, Solicitado: %', current_stock, quantity;
+    end if;
+    
+    -- Reducir stock
+    update products
+    set stock = stock - quantity,
+        updated_at = now()
+    where id = product_id;
+    
+    return true;
+end;
+$$ language plpgsql security definer;
+
+-- ============================================
 -- 12. CONFIGURACIÓN DE STORAGE
 -- ============================================
 -- Bucket para imágenes de productos
@@ -350,13 +413,18 @@ create policy "Admin gestiona imágenes"
 -- 13. DATOS INICIALES (SEED)
 -- ============================================
 
--- Categorías iniciales
+-- Categorías según requisitos del cliente
 insert into categories (name, slug, description, is_active) values 
-    ('Sastrería Premium', 'sastreria-premium', 'Trajes y chaquetas de alta costura italiana', true),
-    ('Calzado Artesanal', 'calzado-artesanal', 'Zapatos hechos a mano con cuero de primera calidad', true),
-    ('Accesorios de Lujo', 'accesorios-lujo', 'Complementos exclusivos para el caballero moderno', true),
-    ('Camisería Fina', 'camiseria-fina', 'Camisas de algodón egipcio y seda natural', true)
+    ('Camisas', 'camisas', 'Camisas elegantes para toda ocasión', true),
+    ('Camisetas', 'camisetas', 'Camisetas casuales y de vestir', true),
+    ('Chalecos', 'chalecos', 'Chalecos formales e informales', true),
+    ('Pantalones', 'pantalones', 'Pantalones de vestir y casual', true)
 on conflict (slug) do nothing;
+
+-- Configuración inicial del sitio
+insert into site_settings (id, show_flash_sales, flash_sales_title, flash_sales_subtitle)
+values ('main', false, '¡Ofertas Flash!', 'Descuentos exclusivos por tiempo limitado')
+on conflict (id) do nothing;
 
 -- ============================================
 -- 14. COMENTARIOS Y DOCUMENTACIÓN
