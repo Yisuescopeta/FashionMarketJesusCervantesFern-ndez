@@ -1,0 +1,44 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/Header.astro';
+import CartSlider from '../components/islands/CartSlider';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="min-h-screen pt-20">
+    <slot />
+  </main>
+  <CartSlider client:load />
+  <footer class="bg-brand-navy text-white py-12 px-6 mt-20">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <h2 class="text-2xl font-serif mb-4">FashionMarket</h2>
+        <p class="text-slate-400">Minimalismo sofisticado para el hombre moderno.</p>
+      </div>
+      <div>
+        <h3 class="font-bold mb-4">Categorías</h3>
+        <ul class="space-y-2 text-slate-400">
+          <li><a href="/categoria/camisas" class="hover:text-white transition">Camisas</a></li>
+          <li><a href="/categoria/camisetas" class="hover:text-white transition">Camisetas</a></li>
+          <li><a href="/categoria/chalecos" class="hover:text-white transition">Chalecos</a></li>
+          <li><a href="/categoria/pantalones" class="hover:text-white transition">Pantalones</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold mb-4">Contacto</h3>
+        <p class="text-slate-400">info@fashionmarket.com</p>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto border-t border-slate-800 mt-12 pt-8 text-center text-slate-500 text-sm">
+      © 2026 FashionMarket. Todos los derechos reservados.
+    </div>
+  </footer>
+</BaseLayout>

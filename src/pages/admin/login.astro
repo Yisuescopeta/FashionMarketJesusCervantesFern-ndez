@@ -1,0 +1,95 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export const prerender = false;
+---
+
+<BaseLayout title="Acceso Administrativo">
+    <div class="min-h-screen flex items-center justify-center bg-slate-50 px-6">
+        <div
+            class="max-w-md w-full bg-white p-10 border border-slate-100 shadow-xl"
+        >
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-serif font-bold italic mb-2">
+                    FashionMarket
+                </h1>
+                <p
+                    class="text-xs uppercase tracking-widest text-slate-400 font-bold"
+                >
+                    Panel de Gestión
+                </p>
+            </div>
+
+            <form id="login-form" class="space-y-6">
+                <div class="space-y-2">
+                    <label
+                        class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        >Email Corporativo</label
+                    >
+                    <input
+                        type="email"
+                        name="email"
+                        required
+                        class="w-full border-slate-200 p-3 focus:ring-brand-gold focus:border-brand-gold outline-none"
+                        placeholder="admin@fashionmarket.com"
+                    />
+                </div>
+
+                <div class="space-y-2">
+                    <label
+                        class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        >Contraseña</label
+                    >
+                    <input
+                        type="password"
+                        name="password"
+                        required
+                        class="w-full border-slate-200 p-3 focus:ring-brand-gold focus:border-brand-gold outline-none"
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    class="w-full bg-brand-navy text-white py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all duration-300"
+                >
+                    Entrar al Sistema
+                </button>
+            </form>
+
+            <div
+                id="error-msg"
+                class="mt-4 text-red-500 text-xs italic text-center hidden"
+            >
+            </div>
+        </div>
+    </div>
+</BaseLayout>
+
+<script>
+    import { supabase } from "../../lib/supabase";
+
+    const form = document.getElementById("login-form") as HTMLFormElement;
+    const errorMsg = document.getElementById("error-msg");
+
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) {
+            if (errorMsg) {
+                errorMsg.textContent =
+                    "Credenciales inválidas o acceso no autorizado.";
+                errorMsg.classList.remove("hidden");
+            }
+        } else {
+            window.location.href = "/admin";
+        }
+    });
+</script>

@@ -1,0 +1,50 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { CheckCircle } from "lucide-react";
+
+export const prerender = false;
+---
+
+<PublicLayout title="Pago Exitoso">
+    <div class="max-w-2xl mx-auto px-6 py-24 text-center">
+        <div class="bg-white border border-slate-100 shadow-sm p-12">
+            <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                <CheckCircle className="w-10 h-10 text-green-500" />
+            </div>
+            
+            <h2 class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4">
+                Pedido Confirmado
+            </h2>
+            <h1 class="text-4xl font-serif italic mb-6">¡Gracias por tu compra!</h1>
+            
+            <p class="text-slate-500 mb-8 leading-relaxed">
+                Tu pedido ha sido procesado correctamente. Recibirás un correo electrónico 
+                con los detalles de tu compra y la información de envío.
+            </p>
+            
+            <div class="space-y-4">
+                <a 
+                    href="/productos" 
+                    class="inline-block bg-brand-navy text-white px-10 py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all"
+                >
+                    Seguir Comprando
+                </a>
+                <p>
+                    <a 
+                        href="/" 
+                        class="text-brand-gold font-bold text-xs uppercase tracking-widest hover:underline"
+                    >
+                        Volver al Inicio
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</PublicLayout>
+
+<script>
+    import { cartItems } from "../stores/cart";
+    
+    // Limpiar el carrito después de un pago exitoso
+    cartItems.set([]);
+</script>
