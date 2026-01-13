@@ -1,0 +1,100 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import ProductCard from '../components/product/ProductCard.astro';
+import { supabase } from '../lib/supabase';
+import { Sparkles } from 'lucide-react';
+
+export const prerender = false;
+
+// Obtener productos más recientes (últimos 30 días)
+const thirtyDaysAgo = new Date();
+thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+const { data: products } = await supabase
+  .from('products')
+  .select('*, categories(name)')
+  .eq('is_active', true)
+  .gte('created_at', thirtyDaysAgo.toISOString())
+  .order('created_at', { ascending: false })
+  .limit(12);
+
+// Si no hay productos recientes, mostrar los últimos agregados
+let displayProducts = products || [];
+if (displayProducts.length === 0) {
+  const { data: fallback } = await supabase
+    .from('products')
+    .select('*, categories(name)')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(12);
+  displayProducts = fallback || [];
+}
+
+const mappedProducts = displayProducts.map(p => ({
+  id: p.id,
+  name: p.name,
+  price: p.is_on_sale && p.sale_price ? p.sale_price : p.price,
+  originalPrice: p.is_on_sale ? p.price : null,
+  slug: p.slug,
+  image: p.images?.[0] || 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
+  category: p.categories?.name || 'Novedad',
+  isOnSale: p.is_on_sale,
+  isNew: true
+}));
+---
+
+<PublicLayout title="Novedades - Últimas Llegadas">
+  <div class="pt-32 pb-16">
+    <!-- Hero de Novedades -->
+    <div class="relative bg-gradient-to-br from-slate-900 via-slate-800 to-brand-navy text-white py-20 mb-16">
+      <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] bg-[length:24px_24px]"></div>
+      <div class="max-w-7xl mx-auto px-6 text-center relative">
+        <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-full mb-6">
+          <Sparkles className="w-4 h-4 text-brand-gold" />
+          <span class="text-xs font-bold uppercase tracking-widest">Recién llegado</span>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-serif italic mb-4">Novedades</h1>
+        <p class="text-slate-300 max-w-2xl mx-auto text-lg">
+          Descubre las últimas incorporaciones a nuestra colección. Prendas seleccionadas 
+          que definen las tendencias de la temporada.
+        </p>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6">
+      <!-- Contador de productos -->
+      <div class="flex justify-between items-center mb-10 pb-6 border-b border-slate-100">
+        <p class="text-sm text-slate-500">
+          <span class="font-semibold text-brand-navy">{mappedProducts.length}</span> nuevas prendas disponibles
+        </p>
+        <a href="/catalogo" class="text-sm font-bold text-brand-gold hover:underline uppercase tracking-widest">
+          Ver catálogo completo →
+        </a>
+      </div>
+
+      <!-- Grid de productos -->
+      {mappedProducts.length > 0 ? (
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
+          {mappedProducts.map((product, index) => (
+            <div class="relative">
+              {index < 4 && (
+                <span class="absolute -top-3 left-4 z-10 bg-brand-navy text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1">
+                  Nuevo
+                </span>
+              )}
+              <ProductCard {...product} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-24">
+          <Sparkles className="w-12 h-12 mx-auto text-slate-200 mb-4" />
+          <p class="text-slate-400 text-lg mb-4">Próximamente nuevas llegadas.</p>
+          <a href="/catalogo" class="text-brand-gold font-bold uppercase tracking-widest text-sm hover:underline">
+            Explorar catálogo
+          </a>
+        </div>
+      )}
+    </div>
+  </div>
+</PublicLayout>

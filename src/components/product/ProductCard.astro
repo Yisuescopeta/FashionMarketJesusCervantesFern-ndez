@@ -1,5 +1,6 @@
 ---
 import { formatPrice } from "../../lib/utils";
+import FavoriteButton from "../islands/FavoriteButton";
 
 interface Props {
   id: string;
@@ -8,9 +9,12 @@ interface Props {
   slug: string;
   image: string;
   category: string;
+  originalPrice?: number | null;
+  isOnSale?: boolean;
 }
 
-const { id, name, price, slug, image, category } = Astro.props;
+const { id, name, price, slug, image, category, originalPrice, isOnSale } = Astro.props;
+const discount = isOnSale && originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
 ---
 
 <div class="group">
@@ -22,6 +26,19 @@ const { id, name, price, slug, image, category } = Astro.props;
         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
       />
     </a>
+    
+    <!-- Botón de favoritos -->
+    <div class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <FavoriteButton productId={id} client:load />
+    </div>
+    
+    <!-- Badge de oferta -->
+    {isOnSale && discount > 0 && (
+      <span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1">
+        -{discount}%
+      </span>
+    )}
+    
     <div
       class="absolute bottom-4 left-4 right-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
     >
@@ -43,6 +60,11 @@ const { id, name, price, slug, image, category } = Astro.props;
     >
       <h3 class="font-serif text-lg leading-tight">{name}</h3>
     </a>
-    <p class="font-medium text-slate-700">{formatPrice(price)}</p>
+    <div class="flex items-center gap-2">
+      <p class={`font-medium ${isOnSale ? 'text-red-600' : 'text-slate-700'}`}>{formatPrice(price)}</p>
+      {isOnSale && originalPrice && (
+        <p class="text-sm text-slate-400 line-through">{formatPrice(originalPrice)}</p>
+      )}
+    </div>
   </div>
 </div>

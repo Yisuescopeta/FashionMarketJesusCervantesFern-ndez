@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { User, LogIn, LogOut, LayoutDashboard, UserCircle } from 'lucide-react';
+import { User, LogIn, LogOut, LayoutDashboard, UserCircle, Heart, Settings } from 'lucide-react';
 
 export default function UserMenu() {
     const [user, setUser] = useState<any>(null);
@@ -96,13 +96,31 @@ export default function UserMenu() {
                         </a>
                     )}
 
-                    <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    <a
+                        href="/mis-favoritos"
+                        className="flex items-center space-x-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-navy transition-colors"
                     >
-                        <LogOut className="w-4 h-4" />
-                        <span>Cerrar Sesión</span>
-                    </button>
+                        <Heart className="w-4 h-4" />
+                        <span>Mis Favoritos</span>
+                    </a>
+
+                    <a
+                        href="/mi-cuenta/preferencias"
+                        className="flex items-center space-x-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-navy transition-colors"
+                    >
+                        <Settings className="w-4 h-4" />
+                        <span>Preferencias</span>
+                    </a>
+
+                    <div className="border-t border-slate-100 mt-1 pt-1">
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                            <LogOut className="w-4 h-4" />
+                            <span>Cerrar Sesión</span>
+                        </button>
+                    </div>
                 </div>
             )}
 
