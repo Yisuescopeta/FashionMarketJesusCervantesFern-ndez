@@ -1,0 +1,409 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { ShoppingBag } from "lucide-react";
+
+export const prerender = false;
+---
+
+<PublicLayout title="Tu Carrito de Compra">
+    <div class="max-w-4xl mx-auto px-6 py-24">
+        <div class="text-center mb-16">
+            <h2
+                class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4"
+            >
+                Finalizar Compra
+            </h2>
+            <h1 class="text-5xl font-serif italic">Mi Selección</h1>
+        </div>
+
+        <div
+            id="cart-container"
+            class="bg-white border border-slate-100 shadow-sm p-8"
+        >
+            <!-- Logic handled by React/NanoStores below for reactivity -->
+            <div id="cart-items-list" class="space-y-8">
+                <!-- Rendered client-side for immediate feedback -->
+            </div>
+
+            <div id="cart-empty" class="hidden text-center py-12">
+                <ShoppingBag
+                    className="w-12 h-12 mx-auto text-slate-200 mb-4"
+                />
+                <p class="text-slate-400 italic">Tu selección está vacía.</p>
+                <a
+                    href="/productos"
+                    class="inline-block mt-6 text-brand-gold font-bold uppercase tracking-widest text-xs hover:underline"
+                    >Ir a la tienda</a
+                >
+            </div>
+
+            <div id="cart-summary" class="mt-12 pt-8 border-t border-slate-100">
+                <!-- Mensaje de login requerido (oculto por defecto) -->
+                <div
+                    id="login-required-msg"
+                    class="hidden mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-center"
+                >
+                    <p class="text-amber-700 text-sm font-medium mb-2">
+                        Debes iniciar sesión para completar tu compra
+                    </p>
+                    <a
+                        href="/login?redirect=/carrito"
+                        class="inline-block text-brand-gold font-bold text-xs uppercase tracking-widest hover:underline"
+                    >
+                        Iniciar Sesión →
+                    </a>
+                </div>
+
+                <!-- Formulario de Envío -->
+                <div id="shipping-form-container" class="hidden mb-8">
+                    <h3 class="text-lg font-serif italic mb-4">
+                        Datos de Envío
+                    </h3>
+                    <form id="shipping-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    for="full_name"
+                                    class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2"
+                                    >Nombre Completo</label
+                                >
+                                <input
+                                    type="text"
+                                    id="full_name"
+                                    name="full_name"
+                                    required
+                                    class="w-full border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-brand-navy bg-slate-50"
+                                    placeholder="Tu nombre..."
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    for="phone"
+                                    class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2"
+                                    >Teléfono</label
+                                >
+                                <input
+                                    type="tel"
+                                    id="phone"
+                                    name="phone"
+                                    required
+                                    class="w-full border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-brand-navy bg-slate-50"
+                                    placeholder="+34 600 000 000"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label
+                                for="address"
+                                class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2"
+                                >Dirección</label
+                            >
+                            <input
+                                type="text"
+                                id="address"
+                                name="address"
+                                required
+                                class="w-full border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-brand-navy bg-slate-50"
+                                placeholder="Calle, número, piso..."
+                            />
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    for="city"
+                                    class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2"
+                                    >Ciudad</label
+                                >
+                                <input
+                                    type="text"
+                                    id="city"
+                                    name="city"
+                                    required
+                                    class="w-full border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-brand-navy bg-slate-50"
+                                    placeholder="Ciudad"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    for="postal_code"
+                                    class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2"
+                                    >Código Postal</label
+                                >
+                                <input
+                                    type="text"
+                                    id="postal_code"
+                                    name="postal_code"
+                                    required
+                                    class="w-full border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-brand-navy bg-slate-50"
+                                    placeholder="00000"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 mt-2">
+                            <input
+                                type="checkbox"
+                                id="save_info"
+                                class="accent-brand-gold"
+                                checked
+                            />
+                            <label
+                                for="save_info"
+                                class="text-sm text-slate-500"
+                                >Guardar mis datos para futuros pedidos</label
+                            >
+                        </div>
+                    </form>
+                </div>
+
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p
+                            class="text-xs uppercase tracking-widest text-slate-400 font-bold mb-1"
+                        >
+                            Total Estimado
+                        </p>
+                        <p id="total-price" class="text-3xl font-serif">
+                            0.00€
+                        </p>
+                    </div>
+                    <button
+                        id="checkout-btn"
+                        class="bg-brand-navy text-white px-12 py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all"
+                    >
+                        Tramitar Pedido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</PublicLayout>
+
+<script>
+    import {
+        cartItems,
+        cartTotal,
+        removeCartItem,
+        updateQuantity,
+    } from "../stores/cart";
+    import { formatPrice } from "../lib/utils";
+    import { supabase } from "../lib/supabase";
+
+    const itemsList = document.getElementById("cart-items-list");
+    const emptyMsg = document.getElementById("cart-empty");
+    const summary = document.getElementById("cart-summary");
+    const totalPriceElem = document.getElementById("total-price");
+    const loginRequiredMsg = document.getElementById("login-required-msg");
+    const shippingFormContainer = document.getElementById(
+        "shipping-form-container",
+    );
+    const shippingForm = document.getElementById(
+        "shipping-form",
+    ) as HTMLFormElement;
+    const checkoutBtn = document.getElementById(
+        "checkout-btn",
+    ) as HTMLButtonElement;
+
+    // Campos del formulario
+    const fullNameInput = document.getElementById(
+        "full_name",
+    ) as HTMLInputElement;
+    const phoneInput = document.getElementById("phone") as HTMLInputElement;
+    const addressInput = document.getElementById("address") as HTMLInputElement;
+    const cityInput = document.getElementById("city") as HTMLInputElement;
+    const postalCodeInput = document.getElementById(
+        "postal_code",
+    ) as HTMLInputElement;
+    const saveInfoCheckbox = document.getElementById(
+        "save_info",
+    ) as HTMLInputElement;
+
+    let isAuthenticated = false;
+    let userProfile: any = null;
+
+    // Verificar autenticación al cargar
+    async function checkAuth() {
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+        isAuthenticated = !!user;
+
+        if (isAuthenticated && user) {
+            // Cargar datos del perfil
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", user.id)
+                .single();
+
+            userProfile = profile;
+
+            // Pre-llenar formulario si hay datos
+            if (profile) {
+                if (profile.full_name) fullNameInput.value = profile.full_name;
+                if (profile.phone) phoneInput.value = profile.phone;
+                if (profile.address) addressInput.value = profile.address;
+                if (profile.city) cityInput.value = profile.city;
+                if (profile.postal_code)
+                    postalCodeInput.value = profile.postal_code;
+            }
+        }
+
+        updateAuthUI();
+    }
+
+    // Actualizar UI según estado de autenticación
+    function updateAuthUI() {
+        if (!isAuthenticated && cartItems.get().length > 0) {
+            loginRequiredMsg?.classList.remove("hidden");
+            shippingFormContainer?.classList.add("hidden");
+            if (checkoutBtn) {
+                checkoutBtn.textContent = "Iniciar Sesión para Comprar";
+            }
+        } else {
+            loginRequiredMsg?.classList.add("hidden");
+            if (cartItems.get().length > 0) {
+                shippingFormContainer?.classList.remove("hidden");
+            }
+            if (checkoutBtn) {
+                checkoutBtn.textContent = "Tramitar Pedido";
+            }
+        }
+    }
+
+    // Manejar click en checkout
+    checkoutBtn?.addEventListener("click", async () => {
+        if (!isAuthenticated) {
+            window.location.href = "/login?redirect=/carrito";
+            return;
+        }
+
+        const items = cartItems.get();
+        if (items.length === 0) {
+            alert("Tu carrito está vacío");
+            return;
+        }
+
+        // Validar formulario
+        if (!shippingForm.checkValidity()) {
+            shippingForm.reportValidity();
+            return;
+        }
+
+        // Deshabilitar botón mientras procesa
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = "Procesando...";
+
+        const shippingData = {
+            full_name: fullNameInput.value,
+            phone: phoneInput.value,
+            address: addressInput.value,
+            city: cityInput.value,
+            postal_code: postalCodeInput.value,
+        };
+
+        try {
+            // Guardar datos en perfil si se solicita
+            if (saveInfoCheckbox.checked) {
+                const {
+                    data: { user },
+                } = await supabase.auth.getUser();
+                if (user) {
+                    await supabase
+                        .from("profiles")
+                        .update(shippingData)
+                        .eq("id", user.id);
+                }
+            }
+
+            // Obtener el usuario actual para asociarlo al pedido
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            // Iniciar checkout
+            const response = await fetch("/api/checkout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    items,
+                    shipping: shippingData,
+                    userId: user?.id,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.url) {
+                // Redirigir a Stripe Checkout
+                window.location.href = data.url;
+            } else {
+                throw new Error(data.error || "Error al procesar el pago");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Error al procesar el pago. Por favor, inténtalo de nuevo.");
+            checkoutBtn.disabled = false;
+            checkoutBtn.textContent = "Tramitar Pedido";
+        }
+    });
+
+    function renderCart() {
+        const items = cartItems.get();
+
+        if (items.length === 0) {
+            itemsList?.classList.add("hidden");
+            summary?.classList.add("hidden");
+            emptyMsg?.classList.remove("hidden");
+            return;
+        }
+
+        itemsList?.classList.remove("hidden");
+        summary?.classList.remove("hidden");
+        emptyMsg?.classList.add("hidden");
+
+        if (itemsList) {
+            itemsList.innerHTML = items
+                .map(
+                    (item) => `
+        <div class="flex items-center space-x-6">
+          <div class="w-24 h-32 bg-slate-50 flex-shrink-0">
+            <img src="${item.image}" alt="" class="w-full h-full object-cover" />
+          </div>
+          <div class="flex-1">
+            <h3 class="font-serif text-xl italic">${item.name}</h3>
+            <p class="text-slate-400 text-sm mb-4">${formatPrice(item.price)}</p>
+            <div class="flex items-center space-x-4">
+               <button onclick="window.updateQty('${item.id}', ${item.quantity - 1})" class="text-slate-400 hover:text-brand-navy">-</button>
+               <span class="text-sm font-bold">${item.quantity}</span>
+               <button onclick="window.updateQty('${item.id}', ${item.quantity + 1})" class="text-slate-400 hover:text-brand-navy">+</button>
+            </div>
+          </div>
+          <button onclick="window.removeItem('${item.id}')" class="text-xs font-bold uppercase tracking-widest text-red-400 hover:text-red-600">Eliminar</button>
+        </div>
+      `,
+                )
+                .join("");
+        }
+
+        if (totalPriceElem) {
+            totalPriceElem.textContent = formatPrice(cartTotal.get());
+        }
+
+        updateAuthUI();
+    }
+
+    // Bind to window for HTML onclick
+    (window as any).removeItem = (id: string) => removeCartItem(id);
+    (window as any).updateQty = (id: string, qty: number) =>
+        updateQuantity(id, qty);
+
+    // Inicializar
+    checkAuth();
+    cartItems.subscribe(renderCart);
+    renderCart();
+</script>

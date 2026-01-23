@@ -1,0 +1,108 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import ProductCard from '../components/product/ProductCard.astro';
+import { supabase } from '../lib/supabase';
+import { TrendingUp, Award } from 'lucide-react';
+
+export const prerender = false;
+
+// Obtener productos más vendidos (por ahora basado en featured o random)
+// En producción esto se conectaría con datos reales de ventas
+const { data: products } = await supabase
+  .from('products')
+  .select('*, categories(name)')
+  .eq('is_active', true)
+  .order('created_at', { ascending: false })
+  .limit(12);
+
+const mappedProducts = (products || []).map((p, index) => ({
+  id: p.id,
+  name: p.name,
+  price: p.is_on_sale && p.sale_price ? p.sale_price : p.price,
+  originalPrice: p.is_on_sale ? p.price : null,
+  slug: p.slug,
+  image: p.images?.[0] || 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
+  category: p.categories?.name || 'Bestseller',
+  isOnSale: p.is_on_sale,
+  rank: index + 1
+}));
+---
+
+<PublicLayout title="Más Vendidos - Los Favoritos">
+  <div class="pt-32 pb-16">
+    <!-- Hero de Más Vendidos -->
+    <div class="relative bg-gradient-to-br from-brand-gold/20 via-amber-50 to-orange-50 py-20 mb-16">
+      <div class="max-w-7xl mx-auto px-6 text-center">
+        <div class="inline-flex items-center gap-2 bg-brand-gold/20 px-4 py-2 rounded-full mb-6">
+          <TrendingUp className="w-4 h-4 text-brand-gold" />
+          <span class="text-xs font-bold uppercase tracking-widest text-brand-navy">Top Ventas</span>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-serif italic text-brand-navy mb-4">Más Vendidos</h1>
+        <p class="text-slate-600 max-w-2xl mx-auto text-lg">
+          Las prendas favoritas de nuestros clientes. Calidad y estilo que han conquistado 
+          a quienes buscan lo mejor.
+        </p>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6">
+      <!-- Top 3 destacados -->
+      {mappedProducts.length >= 3 && (
+        <div class="mb-16">
+          <div class="flex items-center gap-3 mb-8">
+            <Award className="w-5 h-5 text-brand-gold" />
+            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Top 3 del Mes</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {mappedProducts.slice(0, 3).map((product, index) => (
+              <div class="relative group">
+                <div class={`absolute -top-4 -left-4 z-10 w-12 h-12 rounded-full flex items-center justify-center font-serif text-xl italic
+                  ${index === 0 ? 'bg-brand-gold text-white' : index === 1 ? 'bg-slate-400 text-white' : 'bg-amber-700 text-white'}`}>
+                  {index + 1}
+                </div>
+                <a href={`/productos/${product.slug}`} class="block bg-white border border-slate-100 hover:border-brand-gold transition-all hover:shadow-lg">
+                  <div class="aspect-[3/4] overflow-hidden">
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div class="p-6">
+                    <p class="text-[10px] uppercase tracking-widest text-brand-gold font-bold mb-2">{product.category}</p>
+                    <h3 class="font-serif text-xl italic text-brand-navy group-hover:text-brand-gold transition-colors">{product.name}</h3>
+                    <p class="mt-3 text-lg font-bold">
+                      {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(product.price / 100)}
+                    </p>
+                  </div>
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- Resto de productos -->
+      <div class="border-t border-slate-100 pt-12">
+        <div class="flex justify-between items-center mb-10">
+          <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">También populares</h2>
+          <a href="/catalogo" class="text-sm font-bold text-brand-gold hover:underline uppercase tracking-widest">
+            Ver todo →
+          </a>
+        </div>
+
+        {mappedProducts.length > 3 ? (
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
+            {mappedProducts.slice(3).map(product => (
+              <ProductCard {...product} />
+            ))}
+          </div>
+        ) : (
+          <div class="text-center py-12">
+            <p class="text-slate-400">Explora nuestro catálogo completo para descubrir más opciones.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</PublicLayout>

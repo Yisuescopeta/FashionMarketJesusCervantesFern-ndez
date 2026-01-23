@@ -1,0 +1,311 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { CheckCircle } from "lucide-react";
+
+import { stripe } from "../lib/stripe";
+import { supabaseAdmin } from "../lib/supabase-admin";
+import { sendOrderConfirmationEmail } from "../lib/email";
+
+export const prerender = false;
+
+// Obtener session_id de la URL
+const sessionId = Astro.url.searchParams.get("session_id");
+let isSuccess = false;
+let message = "";
+let customerEmail = "";
+
+if (sessionId) {
+    try {
+        // 1. Verificar sesión en Stripe
+        const session = await stripe.checkout.sessions.retrieve(sessionId, {
+            expand: ["line_items.data.price.product"],
+        });
+
+        if (session.payment_status === "paid") {
+            customerEmail =
+                session.customer_details?.email || session.customer_email || "";
+            console.log("✅ Pago confirmado en Stripe. Email:", customerEmail);
+
+            const { data: existingOrder } = await supabaseAdmin
+                .from("orders")
+                .select("id")
+                .eq("stripe_session_id", sessionId)
+                .single();
+
+            if (!existingOrder) {
+                console.log("📝 Creando pedido en BD...");
+
+                const metadataUserId = session.metadata?.userId;
+                const userIdToSave =
+                    metadataUserId && metadataUserId !== ""
+                        ? metadataUserId
+                        : null;
+
+                // 3. Crear pedido en BD
+                const orderData = {
+                    user_id: userIdToSave,
+                    stripe_session_id: sessionId,
+                    customer_email: customerEmail,
+                    total_amount: session.amount_total,
+                    status: "paid",
+                    shipping_address:
+                        session.metadata?.shipping_address || "No especificada",
+                    shipping_city:
+                        session.metadata?.shipping_city || "No especificada",
+                    shipping_postal_code:
+                        session.metadata?.shipping_postal_code || "00000",
+                    shipping_phone: session.metadata?.shipping_phone || null,
+                    notes: session.metadata?.shipping_full_name
+                        ? `Destinatario: ${session.metadata.shipping_full_name}`
+                        : null,
+                };
+
+                console.log(
+                    "📦 Datos del pedido a insertar:",
+                    JSON.stringify(orderData, null, 2),
+                );
+
+                const { data: order, error: orderError } = await supabaseAdmin
+                    .from("orders")
+                    .insert(orderData)
+                    .select()
+                    .single();
+
+                if (orderError) {
+                    console.error("❌ Error creando pedido:");
+                    console.error("  - Message:", orderError.message);
+                    console.error("  - Details:", orderError.details);
+                    console.error("  - Hint:", orderError.hint);
+                    console.error("  - Code:", orderError.code);
+                    console.error(
+                        "  - Full Error:",
+                        JSON.stringify(orderError, null, 2),
+                    );
+                    message = `Error guardando el pedido: ${orderError.message || "Error desconocido"}. Contacte soporte.`;
+                } else if (order) {
+                    console.log("✅ Pedido guardado ID:", order.id);
+                    isSuccess = true;
+
+                    const lineItems = session.line_items?.data || [];
+                    const orderItems = [];
+                    const emailItems = [];
+
+                    for (const item of lineItems) {
+                        const product = item.price?.product as any;
+                        const productName =
+                            product?.metadata?.original_name ||
+                            item.description ||
+                            product?.name ||
+                            "Producto"; // Use cleaned name if available
+                        const productId = product?.metadata?.product_id;
+                        const size = product?.metadata?.size;
+                        const quantity = item.quantity || 1;
+
+                        // Guardar en BD (usamos ambos nombres de columna para evitar errores de esquema)
+                        orderItems.push({
+                            order_id: order.id,
+                            product_name: productName,
+                            product_id: productId,
+                            quantity: quantity,
+                            unit_price: Math.round(
+                                item.amount_total / quantity,
+                            ),
+                            price_at_purchase: Math.round(
+                                item.amount_total / quantity,
+                            ),
+                            size: size,
+                        });
+
+                        emailItems.push({
+                            name:
+                                productName + (size ? ` (Talla: ${size})` : ""),
+                            quantity: quantity,
+                            price: (item.amount_total || 0) / quantity,
+                            image:
+                                product?.images && product.images.length > 0
+                                    ? product.images[0]
+                                    : "",
+                        });
+
+                        // ⬇️ DISMINUIR STOCK SI HAY PRODUCT ID Y TALLA
+                        if (productId && size) {
+                            console.log(
+                                `📉 Actualizando stock para: ${productId}, Talla: ${size}`,
+                            );
+
+                            // 1. Obtener producto actual
+                            const { data: prodData } = await supabaseAdmin
+                                .from("products")
+                                .select("sizes")
+                                .eq("id", productId)
+                                .single();
+
+                            if (prodData && prodData.sizes) {
+                                const currentSizes = prodData.sizes as Record<
+                                    string,
+                                    number
+                                >;
+                                const currentStock = Number(
+                                    currentSizes[size] || 0,
+                                );
+
+                                if (currentStock >= quantity) {
+                                    const newStock = currentStock - quantity;
+                                    const newSizes = {
+                                        ...currentSizes,
+                                        [size]: newStock,
+                                    };
+
+                                    // 2. Actualizar BD
+                                    const { error: stockError } =
+                                        await supabaseAdmin
+                                            .from("products")
+                                            .update({ sizes: newSizes })
+                                            .eq("id", productId);
+
+                                    if (stockError)
+                                        console.error(
+                                            `❌ Error actualizando stock ${productId}:`,
+                                            stockError,
+                                        );
+                                    else
+                                        console.log(
+                                            `✅ Stock actualizado: ${size} de ${currentStock} a ${newStock}`,
+                                        );
+                                } else {
+                                    console.warn(
+                                        `⚠️ Stock insuficiente para ${productId} Talla ${size}. Stock: ${currentStock}, Solicitado: ${quantity}`,
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    if (orderItems.length > 0) {
+                        const { error: itemsError } = await supabaseAdmin
+                            .from("order_items")
+                            .insert(orderItems);
+                        if (itemsError)
+                            console.error(
+                                "❌ Error guardando items:",
+                                itemsError,
+                            );
+                        else console.log("✅ Items guardados.");
+                    }
+
+                    // 5. Enviar Email
+                    console.log("📧 Enviando correo a:", customerEmail);
+                    if (customerEmail) {
+                        const shippingAddressStr = order.shipping_address
+                            ? `${order.shipping_address}, ${order.shipping_postal_code} ${order.shipping_city}`
+                            : undefined;
+
+                        const emailResult = await sendOrderConfirmationEmail({
+                            orderId: order.id,
+                            customerName:
+                                session.customer_details?.name ||
+                                session.metadata?.shipping_full_name ||
+                                "Cliente",
+                            customerEmail: customerEmail,
+                            totalAmount: order.total_amount || 0,
+                            items: emailItems,
+                            shippingAddress: shippingAddressStr,
+                        });
+                        console.log("Resultado email:", emailResult);
+                    } else {
+                        console.warn(
+                            "⚠️ No hay email de cliente, saltando envío.",
+                        );
+                    }
+                }
+            } else {
+                console.log("ℹ️ El pedido ya existe, mostrando éxito.");
+                isSuccess = true;
+            }
+        } else {
+            message = "El pago no se ha completado.";
+            console.warn(
+                "⚠️ Pago no completado. Estado:",
+                session.payment_status,
+            );
+        }
+    } catch (e) {
+        console.error("Error validando sesión:", e);
+        message = "Error validando su compra.";
+    }
+} else {
+    message = "No se encontró información del pedido.";
+}
+---
+
+<PublicLayout title="Pago Exitoso">
+    <div class="max-w-2xl mx-auto px-6 py-24 text-center">
+        <div class="bg-white border border-slate-100 shadow-sm p-12">
+            {
+                isSuccess ? (
+                    <>
+                        <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                            <CheckCircle className="w-10 h-10 text-green-500" />
+                        </div>
+
+                        <h2 class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4">
+                            Pedido Confirmado
+                        </h2>
+                        <h1 class="text-4xl font-serif italic mb-6">
+                            ¡Gracias por tu compra!
+                        </h1>
+
+                        <p class="text-slate-500 mb-8 leading-relaxed">
+                            Tu pedido ha sido procesado correctamente. Hemos
+                            enviado un correo electrónico a{" "}
+                            <strong>
+                                {Astro.url.searchParams.get("email") ||
+                                    "tu dirección"}
+                            </strong>{" "}
+                            con los detalles.
+                        </p>
+                    </>
+                ) : (
+                    <>
+                        <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                            <span class="text-4xl">⚠️</span>
+                        </div>
+                        <h1 class="text-2xl font-serif mb-6">
+                            Hubo un problema
+                        </h1>
+                        <p class="text-slate-500 mb-8">{message}</p>
+                    </>
+                )
+            }
+
+            <div class="space-y-4">
+                <a
+                    href="/productos"
+                    class="inline-block bg-brand-navy text-white px-10 py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all"
+                >
+                    Seguir Comprando
+                </a>
+                <p>
+                    <a
+                        href="/"
+                        class="text-brand-gold font-bold text-xs uppercase tracking-widest hover:underline"
+                    >
+                        Volver al Inicio
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</PublicLayout>
+
+<script>
+    import { cartItems } from "../stores/cart";
+
+    // Limpiar el carrito solo si fue exitoso
+    const isSuccess = document
+        .querySelector("h1")
+        ?.textContent?.includes("Gracias");
+    if (isSuccess) {
+        cartItems.set([]);
+    }
+</script>

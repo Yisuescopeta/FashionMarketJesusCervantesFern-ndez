@@ -1,0 +1,263 @@
+---
+/**
+ * Página de Seguimiento de Pedidos - AfterShip Integration
+ * 
+ * Esta página permite a los clientes rastrear el estado de sus pedidos
+ * utilizando el widget embebido de AfterShip.
+ * 
+ * CONFIGURACIÓN REQUERIDA:
+ * 1. Reemplazar 'TU-SLUG-AFTERSHIP' con el slug real de tu cuenta AfterShip
+ * 2. El slug se obtiene de tu panel de AfterShip > Tracking Pages > Custom Domain
+ * 
+ * TESTING:
+ * - Usa números de tracking de prueba proporcionados por AfterShip
+ * - O crea shipments de prueba en modo sandbox
+ */
+
+import PublicLayout from '../layouts/PublicLayout.astro';
+
+// CONFIGURACIÓN: Reemplaza con tu slug de AfterShip
+const AFTERSHIP_SLUG = 'jesuscervantesfernan';
+
+// URL base de la página de tracking de AfterShip
+const AFTERSHIP_TRACKING_URL = `https://jesuscervantesfernan.aftership.com/`;
+---
+
+<PublicLayout title="Seguimiento de Pedidos | FashionMarket" description="Rastrea el estado de tu pedido en tiempo real">
+  
+  <section class="seguimiento-hero">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-3xl md:text-4xl font-serif text-brand-navy mb-4">
+        Seguimiento de Pedidos
+      </h1>
+      <p class="text-brand-charcoal text-lg">
+        Introduce tu número de seguimiento para conocer el estado de tu envío
+      </p>
+    </div>
+  </section>
+
+  <section class="seguimiento-container">
+    <div class="max-w-4xl mx-auto">
+      
+      <!-- Formulario de búsqueda manual (fallback/alternativa) -->
+      <div class="seguimiento-formulario">
+        <form id="formSeguimiento" class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <label for="numeroTracking" class="sr-only">Número de seguimiento</label>
+            <input 
+              type="text" 
+              id="numeroTracking" 
+              name="numeroTracking"
+              placeholder="Introduce tu número de seguimiento"
+              class="seguimiento-input"
+              required
+            />
+          </div>
+          <button type="submit" class="btn-primary seguimiento-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Rastrear Pedido
+          </button>
+        </form>
+      </div>
+
+      <!-- Widget de AfterShip embebido -->
+      <div class="seguimiento-widget">
+        <div id="aftership-widget-container">
+          <!-- 
+            OPCIÓN 1: Iframe directo (más simple)
+            Descomenta esta opción si prefieres el iframe directo
+          -->
+          <iframe 
+            id="aftership-iframe"
+            src={AFTERSHIP_TRACKING_URL}
+            class="aftership-iframe"
+            title="Seguimiento de pedidos AfterShip"
+            loading="lazy"
+          ></iframe>
+        </div>
+
+        <!-- Mensaje de carga -->
+        <div id="cargando-widget" class="seguimiento-cargando">
+          <div class="animate-pulse flex flex-col items-center">
+            <div class="h-8 w-8 border-4 border-brand-navy border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-brand-charcoal">Cargando sistema de seguimiento...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información adicional -->
+      <div class="seguimiento-info">
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="info-card">
+            <div class="info-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+            </div>
+            <h3 class="font-serif text-lg text-brand-navy mb-2">Pedido Procesado</h3>
+            <p class="text-sm text-brand-charcoal">Tu pedido ha sido confirmado y está siendo preparado para envío.</p>
+          </div>
+          
+          <div class="info-card">
+            <div class="info-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+              </svg>
+            </div>
+            <h3 class="font-serif text-lg text-brand-navy mb-2">En Tránsito</h3>
+            <p class="text-sm text-brand-charcoal">Tu paquete está en camino. Puedes seguir su ubicación en tiempo real.</p>
+          </div>
+          
+          <div class="info-card">
+            <div class="info-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 class="font-serif text-lg text-brand-navy mb-2">Entregado</h3>
+            <p class="text-sm text-brand-charcoal">Tu pedido ha sido entregado con éxito. ¡Gracias por tu compra!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ayuda y contacto -->
+      <div class="seguimiento-ayuda">
+        <h2 class="font-serif text-xl text-brand-navy mb-4">¿Necesitas ayuda?</h2>
+        <p class="text-brand-charcoal mb-4">
+          Si tienes problemas con el seguimiento de tu pedido o no has recibido tu número de tracking, 
+          no dudes en contactarnos.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="mailto:info@fashionmarket.com" class="btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Contactar por Email
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</PublicLayout>
+
+<style>
+  /* Estilos específicos para la página de seguimiento */
+  
+  .seguimiento-hero {
+    @apply py-12 px-6 bg-gradient-to-b from-brand-offwhite to-white;
+  }
+
+  .seguimiento-container {
+    @apply px-6 pb-16;
+  }
+
+  .seguimiento-formulario {
+    @apply bg-white p-6 rounded-lg shadow-sm border border-slate-100 mb-8;
+  }
+
+  .seguimiento-input {
+    @apply w-full px-4 py-3 border border-slate-200 rounded-lg 
+           focus:outline-none focus:ring-2 focus:ring-brand-navy focus:border-transparent
+           placeholder-slate-400 text-brand-navy;
+  }
+
+  .seguimiento-btn {
+    @apply flex items-center justify-center whitespace-nowrap rounded-lg;
+  }
+
+  .seguimiento-widget {
+    @apply bg-white rounded-lg shadow-sm border border-slate-100 mb-8 overflow-hidden relative;
+    min-height: 500px;
+  }
+
+  .aftership-iframe {
+    @apply w-full border-0;
+    height: 600px;
+    min-height: 500px;
+  }
+
+  .seguimiento-cargando {
+    @apply absolute inset-0 flex items-center justify-center bg-white;
+    display: none;
+  }
+
+  .seguimiento-info {
+    @apply mb-8;
+  }
+
+  .info-card {
+    @apply bg-white p-6 rounded-lg shadow-sm border border-slate-100 text-center;
+  }
+
+  .info-icon {
+    @apply w-12 h-12 mx-auto mb-4 bg-brand-offwhite rounded-full 
+           flex items-center justify-center text-brand-navy;
+  }
+
+  .seguimiento-ayuda {
+    @apply bg-brand-offwhite p-8 rounded-lg text-center;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 
+           border border-brand-navy text-brand-navy rounded-lg
+           hover:bg-brand-navy hover:text-white transition-colors;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .aftership-iframe {
+      height: 500px;
+    }
+    
+    .seguimiento-formulario {
+      @apply p-4;
+    }
+  }
+</style>
+
+<script define:vars={{ AFTERSHIP_TRACKING_URL, AFTERSHIP_SLUG }}>
+  // Script para manejar la interacción con AfterShip
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    const formulario = document.getElementById('formSeguimiento');
+    const iframe = document.getElementById('aftership-iframe');
+    const cargando = document.getElementById('cargando-widget');
+    
+    // Ocultar el indicador de carga cuando el iframe termine de cargar
+    if (iframe) {
+      iframe.addEventListener('load', () => {
+        if (cargando) {
+          cargando.style.display = 'none';
+        }
+      });
+    }
+    
+    // Manejar el formulario de búsqueda manual
+    if (formulario) {
+      formulario.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const inputTracking = document.getElementById('numeroTracking');
+        const numeroTracking = inputTracking?.value?.trim();
+        
+        if (numeroTracking) {
+          // Construir la URL de tracking con el número específico
+          const urlTracking = `${AFTERSHIP_TRACKING_URL}/${numeroTracking}`;
+          
+          // Opción 1: Actualizar el iframe
+          if (iframe) {
+            iframe.src = urlTracking;
+          }
+          
+          // Opción 2: Abrir en nueva pestaña (alternativa)
+          // window.open(urlTracking, '_blank');
+        }
+      });
+    }
+  });
+</script>

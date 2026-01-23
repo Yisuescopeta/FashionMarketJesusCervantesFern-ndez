@@ -1,0 +1,239 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import { supabase } from '../lib/supabase';
+import { getAuthenticatedUser } from '../lib/supabase-server';
+import { formatPrice } from '../lib/utils';
+import { Heart, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
+
+export const prerender = false;
+
+// Verificar autenticación usando cookies del servidor
+const user = await getAuthenticatedUser(Astro.cookies);
+
+if (!user) {
+  return Astro.redirect('/login?redirect=/mis-favoritos');
+}
+
+// Paso 1: Obtener IDs de favoritos del usuario
+const { data: favorites, error: favError } = await supabase
+  .from('favorites')
+  .select('id, created_at, product_id')
+  .eq('user_id', user.id)
+  .order('created_at', { ascending: false });
+
+// Debug: Ver qué se obtiene
+console.log('User ID:', user.id);
+console.log('Favorites query result:', { favorites, favError });
+
+// Variable para mostrar error en UI si la tabla no existe
+let tableError = favError?.message?.includes('does not exist') || favError?.code === '42P01';
+
+// Paso 2: Obtener los productos correspondientes
+let favoriteProducts: any[] = [];
+
+if (favorites && favorites.length > 0) {
+  const productIds = favorites.map(f => f.product_id);
+  
+  const { data: products, error: prodError } = await supabase
+    .from('products')
+    .select('id, name, slug, price, sale_price, is_on_sale, images, categories(name)')
+    .in('id', productIds);
+  
+  if (products) {
+    // Mapear favoritos con sus productos
+    favoriteProducts = favorites.map(fav => {
+      const p = products.find(prod => prod.id === fav.product_id);
+      if (!p) return null;
+      
+      const currentPrice = p.is_on_sale && p.sale_price ? p.sale_price : p.price;
+      const originalPrice = p.is_on_sale && p.sale_price ? p.price : null;
+      const discount = originalPrice ? Math.round((1 - currentPrice / originalPrice) * 100) : 0;
+      
+      return {
+        favoriteId: fav.id,
+        addedAt: fav.created_at,
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: currentPrice,
+        originalPrice,
+        isOnSale: p.is_on_sale,
+        discount,
+        image: p.images?.[0] || 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
+        category: (p.categories as any)?.name || 'Moda'
+      };
+    }).filter(Boolean);
+  }
+}
+---
+
+<PublicLayout title="Mis Favoritos">
+  <div class="pt-32 pb-16">
+    <div class="max-w-6xl mx-auto px-6">
+      <!-- Cabecera -->
+      <div class="text-center mb-16">
+        <div class="inline-flex items-center gap-2 mb-4">
+          <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+          <span class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold">Tu Colección Personal</span>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-serif italic">Mis Favoritos</h1>
+        <p class="text-slate-500 mt-4">
+          {favoriteProducts.length === 0 
+            ? 'Aún no has guardado ningún producto' 
+            : `${favoriteProducts.length} ${favoriteProducts.length === 1 ? 'producto guardado' : 'productos guardados'}`
+          }
+        </p>
+      </div>
+
+      {favoriteProducts.length > 0 ? (
+        <div class="space-y-6">
+          <!-- Grid de productos -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {favoriteProducts.map((product: any) => (
+              <div class="group bg-white border border-slate-100 hover:border-slate-200 transition-all hover:shadow-lg">
+                <div class="relative aspect-[3/4] overflow-hidden">
+                  <a href={`/productos/${product.slug}`}>
+                    <img 
+                      src={product.image} 
+                      alt={product.name}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </a>
+                  
+                  {/* Badge de oferta */}
+                  {product.isOnSale && product.discount > 0 && (
+                    <span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1">
+                      -{product.discount}% OFERTA
+                    </span>
+                  )}
+                  
+                  {/* Botón eliminar */}
+                  <button 
+                    class="remove-favorite-btn absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-500"
+                    data-favorite-id={product.favoriteId}
+                    title="Quitar de favoritos"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div class="p-5">
+                  <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">
+                    {product.category}
+                  </p>
+                  <a href={`/productos/${product.slug}`} class="block group-hover:text-brand-gold transition-colors">
+                    <h3 class="font-serif text-lg italic leading-tight mb-3">{product.name}</h3>
+                  </a>
+                  
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span class={`font-bold ${product.isOnSale ? 'text-red-600' : 'text-brand-navy'}`}>
+                        {formatPrice(product.price)}
+                      </span>
+                      {product.originalPrice && (
+                        <span class="text-sm text-slate-400 line-through">
+                          {formatPrice(product.originalPrice)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <a 
+                      href={`/productos/${product.slug}`}
+                      class="text-[10px] font-bold uppercase tracking-widest text-brand-gold hover:underline flex items-center gap-1"
+                    >
+                      Ver <ArrowRight className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : tableError ? (
+        <!-- Error: tabla no existe -->
+        <div class="text-center py-20 bg-red-50 border border-red-200 rounded-lg">
+          <div class="text-red-500 text-6xl mb-6">⚠️</div>
+          <h2 class="text-2xl font-serif italic text-red-700 mb-4">Configuración pendiente</h2>
+          <p class="text-red-600 mb-4 max-w-lg mx-auto">
+            La tabla de favoritos no existe en la base de datos. Debes ejecutar el script SQL en Supabase.
+          </p>
+          <div class="bg-white border border-red-200 rounded p-4 max-w-md mx-auto text-left">
+            <p class="text-sm text-slate-600 mb-2"><strong>Pasos:</strong></p>
+            <ol class="text-sm text-slate-500 list-decimal list-inside space-y-1">
+              <li>Abre Supabase → SQL Editor</li>
+              <li>Copia el contenido de <code class="bg-slate-100 px-1">database/favoritos_sistema.sql</code></li>
+              <li>Ejecuta el script</li>
+              <li>Recarga esta página</li>
+            </ol>
+          </div>
+        </div>
+      ) : (
+        <!-- Estado vacío -->
+        <div class="text-center py-20 bg-slate-50 border border-slate-100">
+          <Heart className="w-16 h-16 mx-auto text-slate-200 mb-6" />
+          <h2 class="text-2xl font-serif italic text-brand-navy mb-4">Tu lista está vacía</h2>
+          <p class="text-slate-500 mb-8 max-w-md mx-auto">
+            Guarda tus prendas favoritas para encontrarlas fácilmente y recibir notificaciones cuando entren en oferta.
+          </p>
+          <a 
+            href="/catalogo"
+            class="inline-flex items-center gap-2 bg-brand-navy text-white px-8 py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            Explorar Catálogo
+          </a>
+        </div>
+      )}
+
+      {/* Sección de preferencias */}
+      {favoriteProducts.length > 0 && (
+        <div class="mt-16 p-8 bg-slate-50 border border-slate-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-brand-navy mb-1">Notificaciones de ofertas</h3>
+              <p class="text-sm text-slate-500">Recibe un email cuando tus favoritos entren en oferta</p>
+            </div>
+            <a 
+              href="/mi-cuenta/preferencias"
+              class="text-brand-gold font-bold text-sm uppercase tracking-widest hover:underline"
+            >
+              Configurar →
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</PublicLayout>
+
+<script>
+  import { supabase } from '../lib/supabase';
+
+  // Manejar eliminación de favoritos
+  document.querySelectorAll('.remove-favorite-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const button = e.currentTarget as HTMLButtonElement;
+      const favoriteId = button.dataset.favoriteId;
+      
+      if (!favoriteId) return;
+      
+      // Confirmar eliminación
+      if (!confirm('¿Quitar este producto de favoritos?')) return;
+      
+      try {
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('id', favoriteId);
+        
+        if (!error) {
+          // Recargar la página para actualizar la lista
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error al eliminar favorito:', error);
+      }
+    });
+  });
+</script>

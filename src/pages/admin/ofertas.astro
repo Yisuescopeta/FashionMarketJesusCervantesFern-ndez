@@ -1,0 +1,304 @@
+---
+// Página de administración para gestionar las ofertas flash
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { supabase } from '../../lib/supabase';
+
+export const prerender = false;
+
+// Obtener configuración actual
+const { data: settings } = await supabase
+    .from('site_settings')
+    .select('*')
+    .eq('id', 'main')
+    .single();
+
+// Obtener productos en oferta
+const { data: saleProducts } = await supabase
+    .from('products')
+    .select('*, categories(name)')
+    .eq('is_on_sale', true)
+    .order('updated_at', { ascending: false });
+
+// Obtener todos los productos para poder añadirlos a ofertas
+const { data: allProducts } = await supabase
+    .from('products')
+    .select('id, name, price, stock, is_on_sale')
+    .eq('is_active', true)
+    .order('name');
+---
+
+<AdminLayout title="Gestión de Ofertas Flash">
+    <!-- Interruptor Principal de Ofertas -->
+    <div class="bg-white p-8 border border-slate-100 shadow-sm mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-serif font-bold mb-2">Sección de Ofertas Flash</h3>
+                <p class="text-slate-500 text-sm">
+                    Activa o desactiva la visibilidad de la sección de ofertas en la página principal.
+                </p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="status-text" class={`text-sm font-bold ${settings?.show_flash_sales ? 'text-green-600' : 'text-slate-400'}`}>
+                    {settings?.show_flash_sales ? 'ACTIVO' : 'INACTIVO'}
+                </span>
+                <button
+                    id="toggle-sales"
+                    data-active={settings?.show_flash_sales ? 'true' : 'false'}
+                    class={`relative w-14 h-8 rounded-full transition-colors ${settings?.show_flash_sales ? 'bg-green-500' : 'bg-slate-300'}`}
+                >
+                    <span class={`absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-all ${settings?.show_flash_sales ? 'left-7' : 'left-1'}`}></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de Títulos -->
+    <div class="bg-white p-8 border border-slate-100 shadow-sm mb-8">
+        <h3 class="text-lg font-bold mb-6">Personalizar Sección</h3>
+        <form id="settings-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 block mb-2">
+                    Título de la Sección
+                </label>
+                <input
+                    type="text"
+                    name="title"
+                    value={settings?.flash_sales_title || '¡Ofertas Flash!'}
+                    class="w-full border border-slate-200 p-3 focus:ring-2 focus:ring-brand-gold outline-none"
+                />
+            </div>
+            <div>
+                <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 block mb-2">
+                    Subtítulo
+                </label>
+                <input
+                    type="text"
+                    name="subtitle"
+                    value={settings?.flash_sales_subtitle || 'Descuentos por tiempo limitado'}
+                    class="w-full border border-slate-200 p-3 focus:ring-2 focus:ring-brand-gold outline-none"
+                />
+            </div>
+            <div class="md:col-span-2">
+                <button
+                    type="submit"
+                    class="bg-brand-navy text-white px-8 py-3 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all"
+                >
+                    Guardar Configuración
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Productos en Oferta Actualmente -->
+    <div class="bg-white p-8 border border-slate-100 shadow-sm mb-8">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold">Productos en Oferta ({saleProducts?.length || 0})</h3>
+        </div>
+        
+        {saleProducts && saleProducts.length > 0 ? (
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-slate-100">
+                            <th class="text-left py-3 px-4 text-[10px] uppercase tracking-widest text-slate-400">Producto</th>
+                            <th class="text-left py-3 px-4 text-[10px] uppercase tracking-widest text-slate-400">Precio Original</th>
+                            <th class="text-left py-3 px-4 text-[10px] uppercase tracking-widest text-slate-400">Precio Oferta</th>
+                            <th class="text-left py-3 px-4 text-[10px] uppercase tracking-widest text-slate-400">Descuento</th>
+                            <th class="text-right py-3 px-4 text-[10px] uppercase tracking-widest text-slate-400">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {saleProducts.map(product => {
+                            const discount = product.sale_price 
+                                ? Math.round((1 - product.sale_price / product.price) * 100) 
+                                : 0;
+                            return (
+                                <tr class="border-b border-slate-50 hover:bg-slate-50">
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 bg-slate-100 rounded overflow-hidden">
+                                                {product.images?.[0] && (
+                                                    <img src={product.images[0]} alt="" class="w-full h-full object-cover" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-sm">{product.name}</p>
+                                                <p class="text-xs text-slate-400">{product.categories?.name}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-slate-500">
+                                        {(product.price / 100).toFixed(2)}€
+                                    </td>
+                                    <td class="py-4 px-4 text-red-600 font-bold">
+                                        {product.sale_price ? `${(product.sale_price / 100).toFixed(2)}€` : '-'}
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">
+                                            -{discount}%
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-4 text-right">
+                                        <button
+                                            class="remove-sale-btn text-red-500 hover:text-red-700 text-xs font-bold uppercase"
+                                            data-id={product.id}
+                                        >
+                                            Quitar de Ofertas
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        ) : (
+            <p class="text-slate-400 text-center py-8 italic">No hay productos en oferta actualmente.</p>
+        )}
+    </div>
+
+    <!-- Añadir Producto a Ofertas -->
+    <div class="bg-white p-8 border border-slate-100 shadow-sm">
+        <h3 class="text-lg font-bold mb-6">Añadir Producto a Ofertas</h3>
+        <form id="add-sale-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="md:col-span-2">
+                <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 block mb-2">
+                    Seleccionar Producto
+                </label>
+                <select
+                    name="product_id"
+                    class="w-full border border-slate-200 p-3 focus:ring-2 focus:ring-brand-gold outline-none"
+                    required
+                >
+                    <option value="">-- Selecciona un producto --</option>
+                    {allProducts?.filter(p => !p.is_on_sale).map(product => (
+                        <option value={product.id} data-price={product.price}>
+                            {product.name} - {(product.price / 100).toFixed(2)}€ (Stock: {product.stock})
+                        </option>
+                    ))}
+                </select>
+            </div>
+            <div>
+                <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 block mb-2">
+                    Precio de Oferta (€)
+                </label>
+                <input
+                    type="number"
+                    name="sale_price"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="Ej: 29.99"
+                    class="w-full border border-slate-200 p-3 focus:ring-2 focus:ring-brand-gold outline-none"
+                    required
+                />
+            </div>
+            <div>
+                <button
+                    type="submit"
+                    class="w-full bg-red-600 text-white px-6 py-3 font-bold uppercase tracking-widest text-sm hover:bg-red-700 transition-all"
+                >
+                    Añadir a Ofertas
+                </button>
+            </div>
+        </form>
+    </div>
+</AdminLayout>
+
+<script>
+    import { supabase } from '../../lib/supabase';
+
+    // Toggle de ofertas
+    const toggleBtn = document.getElementById('toggle-sales');
+    const statusText = document.getElementById('status-text');
+    
+    toggleBtn?.addEventListener('click', async () => {
+        const isActive = toggleBtn.dataset.active === 'true';
+        const newState = !isActive;
+        
+        const { error } = await supabase
+            .from('site_settings')
+            .update({ show_flash_sales: newState, updated_at: new Date().toISOString() })
+            .eq('id', 'main');
+        
+        if (!error) {
+            toggleBtn.dataset.active = newState.toString();
+            toggleBtn.className = `relative w-14 h-8 rounded-full transition-colors ${newState ? 'bg-green-500' : 'bg-slate-300'}`;
+            const span = toggleBtn.querySelector('span');
+            if (span) {
+                span.className = `absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-all ${newState ? 'left-7' : 'left-1'}`;
+            }
+            if (statusText) {
+                statusText.textContent = newState ? 'ACTIVO' : 'INACTIVO';
+                statusText.className = `text-sm font-bold ${newState ? 'text-green-600' : 'text-slate-400'}`;
+            }
+        }
+    });
+
+    // Guardar configuración
+    const settingsForm = document.getElementById('settings-form') as HTMLFormElement;
+    settingsForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(settingsForm);
+        
+        const { error } = await supabase
+            .from('site_settings')
+            .update({
+                flash_sales_title: formData.get('title'),
+                flash_sales_subtitle: formData.get('subtitle'),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', 'main');
+        
+        if (!error) {
+            alert('Configuración guardada correctamente');
+        } else {
+            alert('Error al guardar: ' + error.message);
+        }
+    });
+
+    // Añadir producto a ofertas
+    const addSaleForm = document.getElementById('add-sale-form') as HTMLFormElement;
+    addSaleForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(addSaleForm);
+        const productId = formData.get('product_id');
+        const salePrice = parseFloat(formData.get('sale_price') as string) * 100; // Convertir a céntimos
+        
+        const { error } = await supabase
+            .from('products')
+            .update({
+                is_on_sale: true,
+                sale_price: Math.round(salePrice),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', productId);
+        
+        if (!error) {
+            window.location.reload();
+        } else {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    // Quitar producto de ofertas
+    document.querySelectorAll('.remove-sale-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const productId = (btn as HTMLElement).dataset.id;
+            
+            const { error } = await supabase
+                .from('products')
+                .update({
+                    is_on_sale: false,
+                    sale_price: null,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', productId);
+            
+            if (!error) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + error.message);
+            }
+        });
+    });
+</script>

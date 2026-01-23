@@ -1,0 +1,83 @@
+---
+import { formatPrice } from "../../lib/utils";
+import FavoriteButton from "../islands/FavoriteButton";
+import CloudinaryImage from "../common/CloudinaryImage.astro";
+
+interface Props {
+  id: string;
+  name: string;
+  price: number;
+  slug: string;
+  image: string;
+  category: string;
+  originalPrice?: number | null;
+  isOnSale?: boolean;
+}
+
+const { id, name, price, slug, image, category, originalPrice, isOnSale } =
+  Astro.props;
+const discount =
+  isOnSale && originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
+---
+
+<div class="group">
+  <div class="relative overflow-hidden bg-slate-100 aspect-[3/4] mb-4">
+    <a href={`/productos/${slug}`} class="block w-full h-full">
+      <CloudinaryImage
+        src={image}
+        alt={name}
+        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+    </a>
+
+    <!-- Botón de favoritos -->
+    <div
+      class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+    >
+      <FavoriteButton productId={id} client:load />
+    </div>
+
+    <!-- Badge de oferta -->
+    {
+      isOnSale && discount > 0 && (
+        <span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1">
+          -{discount}%
+        </span>
+      )
+    }
+
+    <div
+      class="absolute bottom-4 left-4 right-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
+    >
+      <a
+        href={`/productos/${slug}`}
+        class="block w-full bg-white/90 backdrop-blur-sm text-brand-navy text-center py-3 text-[10px] uppercase font-bold tracking-widest hover:bg-white transition"
+      >
+        Ver Detalle
+      </a>
+    </div>
+  </div>
+  <div class="space-y-1 px-1">
+    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">
+      {category}
+    </p>
+    <a
+      href={`/productos/${slug}`}
+      class="block group-hover:text-brand-gold transition-colors"
+    >
+      <h3 class="font-serif text-lg leading-tight">{name}</h3>
+    </a>
+    <div class="flex items-center gap-2">
+      <p class={`font-medium ${isOnSale ? "text-red-600" : "text-slate-700"}`}>
+        {formatPrice(price)}
+      </p>
+      {
+        isOnSale && originalPrice && (
+          <p class="text-sm text-slate-400 line-through">
+            {formatPrice(originalPrice)}
+          </p>
+        )
+      }
+    </div>
+  </div>
+</div>

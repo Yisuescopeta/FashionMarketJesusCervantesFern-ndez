@@ -1,0 +1,102 @@
+---
+import { ShoppingBag, Menu, X } from "lucide-react";
+import CartIcon from "./islands/CartIcon";
+import UserMenu from "./islands/UserMenu";
+---
+
+<header
+  class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-100 z-40 transition-all"
+>
+  <!-- Barra superior promocional -->
+  <div class="bg-brand-navy text-white text-center py-2 text-xs tracking-widest uppercase">
+    <span class="text-brand-gold">✦</span> Envío gratis en pedidos +80€ <span class="text-brand-gold">✦</span> Devoluciones gratuitas
+  </div>
+  
+  <div class="max-w-7xl mx-auto h-20 px-6 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="text-2xl font-serif tracking-tight font-bold">
+      FASHION<span class="text-brand-gold">MARKET</span>
+    </a>
+
+    <!-- Navegación principal - Desktop -->
+    <nav class="hidden lg:flex items-center space-x-8 text-sm font-medium tracking-wide uppercase">
+      <a href="/ofertas" class="text-red-600 hover:text-red-700 transition-colors font-bold">
+        Ofertas
+      </a>
+      <a href="/novedades" class="hover:text-brand-gold transition-colors">
+        Novedades
+      </a>
+      <a href="/mas-vendidos" class="hover:text-brand-gold transition-colors">
+        Más Vendidos
+      </a>
+      <a href="/catalogo" class="hover:text-brand-gold transition-colors">
+        Catálogo
+      </a>
+    </nav>
+
+    <!-- Acciones de usuario -->
+    <div class="flex items-center space-x-4">
+      <UserMenu client:load />
+      <div class="h-6 w-px bg-slate-200 mx-2 hidden sm:block"></div>
+      <button
+        id="cart-button"
+        class="relative p-2 hover:bg-slate-50 rounded-full transition-colors"
+        aria-label="Carrito de compra"
+      >
+        <ShoppingBag className="w-6 h-6" />
+        <CartIcon client:load />
+      </button>
+      
+      <!-- Menú móvil -->
+      <button
+        id="mobile-menu-btn"
+        class="lg:hidden p-2 hover:bg-slate-50 rounded-full transition-colors"
+        aria-label="Menú"
+      >
+        <Menu className="w-6 h-6" id="menu-icon" />
+      </button>
+    </div>
+  </div>
+  
+  <!-- Menú móvil desplegable -->
+  <div id="mobile-menu" class="hidden lg:hidden bg-white border-t border-slate-100 absolute w-full left-0 shadow-lg">
+    <nav class="flex flex-col py-4">
+      <a href="/ofertas" class="px-6 py-3 text-red-600 font-bold uppercase tracking-wide text-sm hover:bg-slate-50">
+        Ofertas
+      </a>
+      <a href="/novedades" class="px-6 py-3 uppercase tracking-wide text-sm hover:bg-slate-50 hover:text-brand-gold">
+        Novedades
+      </a>
+      <a href="/mas-vendidos" class="px-6 py-3 uppercase tracking-wide text-sm hover:bg-slate-50 hover:text-brand-gold">
+        Más Vendidos
+      </a>
+      <a href="/catalogo" class="px-6 py-3 uppercase tracking-wide text-sm hover:bg-slate-50 hover:text-brand-gold">
+        Catálogo
+      </a>
+    </nav>
+  </div>
+</header>
+
+<script>
+  import { isCartOpen } from "../stores/cart";
+
+  const cartButton = document.getElementById("cart-button");
+  cartButton?.addEventListener("click", () => {
+    isCartOpen.set(true);
+  });
+
+  // Menú móvil toggle
+  const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+  
+  mobileMenuBtn?.addEventListener("click", () => {
+    mobileMenu?.classList.toggle("hidden");
+  });
+
+  // Cerrar menú al hacer click fuera
+  document.addEventListener("click", (e) => {
+    if (!mobileMenuBtn?.contains(e.target as Node) && !mobileMenu?.contains(e.target as Node)) {
+      mobileMenu?.classList.add("hidden");
+    }
+  });
+</script>

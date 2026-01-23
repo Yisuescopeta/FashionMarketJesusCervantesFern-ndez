@@ -1,0 +1,6 @@
+{
+  "code": "PGRST204",
+  "details": null,
+  "hint": null,
+  "message": "Could not find the 'stripe_session_id' column of 'orders' in the schema cache"
+}

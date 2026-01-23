@@ -1,0 +1,25 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "FashionMarket - Moda Masculina Premium" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | FashionMarket</title>
+    <meta name="description" content={description} />
+  </head>
+  <body class="bg-brand-offwhite text-brand-navy font-sans antialiased">
+    <slot />
+  </body>
+</html>

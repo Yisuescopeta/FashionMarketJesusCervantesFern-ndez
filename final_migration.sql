@@ -1,0 +1,16 @@
+UPDATE products SET images = '{"https://images.unsplash.com/photo-1598033129183-c4f50c7176c8?q=80&w=800","productos/camisa-oxford-blanca-2"}' WHERE id = '4f5977c8-b0cb-4f4f-bbf3-6b5f606a7ab5';
+UPDATE products SET images = '{"productos/camisa-azul-slim-fit"}' WHERE id = '922c0505-0641-4e8a-ab86-e405a74e186a';
+UPDATE products SET images = '{"productos/camisa-lino-natural"}' WHERE id = '2f34aef9-450b-4321-9b79-c827bb93e751';
+UPDATE products SET images = '{"productos/camiseta-basica-negra-1","productos/camiseta-basica-negra-2"}' WHERE id = '9f5dbf1d-3ac1-41d6-974e-7480cb58f267';
+UPDATE products SET images = '{"productos/camiseta-blanca-premium"}' WHERE id = '622aa644-6202-4a32-8b6d-833d4d1a2519';
+UPDATE products SET images = '{"productos/camiseta-gris-jaspeada"}' WHERE id = 'd0ba2584-f708-4735-b539-82eac7e466de';
+UPDATE products SET images = '{"productos/chaleco-casual-marron"}' WHERE id = '13c5e5d1-e737-4c0a-a81a-fa87d5b2b454';
+UPDATE products SET images = '{"productos/chaleco-negro-elegante"}' WHERE id = 'b930cbf5-ff20-4251-91ca-b34417cd5715';
+UPDATE products SET images = '{"productos/pantalon-chino-beige"}' WHERE id = '16a9cdcb-636e-474f-8889-02fcf5e91e34';
+UPDATE products SET images = '{"productos/pantalon-vestir-negro"}' WHERE id = 'f93cac17-230e-4ca5-abd2-2a8dabc29669';
+UPDATE products SET images = '{"productos/pantalon-azul-marino"}' WHERE id = '287112da-6bb5-4ff9-902f-0120a34c03dd';
+UPDATE products SET images = '{"productos/pantalon-gris-slim"}' WHERE id = '888e3397-3372-405f-9872-a0e0bed4d09b';
+UPDATE products SET images = '{"productos/camiseta-cuello-v-azul"}' WHERE id = '33e29f7e-bb9c-4329-b618-3080cf40dcc6';
+UPDATE products SET images = '{"productos/chaleco-vestir-gris"}' WHERE id = 'b33b7480-cb14-4cf1-8bae-648b7d92b7da';
+UPDATE products SET images = '{"productos/camisa-negra-formal"}' WHERE id = '0b2a88c0-5a43-4500-9f64-6c286b1a07d9';
+UPDATE products SET images = '{"productos/coca"}' WHERE id = 'ed751fcd-a898-49fd-a6ad-28a048473857';

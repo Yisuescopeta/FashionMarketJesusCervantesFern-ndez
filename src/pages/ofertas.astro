@@ -1,0 +1,167 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import ProductCard from '../components/product/ProductCard.astro';
+import { supabase } from '../lib/supabase';
+import { Percent, Clock, Flame } from 'lucide-react';
+
+export const prerender = false;
+
+// Obtener configuración de ofertas
+const { data: siteSettings } = await supabase
+  .from('site_settings')
+  .select('*')
+  .eq('id', 'main')
+  .single();
+
+const flashSalesTitle = siteSettings?.flash_sales_title || '¡Ofertas Especiales!';
+const flashSalesSubtitle = siteSettings?.flash_sales_subtitle || 'Descuentos exclusivos por tiempo limitado';
+
+// Obtener productos en oferta
+const { data: saleProducts } = await supabase
+  .from('products')
+  .select('*, categories(name)')
+  .eq('is_on_sale', true)
+  .eq('is_active', true)
+  .order('created_at', { ascending: false });
+
+// Si no hay productos en oferta, obtener algunos productos aleatorios
+let displayProducts = saleProducts || [];
+if (displayProducts.length === 0) {
+  const { data: fallback } = await supabase
+    .from('products')
+    .select('*, categories(name)')
+    .eq('is_active', true)
+    .limit(8);
+  displayProducts = fallback || [];
+}
+
+const mappedProducts = displayProducts.map(p => {
+  const isRealSale = p.is_on_sale && p.sale_price;
+  const discount = isRealSale ? Math.round((1 - p.sale_price / p.price) * 100) : 0;
+  
+  return {
+    id: p.id,
+    name: p.name,
+    price: isRealSale ? p.sale_price : p.price,
+    originalPrice: isRealSale ? p.price : null,
+    slug: p.slug,
+    image: p.images?.[0] || 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
+    category: p.categories?.name || 'Oferta',
+    isOnSale: isRealSale,
+    discount
+  };
+});
+
+const hasRealSales = mappedProducts.some(p => p.isOnSale);
+---
+
+<PublicLayout title="Ofertas - Descuentos Exclusivos">
+  <div class="pt-32 pb-16">
+    <!-- Hero de Ofertas -->
+    <div class="relative bg-gradient-to-br from-red-600 via-red-500 to-orange-500 text-white py-20 mb-16 overflow-hidden">
+      <div class="absolute inset-0 opacity-20">
+        <div class="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 right-10 w-48 h-48 bg-yellow-300 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div class="max-w-7xl mx-auto px-6 text-center relative">
+        <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur px-4 py-2 rounded-full mb-6">
+          <Flame className="w-4 h-4" />
+          <span class="text-xs font-bold uppercase tracking-widest">Tiempo Limitado</span>
+        </div>
+        <h1 class="text-5xl md:text-7xl font-serif italic mb-4">{flashSalesTitle}</h1>
+        <p class="text-white/80 max-w-2xl mx-auto text-lg mb-8">
+          {flashSalesSubtitle}
+        </p>
+        
+        {hasRealSales && (
+          <div class="inline-flex items-center gap-6 bg-white/10 backdrop-blur px-8 py-4 rounded-lg">
+            <div class="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              <span class="text-sm font-medium">Ofertas activas</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <Percent className="w-5 h-5" />
+              <span class="text-sm font-medium">Hasta -50% dto.</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6">
+      {hasRealSales ? (
+        <>
+          <!-- Contador de ofertas -->
+          <div class="flex justify-between items-center mb-10 pb-6 border-b border-slate-100">
+            <p class="text-sm text-slate-500">
+              <span class="font-semibold text-red-600">{mappedProducts.filter(p => p.isOnSale).length}</span> productos en oferta
+            </p>
+            <a href="/catalogo" class="text-sm font-bold text-brand-gold hover:underline uppercase tracking-widest">
+              Ver catálogo completo →
+            </a>
+          </div>
+
+          <!-- Grid de productos en oferta -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {mappedProducts.filter(p => p.isOnSale).map(product => (
+              <a href={`/productos/${product.slug}`} class="group bg-white border border-slate-100 hover:border-red-200 transition-all hover:shadow-lg overflow-hidden">
+                <div class="relative aspect-[3/4] overflow-hidden">
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div class="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 text-sm font-bold rounded">
+                    -{product.discount}%
+                  </div>
+                </div>
+                <div class="p-5">
+                  <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">{product.category}</p>
+                  <h3 class="font-serif text-lg italic text-brand-navy group-hover:text-red-600 transition-colors mb-3">{product.name}</h3>
+                  <div class="flex items-center gap-3">
+                    <span class="text-xl font-bold text-red-600">
+                      {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(product.price / 100)}
+                    </span>
+                    <span class="text-sm text-slate-400 line-through">
+                      {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(product.originalPrice / 100)}
+                    </span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </>
+      ) : (
+        <!-- No hay ofertas activas -->
+        <div class="text-center py-24">
+          <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Percent className="w-10 h-10 text-slate-300" />
+          </div>
+          <h2 class="text-2xl font-serif italic text-brand-navy mb-4">Próximamente nuevas ofertas</h2>
+          <p class="text-slate-500 max-w-md mx-auto mb-8">
+            No te pierdas nuestras próximas promociones. Mientras tanto, explora nuestra colección completa.
+          </p>
+          <a 
+            href="/catalogo" 
+            class="inline-block bg-brand-navy text-white px-10 py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all"
+          >
+            Explorar Catálogo
+          </a>
+        </div>
+      )}
+
+      <!-- Sección de productos destacados (si no hay ofertas reales) -->
+      {!hasRealSales && mappedProducts.length > 0 && (
+        <div class="mt-20 pt-12 border-t border-slate-100">
+          <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-8">Quizás te interese</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {mappedProducts.slice(0, 4).map(product => (
+              <ProductCard {...product} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</PublicLayout>

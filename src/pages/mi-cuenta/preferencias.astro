@@ -1,0 +1,185 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import { getAuthenticatedUser, createSupabaseServerClient } from '../../lib/supabase-server';
+import { Bell, Heart, Mail, ArrowLeft, Check } from 'lucide-react';
+
+export const prerender = false;
+
+// Verificar autenticación usando cookies del servidor
+const user = await getAuthenticatedUser(Astro.cookies);
+
+if (!user) {
+  return Astro.redirect('/login?redirect=/mi-cuenta/preferencias');
+}
+
+// Usar cliente SSR para queries
+const supabaseServer = createSupabaseServerClient(Astro.cookies);
+
+// Obtener preferencias actuales
+let { data: preferences } = await supabaseServer
+  .from('user_notification_preferences')
+  .select('*')
+  .eq('user_id', user.id)
+  .single();
+
+// Si no existen preferencias, crear con valores por defecto
+if (!preferences) {
+  const { data: newPrefs } = await supabaseServer
+    .from('user_notification_preferences')
+    .insert({
+      user_id: user.id,
+      favorites_on_sale: true,
+      marketing_emails: false
+    })
+    .select()
+    .single();
+  
+  preferences = newPrefs;
+}
+
+// Manejar actualización de preferencias
+let successMessage = '';
+let errorMessage = '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const favoritesOnSale = formData.get('favorites_on_sale') === 'on';
+    const marketingEmails = formData.get('marketing_emails') === 'on';
+
+    const { error } = await supabaseServer
+      .from('user_notification_preferences')
+      .update({
+        favorites_on_sale: favoritesOnSale,
+        marketing_emails: marketingEmails,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    // Actualizar preferencias locales
+    preferences = {
+      ...preferences,
+      favorites_on_sale: favoritesOnSale,
+      marketing_emails: marketingEmails
+    };
+    
+    successMessage = 'Preferencias guardadas correctamente';
+  } catch (error) {
+    console.error('Error actualizando preferencias:', error);
+    errorMessage = 'Error al guardar las preferencias';
+  }
+}
+
+const userEmail = user.email;
+const userName = user.user_metadata?.full_name || user.user_metadata?.name || 'Usuario';
+---
+
+<PublicLayout title="Preferencias de Notificaciones">
+  <div class="pt-32 pb-16">
+    <div class="max-w-2xl mx-auto px-6">
+      <!-- Navegación -->
+      <a href="/mis-favoritos" class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-brand-navy transition-colors mb-8">
+        <ArrowLeft className="w-4 h-4" />
+        Volver a favoritos
+      </a>
+
+      <!-- Cabecera -->
+      <div class="mb-12">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 bg-brand-gold/10 rounded-full flex items-center justify-center">
+            <Bell className="w-6 h-6 text-brand-gold" />
+          </div>
+          <div>
+            <h1 class="text-3xl font-serif italic">Preferencias</h1>
+            <p class="text-slate-500 text-sm">Gestiona tus notificaciones por email</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensajes de estado -->
+      {successMessage && (
+        <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+          <Check className="w-5 h-5 text-green-600" />
+          <span class="text-green-800">{successMessage}</span>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <span class="text-red-800">{errorMessage}</span>
+        </div>
+      )}
+
+      <!-- Información de cuenta -->
+      <div class="bg-slate-50 border border-slate-100 p-6 mb-8">
+        <p class="text-sm text-slate-500 mb-1">Conectado como</p>
+        <p class="font-medium text-brand-navy">{userName}</p>
+        <p class="text-sm text-slate-500">{userEmail}</p>
+      </div>
+
+      <!-- Formulario de preferencias -->
+      <form method="POST" class="space-y-6">
+        <div class="bg-white border border-slate-100 divide-y divide-slate-100">
+          
+          <!-- Notificaciones de favoritos en oferta -->
+          <label class="flex items-start gap-4 p-6 cursor-pointer hover:bg-slate-50 transition-colors">
+            <input 
+              type="checkbox" 
+              name="favorites_on_sale"
+              checked={preferences?.favorites_on_sale}
+              class="mt-1 w-5 h-5 accent-brand-gold rounded"
+            />
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <Heart className="w-4 h-4 text-red-500" />
+                <span class="font-bold text-brand-navy">Favoritos en oferta</span>
+              </div>
+              <p class="text-sm text-slate-500 leading-relaxed">
+                Recibe un email cuando un producto que hayas guardado en favoritos entre en oferta. 
+                Solo te notificaremos una vez por producto.
+              </p>
+            </div>
+          </label>
+
+          <!-- Emails de marketing -->
+          <label class="flex items-start gap-4 p-6 cursor-pointer hover:bg-slate-50 transition-colors">
+            <input 
+              type="checkbox" 
+              name="marketing_emails"
+              checked={preferences?.marketing_emails}
+              class="mt-1 w-5 h-5 accent-brand-gold rounded"
+            />
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <Mail className="w-4 h-4 text-brand-gold" />
+                <span class="font-bold text-brand-navy">Novedades y promociones</span>
+              </div>
+              <p class="text-sm text-slate-500 leading-relaxed">
+                Recibe información sobre nuevas colecciones, promociones exclusivas y eventos especiales.
+              </p>
+            </div>
+          </label>
+
+        </div>
+
+        <!-- Botón guardar -->
+        <button 
+          type="submit"
+          class="w-full bg-brand-navy text-white py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all"
+        >
+          Guardar Preferencias
+        </button>
+      </form>
+
+      <!-- Información adicional -->
+      <div class="mt-12 text-center">
+        <p class="text-xs text-slate-400">
+          Puedes cambiar estas preferencias en cualquier momento. 
+          Respetamos tu privacidad y nunca compartiremos tu email con terceros.
+        </p>
+      </div>
+    </div>
+  </div>
+</PublicLayout>
