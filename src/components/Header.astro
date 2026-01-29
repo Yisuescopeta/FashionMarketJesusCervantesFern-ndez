@@ -2,6 +2,7 @@
 import { ShoppingBag, Menu, X, Search } from "lucide-react";
 import CartIcon from "./islands/CartIcon";
 import UserMenu from "./islands/UserMenu";
+import SearchOverlay from "./Search/SearchOverlay";
 ---
 
 <header
@@ -157,6 +158,7 @@ import UserMenu from "./islands/UserMenu";
     </nav>
   </div>
 </header>
+<SearchOverlay client:idle />
 
 <style>
   /* Efecto de scroll en el header */
@@ -296,6 +298,7 @@ import UserMenu from "./islands/UserMenu";
 
 <script>
   import { isCartOpen } from "../stores/cart";
+  import { isSearchOpen } from "../stores/searchStore";
 
   const cartButton = document.getElementById("cart-button");
   const header = document.getElementById("main-header");
@@ -325,18 +328,16 @@ import UserMenu from "./islands/UserMenu";
   });
 
   // Buscador del header
-  const searchInput = document.getElementById(
-    "header-search-input",
-  ) as HTMLInputElement;
+  const searchContainer = document.getElementById("search-container");
+  const searchInput = document.getElementById("header-search-input");
 
-  searchInput?.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      const query = searchInput.value.trim();
-      if (query) {
-        window.location.href = `/catalogo?search=${encodeURIComponent(query)}`;
-      }
-    }
-  });
+  const openSearch = (e: Event) => {
+    e.preventDefault();
+    isSearchOpen.set(true);
+  };
+
+  searchContainer?.addEventListener("click", openSearch);
+  searchInput?.addEventListener("focus", openSearch);
 
   // Efecto de scroll en el header
   let lastScroll = 0;
