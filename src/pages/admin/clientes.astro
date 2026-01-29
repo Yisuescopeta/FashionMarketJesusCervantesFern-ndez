@@ -1,6 +1,6 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
-import { supabaseAdmin } from "../../lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import {
     Users,
     Search,
@@ -15,6 +15,14 @@ import {
 
 export const prerender = false;
 
+// Crear cliente admin DIRECTAMENTE aquí
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAdmin = createClient(
+    supabaseUrl,
+    supabaseServiceKey || import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+);
+
 // Paginación
 const url = new URL(Astro.request.url);
 const page = parseInt(url.searchParams.get("page") || "1");
@@ -28,9 +36,7 @@ const searchFilter = url.searchParams.get("search") || "";
 // Consulta
 let query = supabaseAdmin
     .from("profiles")
-    .select("*, user_notification_preferences(marketing_emails)", {
-        count: "exact",
-    })
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false });
 
 if (searchFilter) {
@@ -39,7 +45,16 @@ if (searchFilter) {
     );
 }
 
-const { data: clients, count } = await query.range(from, to);
+const { data: clients, count, error } = await query.range(from, to);
+
+console.log(
+    "CLIENTES DEBUG - Count:",
+    count,
+    "Error:",
+    error,
+    "Data:",
+    clients?.length,
+);
 
 const totalPages = Math.ceil((count || 0) / pageSize);
 ---

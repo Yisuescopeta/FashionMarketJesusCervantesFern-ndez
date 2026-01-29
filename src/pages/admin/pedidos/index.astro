@@ -1,6 +1,6 @@
 ---
 import AdminLayout from "../../../layouts/AdminLayout.astro";
-import { supabaseAdmin } from "../../../lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import {
     ShoppingBag,
     Search,
@@ -17,6 +17,19 @@ import {
 
 export const prerender = false;
 
+// Crear cliente admin DIRECTAMENTE aquí (no importar de supabase.ts)
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseServiceKey) {
+    console.error("CRITICAL: SUPABASE_SERVICE_ROLE_KEY no está disponible!");
+}
+
+const supabaseAdmin = createClient(
+    supabaseUrl,
+    supabaseServiceKey || import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+);
+
 // Paginación
 const url = new URL(Astro.request.url);
 const page = parseInt(url.searchParams.get("page") || "1");
@@ -28,10 +41,10 @@ const to = from + pageSize - 1;
 const statusFilter = url.searchParams.get("status") || "todos";
 const searchFilter = url.searchParams.get("search") || "";
 
-// Consulta base
+// Consulta CON LEFT JOIN a profiles (usando !left para evitar filtrar registros sin perfil)
 let query = supabaseAdmin
     .from("orders")
-    .select("*, profiles(full_name, email)", { count: "exact" })
+    .select("*, profiles!left(full_name, email)", { count: "exact" })
     .order("created_at", { ascending: false });
 
 if (statusFilter !== "todos") {
@@ -39,12 +52,23 @@ if (statusFilter !== "todos") {
 }
 
 if (searchFilter) {
-    query = query.or(
-        `id.ilike.%${searchFilter}%,profiles.full_name.ilike.%${searchFilter}%`,
-    );
+    query = query.ilike("id", `%${searchFilter}%`);
 }
 
 const { data: orders, count, error } = await query.range(from, to);
+
+console.log("============================================");
+console.log("!!! SUPER DEBUG ORDERS FETCH (RAW DATA) !!!");
+console.log("============================================");
+console.log("COUNT:", count);
+console.log("ERROR:", error ? JSON.stringify(error, null, 2) : "No Error");
+console.log("DATA LENGTH:", orders?.length);
+if (orders && orders.length > 0) {
+    console.log("FIRST ROW SAMPLE:", JSON.stringify(orders[0], null, 2));
+} else {
+    console.log("DATA IS EMPTY ARRAY []");
+}
+console.log("============================================");
 
 const totalPages = Math.ceil((count || 0) / pageSize);
 
@@ -207,10 +231,12 @@ const getStatusIcon = (status: string) => {
                                         <div class="flex flex-col">
                                             <span class="text-sm font-bold text-slate-700">
                                                 {order.profiles?.full_name ||
-                                                    "Anónimo"}
+                                                    "Cliente"}
                                             </span>
                                             <span class="text-[10px] text-slate-400 font-medium">
-                                                {order.profiles?.email || "-"}
+                                                {order.profiles?.email ||
+                                                    order.customer_email ||
+                                                    "-"}
                                             </span>
                                         </div>
                                     </td>
