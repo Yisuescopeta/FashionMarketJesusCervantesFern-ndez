@@ -1,102 +1,354 @@
 ---
-import { ShoppingBag, Menu, X } from "lucide-react";
+import { ShoppingBag, Menu, X, Search } from "lucide-react";
 import CartIcon from "./islands/CartIcon";
 import UserMenu from "./islands/UserMenu";
 ---
 
 <header
-  class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-100 z-40 transition-all"
+  id="main-header"
+  class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-100 z-40 transition-all duration-300"
 >
-  <!-- Barra superior promocional -->
-  <div class="bg-brand-navy text-white text-center py-2 text-xs tracking-widest uppercase">
-    <span class="text-brand-gold">✦</span> Envío gratis en pedidos +80€ <span class="text-brand-gold">✦</span> Devoluciones gratuitas
+  <!-- Barra superior promocional con animación -->
+  <div
+    class="promo-bar bg-brand-navy text-white text-center py-2 text-xs tracking-widest uppercase overflow-hidden"
+  >
+    <div class="promo-content animate-fade-in">
+      <span class="text-brand-gold animate-pulse-soft">✦</span>
+      <span class="inline-block">Envío gratis en pedidos +80€</span>
+      <span class="text-brand-gold animate-pulse-soft">✦</span>
+      <span class="inline-block">Devoluciones gratuitas</span>
+    </div>
   </div>
-  
-  <div class="max-w-7xl mx-auto h-20 px-6 flex items-center justify-between">
-    <!-- Logo -->
-    <a href="/" class="text-2xl font-serif tracking-tight font-bold">
-      FASHION<span class="text-brand-gold">MARKET</span>
+
+  <div class="max-w-7xl mx-auto h-20 px-4 flex items-center justify-between">
+    <!-- Logo... -->
+    <a href="/" class="flex items-center group">
+      <img
+        src="/logo-aurum.jpg"
+        alt="Aurum"
+        class="w-32 h-auto transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-lg"
+      />
     </a>
 
-    <!-- Navegación principal - Desktop -->
-    <nav class="hidden lg:flex items-center space-x-8 text-sm font-medium tracking-wide uppercase">
-      <a href="/ofertas" class="text-red-600 hover:text-red-700 transition-colors font-bold">
-        Ofertas
+    <!-- Navegación... -->
+    <nav
+      class="hidden lg:flex items-center space-x-8 text-sm font-medium tracking-wide uppercase"
+    >
+      <!-- ...enlaces de navegación... -->
+      <a
+        href="/ofertas"
+        class="nav-link nav-link-sale relative text-red-600 font-bold group"
+      >
+        <span class="relative z-10">Ofertas</span>
+        <span
+          class="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"
+        ></span>
+        <span
+          class="sale-badge absolute -top-2 -right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse-soft"
+        ></span>
       </a>
-      <a href="/novedades" class="hover:text-brand-gold transition-colors">
-        Novedades
+      <a href="/novedades" class="nav-link relative group">
+        <span
+          class="relative z-10 transition-colors duration-300 group-hover:text-brand-gold"
+          >Novedades</span
+        >
+        <span
+          class="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-gold transition-all duration-300 group-hover:w-full"
+        ></span>
       </a>
-      <a href="/mas-vendidos" class="hover:text-brand-gold transition-colors">
-        Más Vendidos
+      <a href="/mas-vendidos" class="nav-link relative group">
+        <span
+          class="relative z-10 transition-colors duration-300 group-hover:text-brand-gold"
+          >Más Vendidos</span
+        >
+        <span
+          class="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-gold transition-all duration-300 group-hover:w-full"
+        ></span>
       </a>
-      <a href="/catalogo" class="hover:text-brand-gold transition-colors">
-        Catálogo
+      <a href="/catalogo" class="nav-link relative group">
+        <span
+          class="relative z-10 transition-colors duration-300 group-hover:text-brand-gold"
+          >Catálogo</span
+        >
+        <span
+          class="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-gold transition-all duration-300 group-hover:w-full"
+        ></span>
       </a>
     </nav>
 
-    <!-- Acciones de usuario -->
-    <div class="flex items-center space-x-4">
+    <!-- Acciones de usuario con buscador -->
+    <div class="flex items-center space-x-2 md:space-x-4">
+      <!-- Buscador elegante -->
+      <div
+        id="search-container"
+        class="relative items-center hidden sm:flex group h-10 transition-all duration-300"
+      >
+        <div
+          class="relative flex items-center bg-slate-50 border border-slate-200 rounded-full px-4 h-full group-focus-within:border-brand-gold group-focus-within:bg-white transition-all duration-300"
+        >
+          <Search
+            className="w-4 h-4 text-slate-400 group-focus-within:text-brand-gold transition-colors"
+          />
+          <input
+            type="text"
+            id="header-search-input"
+            placeholder="Buscar..."
+            class="bg-transparent border-none outline-none text-sm ml-2 w-32 focus:w-48 transition-all duration-300 placeholder-slate-400 text-slate-700"
+          />
+        </div>
+      </div>
+
       <UserMenu client:load />
       <div class="h-6 w-px bg-slate-200 mx-2 hidden sm:block"></div>
       <button
         id="cart-button"
-        class="relative p-2 hover:bg-slate-50 rounded-full transition-colors"
+        class="cart-btn relative p-2 rounded-full transition-all duration-300 hover:bg-brand-gold/10 hover:scale-110 active:scale-95"
         aria-label="Carrito de compra"
       >
-        <ShoppingBag className="w-6 h-6" />
+        <ShoppingBag className="w-6 h-6 transition-colors duration-300" />
         <CartIcon client:load />
       </button>
-      
-      <!-- Menú móvil -->
+
+      <!-- Menú móvil con animación -->
       <button
         id="mobile-menu-btn"
-        class="lg:hidden p-2 hover:bg-slate-50 rounded-full transition-colors"
+        class="lg:hidden p-2 rounded-full transition-all duration-300 hover:bg-brand-gold/10 hover:rotate-90"
         aria-label="Menú"
       >
-        <Menu className="w-6 h-6" id="menu-icon" />
+        <Menu
+          className="w-6 h-6 transition-transform duration-300"
+          id="menu-icon"
+        />
       </button>
     </div>
   </div>
-  
-  <!-- Menú móvil desplegable -->
-  <div id="mobile-menu" class="hidden lg:hidden bg-white border-t border-slate-100 absolute w-full left-0 shadow-lg">
+
+  <!-- Menú móvil desplegable con animación -->
+  <div
+    id="mobile-menu"
+    class="mobile-menu hidden lg:hidden bg-white border-t border-slate-100 absolute w-full left-0 shadow-xl"
+  >
     <nav class="flex flex-col py-4">
-      <a href="/ofertas" class="px-6 py-3 text-red-600 font-bold uppercase tracking-wide text-sm hover:bg-slate-50">
-        Ofertas
+      <a
+        href="/ofertas"
+        class="mobile-nav-link px-6 py-4 text-red-600 font-bold uppercase tracking-wide text-sm flex items-center justify-between group"
+      >
+        <span>Ofertas</span>
+        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse-soft"></span>
       </a>
-      <a href="/novedades" class="px-6 py-3 uppercase tracking-wide text-sm hover:bg-slate-50 hover:text-brand-gold">
+      <a
+        href="/novedades"
+        class="mobile-nav-link px-6 py-4 uppercase tracking-wide text-sm transition-all duration-300 hover:bg-brand-gold/10 hover:text-brand-gold hover:pl-8"
+      >
         Novedades
       </a>
-      <a href="/mas-vendidos" class="px-6 py-3 uppercase tracking-wide text-sm hover:bg-slate-50 hover:text-brand-gold">
+      <a
+        href="/mas-vendidos"
+        class="mobile-nav-link px-6 py-4 uppercase tracking-wide text-sm transition-all duration-300 hover:bg-brand-gold/10 hover:text-brand-gold hover:pl-8"
+      >
         Más Vendidos
       </a>
-      <a href="/catalogo" class="px-6 py-3 uppercase tracking-wide text-sm hover:bg-slate-50 hover:text-brand-gold">
+      <a
+        href="/catalogo"
+        class="mobile-nav-link px-6 py-4 uppercase tracking-wide text-sm transition-all duration-300 hover:bg-brand-gold/10 hover:text-brand-gold hover:pl-8"
+      >
         Catálogo
       </a>
     </nav>
   </div>
 </header>
 
+<style>
+  /* Efecto de scroll en el header */
+  .header-scrolled {
+    @apply shadow-lg bg-white;
+    backdrop-filter: blur(12px);
+  }
+
+  /* Animación de la barra promocional */
+  .promo-bar {
+    background: linear-gradient(90deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+    background-size: 200% 100%;
+    animation: gradientShift 8s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* Efecto hover en enlaces de navegación */
+  .nav-link {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  .nav-link::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(212, 175, 55, 0.1);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition:
+      width 0.4s ease,
+      height 0.4s ease;
+    z-index: 0;
+  }
+
+  .nav-link:hover::before {
+    width: 120%;
+    height: 200%;
+  }
+
+  /* Efecto especial para ofertas */
+  .nav-link-sale:hover {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-2px);
+    }
+    75% {
+      transform: translateX(2px);
+    }
+  }
+
+  /* Animación del menú móvil */
+  .mobile-menu {
+    transform-origin: top;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: scaleY(0);
+    }
+    to {
+      opacity: 1;
+      transform: scaleY(1);
+    }
+  }
+
+  /* Animación de enlaces móviles */
+  .mobile-nav-link {
+    opacity: 0;
+    animation: fadeInLeft 0.3s ease-out forwards;
+  }
+
+  .mobile-nav-link:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+  .mobile-nav-link:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .mobile-nav-link:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  .mobile-nav-link:nth-child(4) {
+    animation-delay: 0.25s;
+  }
+
+  @keyframes fadeInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Efecto de brillo en el botón del carrito */
+  .cart-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(212, 175, 55, 0.3) 0%,
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .cart-btn:hover::after {
+    opacity: 1;
+  }
+</style>
+
 <script>
   import { isCartOpen } from "../stores/cart";
 
   const cartButton = document.getElementById("cart-button");
+  const header = document.getElementById("main-header");
+
   cartButton?.addEventListener("click", () => {
     isCartOpen.set(true);
   });
 
-  // Menú móvil toggle
+  // Menú móvil toggle con animación
   const mobileMenuBtn = document.getElementById("mobile-menu-btn");
   const mobileMenu = document.getElementById("mobile-menu");
-  
+
   mobileMenuBtn?.addEventListener("click", () => {
     mobileMenu?.classList.toggle("hidden");
+    mobileMenuBtn?.classList.toggle("rotate-90");
   });
 
   // Cerrar menú al hacer click fuera
   document.addEventListener("click", (e) => {
-    if (!mobileMenuBtn?.contains(e.target as Node) && !mobileMenu?.contains(e.target as Node)) {
+    if (
+      !mobileMenuBtn?.contains(e.target as Node) &&
+      !mobileMenu?.contains(e.target as Node)
+    ) {
       mobileMenu?.classList.add("hidden");
+      mobileMenuBtn?.classList.remove("rotate-90");
     }
+  });
+
+  // Buscador del header
+  const searchInput = document.getElementById(
+    "header-search-input",
+  ) as HTMLInputElement;
+
+  searchInput?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      const query = searchInput.value.trim();
+      if (query) {
+        window.location.href = `/catalogo?search=${encodeURIComponent(query)}`;
+      }
+    }
+  });
+
+  // Efecto de scroll en el header
+  let lastScroll = 0;
+  window.addEventListener("scroll", () => {
+    const currentScroll = window.pageYOffset;
+
+    if (currentScroll > 50) {
+      header?.classList.add("header-scrolled");
+    } else {
+      header?.classList.remove("header-scrolled");
+    }
+
+    lastScroll = currentScroll;
   });
 </script>

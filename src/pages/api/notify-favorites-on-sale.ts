@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin } from '../../lib/supabase';
 import { sendFavoriteOnSaleEmail } from '../../lib/email';
 
 /**
@@ -30,7 +30,7 @@ export const POST: APIRoute = async ({ request }) => {
     const oneDayAgo = new Date();
     oneDayAgo.setHours(oneDayAgo.getHours() - 24);
 
-    const { data: productsOnSale, error: productsError } = await supabase
+    const { data: productsOnSale, error: productsError } = await supabaseAdmin
       .from('products')
       .select('id, name, slug, price, sale_price, images')
       .eq('is_on_sale', true)
@@ -53,7 +53,7 @@ export const POST: APIRoute = async ({ request }) => {
     // 2. Para cada producto, encontrar usuarios que lo tienen en favoritos
     for (const product of productsOnSale) {
       // Obtener usuarios con este producto en favoritos
-      const { data: favorites, error: favError } = await supabase
+      const { data: favorites, error: favError } = await supabaseAdmin
         .from('favorites')
         .select(`
           user_id,
@@ -72,7 +72,7 @@ export const POST: APIRoute = async ({ request }) => {
         if (!user?.email) continue;
 
         // 3. Verificar preferencias del usuario
-        const { data: prefs } = await supabase
+        const { data: prefs } = await supabaseAdmin
           .from('user_notification_preferences')
           .select('favorites_on_sale')
           .eq('user_id', user.id)
@@ -82,7 +82,7 @@ export const POST: APIRoute = async ({ request }) => {
         if (prefs && prefs.favorites_on_sale === false) continue;
 
         // 4. Verificar que no hayamos enviado ya esta notificación
-        const { data: existingNotification } = await supabase
+        const { data: existingNotification } = await supabaseAdmin
           .from('notification_history')
           .select('id')
           .eq('user_id', user.id)
@@ -108,7 +108,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         if (emailResult.success) {
           // 6. Registrar en historial de notificaciones
-          await supabase
+          await supabaseAdmin
             .from('notification_history')
             .insert({
               user_id: user.id,

@@ -1,0 +1,120 @@
+---
+import { X, ZoomIn, ZoomOut } from "lucide-react";
+
+interface Props {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  class?: string;
+  priority?: boolean;
+  images?: string[]; // Array de imágenes adicionales para el carrusel
+}
+
+const {
+  src,
+  alt,
+  width = 800,
+  height = 800,
+  class: className,
+  priority = false,
+  images = [],
+} = Astro.props;
+
+// Combinar imagen principal con adicionales
+const allImages = [src, ...images];
+
+const isFullUrl = src?.startsWith("http") || src?.startsWith("https");
+---
+
+<div
+  class="zoom-image-container relative group"
+  data-zoom-image={src}
+  data-images={JSON.stringify(allImages)}
+>
+  {
+    isFullUrl ? (
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        class={`${className} zoom-image cursor-zoom transition-transform duration-300`}
+        loading={priority ? "eager" : "lazy"}
+      />
+    ) : (
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        class={`${className} zoom-image cursor-zoom transition-transform duration-300`}
+        loading={priority ? "eager" : "lazy"}
+      />
+    )
+  }
+
+  <!-- Icono de zoom que aparece al hover -->
+  <div
+    class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+  >
+    <div class="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
+      <ZoomIn className="w-6 h-6 text-brand-navy" />
+    </div>
+  </div>
+
+  <!-- Indicador de múltiples imágenes -->
+  {
+    allImages.length > 1 && (
+      <div class="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {allImages.length} fotos
+      </div>
+    )
+  }
+</div>
+
+<style>
+  /* Cursor personalizado para zoom en español */
+  .cursor-zoom {
+    cursor:
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text x="4" y="24" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="%231a1a2e">VER</text></svg>'),
+      auto;
+  }
+
+  /* Transiciones suaves */
+  .zoom-image {
+    transition: transform 0.3s ease;
+  }
+
+  .zoom-image:hover {
+    transform: scale(1.02);
+  }
+</style>
+
+<script is:inline>
+  // Manejador para abrir el carrusel al hacer clic en una imagen
+  document.addEventListener("click", function (e) {
+    var target = e.target;
+    var zoomImage = target.closest(".zoom-image");
+
+    if (zoomImage) {
+      var container = zoomImage.closest(".zoom-image-container");
+      if (container && container.dataset.images) {
+        try {
+          var images = JSON.parse(container.dataset.images);
+          var currentSrc = container.dataset.zoomImage;
+          var imageIndex = images.indexOf(currentSrc);
+
+          // Abrir carrusel
+          if (window.openCarrusel) {
+            window.openCarrusel(Math.max(0, imageIndex));
+          } else {
+            console.error("openCarrusel no está definido");
+          }
+        } catch (err) {
+          console.error("Error parsing images for carrusel", err);
+        }
+      }
+    }
+  });
+</script>

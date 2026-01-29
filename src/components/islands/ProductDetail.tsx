@@ -14,6 +14,7 @@ interface Props {
     productPrice: number;
     productImage: string;
     availableSizes: string[];
+    compact?: boolean;
 }
 
 const LOW_STOCK_THRESHOLD = 20;
@@ -23,7 +24,8 @@ export default function ProductDetail({
     productName,
     productPrice,
     productImage,
-    availableSizes
+    availableSizes,
+    compact = false
 }: Props) {
     const [sizeStock, setSizeStock] = useState<SizeStock[]>([]);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -139,18 +141,82 @@ export default function ProductDetail({
     const selectedSizeStock = sizeStock.find(s => s.size === selectedSize);
     const isLowStock = selectedSizeStock && selectedSizeStock.stock > 0 && selectedSizeStock.stock < LOW_STOCK_THRESHOLD;
 
+    const [showSizeGuide, setShowSizeGuide] = useState(false);
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-4">
+            {/* Guía de Tallas Inline (se muestra cuando se hace clic) */}
+            {showSizeGuide && (
+                <div className="border border-gray-200 mb-4 animate-fadeIn">
+                    <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+                        <span className="text-xs font-bold uppercase tracking-widest">SIZE GUIDE</span>
+                        <button
+                            onClick={() => setShowSizeGuide(false)}
+                            className="text-gray-400 hover:text-black text-xl leading-none"
+                        >
+                            ×
+                        </button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-center text-xs">
+                            <thead>
+                                <tr className="bg-gray-100 border-b border-gray-200">
+                                    <th className="py-3 px-2 text-left font-bold">Size</th>
+                                    <th className="py-3 px-2 font-bold">XS</th>
+                                    <th className="py-3 px-2 font-bold">S</th>
+                                    <th className="py-3 px-2 font-bold">M</th>
+                                    <th className="py-3 px-2 font-bold">L</th>
+                                    <th className="py-3 px-2 font-bold">XL</th>
+                                    <th className="py-3 px-2 font-bold">XXL</th>
+                                    <th className="py-3 px-2 font-bold">XXXL</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-gray-600">
+                                <tr className="border-b border-gray-100">
+                                    <td className="py-3 px-2 text-left text-gray-500">UK/US/AU</td>
+                                    <td className="py-3 px-2">34</td>
+                                    <td className="py-3 px-2">36</td>
+                                    <td className="py-3 px-2">38</td>
+                                    <td className="py-3 px-2">40</td>
+                                    <td className="py-3 px-2">42</td>
+                                    <td className="py-3 px-2">44</td>
+                                    <td className="py-3 px-2">46</td>
+                                </tr>
+                                <tr>
+                                    <td className="py-3 px-2 text-left text-gray-500">EU/FR</td>
+                                    <td className="py-3 px-2">44</td>
+                                    <td className="py-3 px-2">46</td>
+                                    <td className="py-3 px-2">48</td>
+                                    <td className="py-3 px-2">50</td>
+                                    <td className="py-3 px-2">52</td>
+                                    <td className="py-3 px-2">54</td>
+                                    <td className="py-3 px-2">56</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div className="h-1 bg-black w-full"></div>
+                    </div>
+                </div>
+            )}
+
             {/* Selector de tallas */}
             <div>
-                <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 mb-4">
-                    Selecciona tu talla
-                </h3>
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-navy">
+                        SELECCIONA TALLA
+                    </h3>
+                    <button
+                        onClick={() => setShowSizeGuide(!showSizeGuide)}
+                        className="text-[10px] text-slate-500 underline hover:text-brand-navy transition-colors uppercase tracking-wider"
+                    >
+                        {showSizeGuide ? 'Ocultar guía' : 'Guía de tallas'}
+                    </button>
+                </div>
 
                 {loading ? (
                     <div className="flex gap-2">
                         {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="w-14 h-14 bg-slate-100 animate-pulse rounded" />
+                            <div key={i} className="w-14 h-10 bg-slate-50 animate-pulse" />
                         ))}
                     </div>
                 ) : (
@@ -158,7 +224,6 @@ export default function ProductDetail({
                         {sizeStock.map(({ size, stock }) => {
                             const isSelected = selectedSize === size;
                             const isOutOfStock = stock === 0;
-                            const isLow = stock > 0 && stock < LOW_STOCK_THRESHOLD;
 
                             return (
                                 <button
@@ -166,83 +231,59 @@ export default function ProductDetail({
                                     onClick={() => !isOutOfStock && setSelectedSize(size)}
                                     disabled={isOutOfStock}
                                     className={`
-                                        relative min-w-[3.5rem] h-14 px-3 border-2 font-bold text-sm
-                                        transition-all duration-200
+                                        relative min-w-[3.5rem] h-10 px-2 flex items-center justify-center text-xs font-medium transition-all duration-200
+                                        border
                                         ${isSelected
                                             ? 'border-brand-navy bg-brand-navy text-white'
                                             : isOutOfStock
-                                                ? 'border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed line-through'
-                                                : 'border-slate-200 hover:border-brand-navy text-slate-700'
+                                                ? 'border-slate-100 text-slate-300 cursor-not-allowed bg-slate-50'
+                                                : 'border-slate-300 hover:border-brand-navy text-slate-700 bg-white'
                                         }
                                     `}
                                 >
                                     {size}
-                                    {/* Indicador de stock bajo */}
-                                    {isLow && !isSelected && (
-                                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full" />
+                                    {isOutOfStock && (
+                                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                                            <svg className="absolute inset-0 w-full h-full text-slate-200" preserveAspectRatio="none">
+                                                <line x1="0" y1="100%" x2="100%" y2="0" stroke="currentColor" strokeWidth="1" />
+                                            </svg>
+                                        </div>
                                     )}
                                 </button>
                             );
                         })}
                     </div>
                 )}
-            </div>
 
-            {/* Información de stock de la talla seleccionada */}
-            {selectedSize && selectedSizeStock && (
-                <div className={`p-4 rounded-lg ${isLowStock ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}`}>
-                    <div className="flex items-center gap-2">
-                        {isLowStock ? (
-                            <>
-                                <AlertTriangle className="w-5 h-5 text-amber-600" />
-                                <span className="text-amber-800 font-medium">
-                                    ¡Últimas unidades! Solo quedan {selectedSizeStock.stock} en talla {selectedSize}
-                                </span>
-                            </>
-                        ) : (
-                            <>
-                                <Check className="w-5 h-5 text-green-600" />
-                                <span className="text-green-800 font-medium">
-                                    Disponible en talla {selectedSize} ({selectedSizeStock.stock} uds)
-                                </span>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
+                {/* Minimal Stock Indicator */}
+                {selectedSize && selectedSizeStock && selectedSizeStock.stock < LOW_STOCK_THRESHOLD && selectedSizeStock.stock > 0 && (
+                    <p className="mt-2 text-[10px] text-amber-600 font-medium tracking-wide uppercase">
+                        ¡Pocas unidades! Solo quedan {selectedSizeStock.stock}
+                    </p>
+                )}
+            </div>
 
             {/* Botón de añadir al carrito */}
             <button
                 onClick={handleAddToCart}
                 disabled={!selectedSize || (selectedSizeStock?.stock === 0)}
                 className={`
-                    w-full px-8 py-5 flex items-center justify-center space-x-3 
-                    font-bold tracking-[0.2em] uppercase text-xs 
-                    transition-all duration-300 group shadow-lg
+                    w-full py-4 px-6 flex items-center justify-center space-x-2
+                    font-bold text-xs tracking-[0.2em] uppercase
+                    transition-all duration-300
                     ${!selectedSize
-                        ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                         : added
-                            ? 'bg-green-600 text-white'
-                            : 'bg-brand-navy text-white hover:bg-black shadow-navy-900/10'
+                            ? 'bg-green-700 text-white'
+                            : 'bg-[#B59410] text-white hover:bg-[#967d0d] shadow-lg shadow-[#B59410]/20'
                     }
                 `}
             >
                 {added ? (
-                    <>
-                        <Check className="w-5 h-5" />
-                        <span>¡Añadido!</span>
-                    </>
+                    <span>AÑADIDO A LA BOLSA</span>
                 ) : (
-                    <>
-                        <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        <span>{selectedSize ? 'Añadir a la Selección' : 'Selecciona una talla'}</span>
-                    </>
+                    <span>AÑADIR A LA BOLSA</span>
                 )}
-            </button>
-
-            {/* Guía de tallas */}
-            <button className="text-xs text-slate-500 underline hover:text-brand-navy transition-colors">
-                Guía de tallas
             </button>
         </div>
     );

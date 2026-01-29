@@ -27,163 +27,154 @@ const isActive = (path: string) =>
 ---
 
 <BaseLayout title={`Admin | ${title}`}>
-  <div class="flex min-h-screen bg-slate-900">
-    <!-- Sidebar Profesional -->
+  <div class="flex min-h-screen bg-[#f8fafc]">
+    <!-- Sidebar Minimalista y Elegante -->
     <aside
-      class="w-72 bg-slate-900 text-white flex flex-col fixed h-full border-r border-slate-800 z-50 transition-all duration-300 relative shadow-2xl"
+      class="w-52 bg-white text-slate-600 flex flex-col fixed h-full border-r border-slate-200 z-50 transition-all duration-300 shadow-sm"
     >
-      <div class="absolute inset-0 bg-gradient-to-b from-slate-900 to-slate-950 -z-10"></div>
-      
       <!-- Logo y Branding -->
-      <div class="p-8 border-b border-slate-800/80">
-        <div class="flex items-center gap-4">
+      <div class="p-6 border-b border-slate-100">
+        <div class="flex items-center gap-3">
           <div
-            class="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20"
+            class="w-8 h-8 bg-gradient-to-br from-brand-gold to-amber-600 rounded-lg flex items-center justify-center shadow-md shadow-brand-gold/10"
           >
-            <Settings className="w-6 h-6 text-white" />
+            <Settings className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h1 class="text-xl font-bold tracking-tight text-white">FashionMarket</h1>
-            <div class="flex items-center gap-2 mt-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
-                Panel Admin
-              </p>
-            </div>
+            <h1
+              class="text-base font-bold tracking-tight text-slate-800 font-serif italic"
+            >
+              Aurum
+            </h1>
+            <p
+              class="text-[8px] uppercase tracking-[0.2em] text-slate-400 font-bold"
+            >
+              Admin
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- Botón Ver Tienda -->
-      <div class="px-6 py-6">
-        <a
-          href="/"
-          target="_blank"
-          class="flex items-center justify-center gap-2 w-full py-4 px-4 bg-gradient-to-r from-slate-800 to-slate-800 hover:from-emerald-600 hover:to-teal-600 border border-slate-700 hover:border-emerald-500/50 rounded-2xl text-slate-300 hover:text-white font-bold text-sm transition-all duration-300 shadow-lg shadow-black/20 hover:shadow-emerald-500/20 group"
-        >
-          <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
-          <span>Ver Tienda (Usuario)</span>
-        </a>
-      </div>
-
       <!-- Navegación Principal -->
-      <nav class="flex-1 px-6 space-y-1 overflow-y-auto custom-scrollbar">
-        <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold px-3 pt-4 pb-3">
+      <nav
+        class="flex-1 px-3 space-y-0.5 mt-6 overflow-y-auto custom-scrollbar"
+      >
+        <p
+          class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-bold px-3 pb-2 opacity-80"
+        >
           Principal
         </p>
 
         <a
           href="/admin"
-          class={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive("/admin") && !isActive("/admin/productos") && !isActive("/admin/ofertas") && !isActive("/admin/pedidos") ? "bg-gradient-to-r from-amber-500/10 to-transparent text-amber-400 border-l-2 border-amber-500" : "hover:bg-white/5 text-slate-400 hover:text-white hover:translate-x-1"}`}
+          class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin") && !isActive("/admin/productos") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
         >
-          <BarChart3 className={`w-5 h-5 ${isActive("/admin") && !isActive("/admin/productos") && !isActive("/admin/ofertas") ? "text-amber-400" : "text-slate-500 group-hover:text-white"}`} />
-          <span class="font-medium">Dashboard</span>
+          <BarChart3
+            className={`w-4 h-4 ${isActive("/admin") && !isActive("/admin/productos") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+          />
+          <span class="text-sm font-medium focus:text-slate-900">Dashboard</span
+          >
         </a>
 
-        <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold px-3 pt-8 pb-3">
+        <p
+          class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-bold px-3 pt-6 pb-2 opacity-80"
+        >
           Catálogo
         </p>
 
         <a
           href="/admin/productos"
-          class={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive("/admin/productos") ? "bg-gradient-to-r from-amber-500/10 to-transparent text-amber-400 border-l-2 border-amber-500" : "hover:bg-white/5 text-slate-400 hover:text-white hover:translate-x-1"}`}
+          class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/productos") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
         >
-          <Package className={`w-5 h-5 ${isActive("/admin/productos") ? "text-amber-400" : "text-slate-500 group-hover:text-white"}`} />
-          <span class="font-medium">Productos</span>
-        </a>
-
-        <a
-          href="/admin/productos/nuevo"
-          class="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-white/5 text-slate-500 hover:text-white transition-all ml-4 text-sm hover:translate-x-1"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Añadir Producto</span>
+          <Package
+            className={`w-4 h-4 ${isActive("/admin/productos") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+          />
+          <span class="text-sm font-medium">Productos</span>
         </a>
 
         <a
           href="/admin/ofertas"
-          class={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive("/admin/ofertas") ? "bg-gradient-to-r from-orange-500/10 to-transparent text-orange-400 border-l-2 border-orange-500" : "hover:bg-white/5 text-slate-400 hover:text-white hover:translate-x-1"}`}
+          class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/ofertas") ? "bg-orange-50 text-orange-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
         >
-          <Zap className={`w-5 h-5 ${isActive("/admin/ofertas") ? "text-orange-400" : "text-slate-500 group-hover:text-white"}`} />
-          <span class="font-medium">Ofertas Flash</span>
+          <Zap
+            className={`w-4 h-4 ${isActive("/admin/ofertas") ? "text-orange-500" : "text-slate-400 group-hover:text-slate-600"}`}
+          />
+          <span class="text-sm font-medium">Ofertas</span>
         </a>
 
-        <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold px-3 pt-8 pb-3">
+        <p
+          class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-bold px-3 pt-6 pb-2 opacity-80"
+        >
           Ventas
         </p>
 
         <a
           href="/admin/pedidos"
-          class={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive("/admin/pedidos") ? "bg-gradient-to-r from-amber-500/10 to-transparent text-amber-400 border-l-2 border-amber-500" : "hover:bg-white/5 text-slate-400 hover:text-white hover:translate-x-1"}`}
+          class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/pedidos") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
         >
-          <ShoppingBag className={`w-5 h-5 ${isActive("/admin/pedidos") ? "text-amber-400" : "text-slate-500 group-hover:text-white"}`} />
-          <span class="font-medium">Pedidos</span>
+          <ShoppingBag
+            className={`w-4 h-4 ${isActive("/admin/pedidos") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+          />
+          <span class="text-sm font-medium">Pedidos</span>
         </a>
 
         <a
           href="/admin/clientes"
-          class={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive("/admin/clientes") ? "bg-gradient-to-r from-amber-500/10 to-transparent text-amber-400 border-l-2 border-amber-500" : "hover:bg-white/5 text-slate-400 hover:text-white hover:translate-x-1"}`}
+          class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/clientes") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
         >
-          <Users className={`w-5 h-5 ${isActive("/admin/clientes") ? "text-amber-400" : "text-slate-500 group-hover:text-white"}`} />
-          <span class="font-medium">Clientes</span>
-        </a>
-
-        <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold px-3 pt-8 pb-3">
-          Comunicaciones
-        </p>
-
-        <a
-          href="/admin/correos"
-          class={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive("/admin/correos") ? "bg-gradient-to-r from-indigo-500/10 to-transparent text-indigo-400 border-l-2 border-indigo-500" : "hover:bg-white/5 text-slate-400 hover:text-white hover:translate-x-1"}`}
-        >
-          <div class={`w-5 h-5 flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity`}>📧</div>
-          <span class="font-medium">Correos</span>
+          <Users
+            className={`w-4 h-4 ${isActive("/admin/clientes") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+          />
+          <span class="text-sm font-medium">Clientes</span>
         </a>
       </nav>
 
       <!-- Footer del Sidebar -->
-      <div class="p-6 border-t border-slate-800 bg-slate-900/50 backdrop-blur-sm">
-        <div class="flex items-center gap-3 px-1 mb-4">
-          <div
-            class="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-slate-800"
-          >
-            A
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-white truncate">Administrador</p>
-            <p class="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
-            </p>
-          </div>
-        </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <a
+          href="/"
+          target="_blank"
+          class="flex items-center gap-2 px-3 py-2 text-[11px] text-slate-400 hover:text-amber-600 transition-colors mb-4 group"
+        >
+          <Eye
+            className="w-3.5 h-3.5 group-hover:scale-110 transition-transform"
+          />
+          <span>Ver Tienda Pública</span>
+        </a>
+
         <button
           id="logout-btn"
-          class="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-medium text-sm transition-all border border-red-500/10 hover:border-red-500/30 group"
+          class="flex items-center justify-center gap-2 w-full py-2 px-4 rounded-lg bg-red-50 hover:bg-red-500 hover:text-white text-red-500 text-xs font-bold transition-all border border-red-100"
         >
-          <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Cerrar Sesión</span>
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Salir</span>
         </button>
       </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 ml-72 bg-slate-100 min-h-screen">
+    <main class="flex-1 ml-52 bg-[#f8fafc] min-h-screen">
       <!-- Header Superior -->
       <header
-        class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-8 py-4"
+        class="sticky top-0 z-30 bg-white/70 backdrop-blur-md border-b border-slate-200 px-8 py-4"
       >
         <div class="flex justify-between items-center">
           <div>
-            <h2 class="text-2xl font-bold text-slate-800">{title}</h2>
-            <p class="text-sm text-slate-500">Panel de Administración</p>
+            <h2 class="text-xl font-bold text-slate-800 font-serif italic">
+              {title}
+            </h2>
+            <p
+              class="text-[10px] uppercase tracking-widest text-slate-400 font-bold"
+            >
+              Resumen de Gestión
+            </p>
           </div>
           <div class="flex items-center gap-4">
-            <!-- Acciones Rápidas -->
             <a
               href="/admin/productos/nuevo"
-              class="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm transition-all shadow-lg shadow-amber-500/20"
+              class="flex items-center gap-2 px-4 py-2 bg-brand-gold hover:bg-black text-white rounded-full font-bold text-xs transition-all shadow-lg shadow-brand-gold/10"
             >
-              <PlusCircle className="w-4 h-4" />
+              <PlusCircle className="w-3.5 h-3.5" />
               <span>Nuevo Producto</span>
             </a>
           </div>
@@ -202,7 +193,13 @@ const isActive = (path: string) =>
   import { supabase } from "../lib/supabase";
 
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
+    // Borrar cookies manuales
+    document.cookie =
+      "sb-access-token=; path=/; max-age=0; SameSite=Lax; Secure";
+    document.cookie =
+      "sb-refresh-token=; path=/; max-age=0; SameSite=Lax; Secure";
+
     await supabase.auth.signOut();
-    window.location.href = "/";
+    window.location.href = "/admin/login";
   });
 </script>

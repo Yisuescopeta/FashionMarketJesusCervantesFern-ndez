@@ -1,5 +1,5 @@
 ---
-import PublicLayout from '../../../layouts/PublicLayout.astro';
+import PublicLayout from '../../../../layouts/PublicLayout.astro';
 import { getAuthenticatedUser, createSupabaseServerClient } from '../../../lib/supabase-server';
 import { formatPrice } from '../../../lib/utils';
 import { ArrowLeft, Package, Truck, CheckCircle, AlertCircle, XCircle, Clock, MapPin } from 'lucide-react';
@@ -202,8 +202,8 @@ const isCancelled = order.status === 'cancelled';
               <div class="bg-indigo-50 rounded-2xl border border-indigo-100 p-6">
                   <h3 class="text-sm font-bold uppercase tracking-widest text-indigo-800 mb-2">Ayuda</h3>
                   <p class="text-xs text-indigo-600 mb-4">¿Tienes algún problema con tu pedido? Contáctanos.</p>
-                  <a href="mailto:soporte@fashionmarket.com" class="text-xs font-bold underline text-indigo-700 hover:text-indigo-900">
-                      soporte@fashionmarket.com
+                  <a href="mailto:soporte@aurum.com" class="text-xs font-bold underline text-indigo-700 hover:text-indigo-900">
+                      soporte@aurum.com
                   </a>
               </div>
           </div>

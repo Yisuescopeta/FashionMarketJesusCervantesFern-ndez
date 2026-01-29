@@ -1,0 +1,310 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseAdmin } from "../../../lib/supabase";
+import {
+    ShoppingBag,
+    Search,
+    Filter,
+    ChevronLeft,
+    ChevronRight,
+    Eye,
+    Clock,
+    CheckCircle2,
+    AlertCircle,
+    Truck,
+    MoreVertical,
+} from "lucide-react";
+
+export const prerender = false;
+
+// Paginación
+const url = new URL(Astro.request.url);
+const page = parseInt(url.searchParams.get("page") || "1");
+const pageSize = 10;
+const from = (page - 1) * pageSize;
+const to = from + pageSize - 1;
+
+// Filtros
+const statusFilter = url.searchParams.get("status") || "todos";
+const searchFilter = url.searchParams.get("search") || "";
+
+// Consulta base
+let query = supabaseAdmin
+    .from("orders")
+    .select("*, profiles(full_name, email)", { count: "exact" })
+    .order("created_at", { ascending: false });
+
+if (statusFilter !== "todos") {
+    query = query.eq("status", statusFilter);
+}
+
+if (searchFilter) {
+    query = query.or(
+        `id.ilike.%${searchFilter}%,profiles.full_name.ilike.%${searchFilter}%`,
+    );
+}
+
+const { data: orders, count, error } = await query.range(from, to);
+
+const totalPages = Math.ceil((count || 0) / pageSize);
+
+const getStatusStyle = (status: string) => {
+    switch (status) {
+        case "entregado":
+            return "bg-emerald-100 text-emerald-600 border-emerald-200";
+        case "enviado":
+            return "bg-blue-100 text-blue-600 border-blue-200";
+        case "procesando":
+            return "bg-amber-100 text-amber-600 border-amber-200";
+        case "cancelado":
+            return "bg-rose-100 text-rose-600 border-rose-200";
+        case "pendiente":
+            return "bg-slate-100 text-slate-600 border-slate-200";
+        default:
+            return "bg-slate-100 text-slate-600 border-slate-200";
+    }
+};
+
+const getStatusIcon = (status: string) => {
+    switch (status) {
+        case "entregado":
+            return CheckCircle2;
+        case "enviado":
+            return Truck;
+        case "procesando":
+            return Clock;
+        case "cancelado":
+            return AlertCircle;
+        case "pendiente":
+            return Clock;
+        default:
+            return Clock;
+    }
+};
+---
+
+<AdminLayout title="Pedidos">
+    <div
+        class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8"
+    >
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 font-serif italic">
+                Gestión de Pedidos
+            </h1>
+            <p class="text-sm text-slate-500">
+                Visualiza y gestiona las ventas de tu tienda.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div
+                class="bg-white px-4 py-2 rounded-2xl border border-slate-100 flex items-center gap-2 shadow-sm italic text-xs font-bold text-slate-500"
+            >
+                <ShoppingBag className="w-4 h-4 text-brand-gold" />
+                <span>Total: {count || 0}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div
+        class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm mb-8 flex flex-col md:flex-row items-center gap-4"
+    >
+        <form class="flex-1 w-full flex items-center gap-4">
+            <div class="relative flex-1">
+                <Search
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                />
+                <input
+                    type="text"
+                    name="search"
+                    value={searchFilter}
+                    placeholder="Buscar por ID o email..."
+                    class="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-gold transition-all"
+                />
+            </div>
+
+            <select
+                name="status"
+                onchange="this.form.submit()"
+                class="bg-slate-50 border-none rounded-2xl py-3 px-4 text-sm focus:ring-2 focus:ring-brand-gold cursor-pointer italic font-bold text-slate-600"
+            >
+                <option value="todos">Todos los estados</option>
+                <option
+                    value="pendiente"
+                    selected={statusFilter === "pendiente"}>Pendiente</option
+                >
+                <option
+                    value="procesando"
+                    selected={statusFilter === "procesando"}>Procesando</option
+                >
+                <option value="enviado" selected={statusFilter === "enviado"}
+                    >Enviado</option
+                >
+                <option
+                    value="entregado"
+                    selected={statusFilter === "entregado"}>Entregado</option
+                >
+                <option
+                    value="cancelado"
+                    selected={statusFilter === "cancelado"}>Cancelado</option
+                >
+            </select>
+
+            <button type="submit" class="hidden">Filtrar</button>
+        </form>
+    </div>
+
+    <!-- Tabla de Pedidos -->
+    <div
+        class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden border-t-4 border-t-amber-500"
+    >
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100">
+                        <th
+                            class="text-left py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Nº Pedido</th
+                        >
+                        <th
+                            class="text-left py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Cliente</th
+                        >
+                        <th
+                            class="text-left py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Fecha</th
+                        >
+                        <th
+                            class="text-left py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Total</th
+                        >
+                        <th
+                            class="text-left py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Estado</th
+                        >
+                        <th
+                            class="text-right py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Acciones</th
+                        >
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {
+                        orders?.map((order) => {
+                            const StatusIcon = getStatusIcon(order.status);
+                            return (
+                                <tr class="hover:bg-slate-50/50 transition-colors group">
+                                    <td class="py-4 px-6">
+                                        <span class="font-bold text-slate-800 text-sm group-hover:text-brand-gold transition-colors">
+                                            #
+                                            {order.id
+                                                .split("-")[0]
+                                                .toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-bold text-slate-700">
+                                                {order.profiles?.full_name ||
+                                                    "Anónimo"}
+                                            </span>
+                                            <span class="text-[10px] text-slate-400 font-medium">
+                                                {order.profiles?.email || "-"}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <span class="text-xs text-slate-500 font-medium italic">
+                                            {new Date(
+                                                order.created_at,
+                                            ).toLocaleDateString("es-ES", {
+                                                day: "2-digit",
+                                                month: "short",
+                                                year: "numeric",
+                                            })}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <span class="text-sm font-bold text-slate-800">
+                                            {(order.total_amount / 100).toFixed(
+                                                2,
+                                            )}
+                                            €
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <div
+                                            class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(order.status)}`}
+                                        >
+                                            <StatusIcon className="w-3 h-3" />
+                                            <span>{order.status}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a
+                                                href={`/admin/pedidos/${order.id}`}
+                                                class="p-2 text-slate-400 hover:text-brand-gold hover:bg-amber-50 rounded-xl transition-all"
+                                                title="Ver detalles"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </a>
+                                            <button class="p-2 text-slate-300 hover:text-slate-600 rounded-xl transition-all">
+                                                <MoreVertical className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })
+                    }
+
+                    {
+                        (!orders || orders.length === 0) && (
+                            <tr>
+                                <td colspan="6" class="py-16 text-center">
+                                    <ShoppingBag className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                                    <p class="text-slate-400 text-sm italic">
+                                        No se encontraron pedidos.
+                                    </p>
+                                </td>
+                            </tr>
+                        )
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        {
+            totalPages > 1 && (
+                <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">
+                        Página {page} de {totalPages}
+                    </span>
+
+                    <div class="flex items-center gap-2">
+                        {page > 1 && (
+                            <a
+                                href={`?page=${page - 1}&status=${statusFilter}&search=${searchFilter}`}
+                                class="p-2 bg-white border border-slate-200 rounded-xl hover:border-brand-gold hover:text-brand-gold transition-all shadow-sm"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </a>
+                        )}
+
+                        {page < totalPages && (
+                            <a
+                                href={`?page=${page + 1}&status=${statusFilter}&search=${searchFilter}`}
+                                class="p-2 bg-white border border-slate-200 rounded-xl hover:border-brand-gold hover:text-brand-gold transition-all shadow-sm"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </a>
+                        )}
+                    </div>
+                </div>
+            )
+        }
+    </div>
+</AdminLayout>

@@ -1,0 +1,358 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabase } from "../../../lib/supabase";
+import {
+    ArrowLeft,
+    Calendar,
+    User,
+    Mail,
+    MapPin,
+    Package,
+    CreditCard,
+    Truck,
+    CheckCircle2,
+    Clock,
+    AlertCircle,
+    Printer,
+    Edit3,
+} from "lucide-react";
+
+export const prerender = false;
+
+const { id } = Astro.params as { id: string };
+
+const { data: order, error } = await supabaseAdmin
+    .from("orders")
+    .select("*, profiles(*), order_items(*)")
+    .eq("id", id)
+    .single();
+
+if (!order) {
+    return Astro.redirect("/admin/pedidos");
+}
+
+const displayId = id.split("-")[0].toUpperCase();
+
+const getStatusStyle = (status: string) => {
+    switch (status) {
+        case "entregado":
+            return "bg-emerald-50 text-emerald-600 border-emerald-100";
+        case "enviado":
+            return "bg-blue-50 text-blue-600 border-blue-100";
+        case "procesando":
+            return "bg-amber-50 text-amber-600 border-amber-100";
+        case "cancelado":
+            return "bg-rose-50 text-rose-600 border-rose-100";
+        case "pendiente":
+            return "bg-slate-50 text-slate-600 border-slate-100";
+        default:
+            return "bg-slate-50 text-slate-600 border-slate-100";
+    }
+};
+---
+
+<AdminLayout title={`Pedido #${displayId}`}>
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+            <a
+                href="/admin/pedidos"
+                class="p-2 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all shadow-sm group"
+            >
+                <ArrowLeft
+                    className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors"
+                />
+            </a>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 font-serif italic">
+                    Pedido #{displayId}
+                </h1>
+                <div
+                    class="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1"
+                >
+                    <Calendar className="w-3 h-3" />
+                    <span
+                        >{
+                            new Date(order.created_at).toLocaleString("es-ES")
+                        }</span
+                    >
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button
+                class="bg-white px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all text-xs font-bold shadow-sm flex items-center gap-2 italic"
+            >
+                <Printer className="w-4 h-4" />
+                Imprimir Factura
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Columna Principal -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- Detalles del Producto -->
+            <div
+                class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm border-t-2 border-t-brand-gold"
+            >
+                <h3
+                    class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-3"
+                >
+                    <Package className="w-5 h-5 text-brand-gold" />
+                    Productos Comprados
+                </h3>
+
+                <div class="divide-y divide-slate-50">
+                    {
+                        order.order_items.map((item: any) => (
+                            <div class="py-6 flex items-center gap-6 group">
+                                <div class="w-16 h-16 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                                    <Package className="w-8 h-8 text-slate-200" />
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-slate-800 text-sm group-hover:text-amber-700 transition-colors">
+                                        {item.product_name}
+                                    </h4>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                                        Cantidad: {item.quantity}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-slate-800">
+                                        {(item.price_at_purchase / 100).toFixed(
+                                            2,
+                                        )}
+                                        €
+                                    </p>
+                                    <p class="text-[10px] text-slate-400 italic">
+                                        Total:{" "}
+                                        {(
+                                            (item.price_at_purchase *
+                                                item.quantity) /
+                                            100
+                                        ).toFixed(2)}
+                                        €
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    }
+                </div>
+
+                <div class="mt-8 pt-8 border-t border-slate-50 space-y-3">
+                    <div
+                        class="flex justify-between text-sm text-slate-500 italic"
+                    >
+                        <span>Subtotal</span>
+                        <span>{(order.total_amount / 100).toFixed(2)}€</span>
+                    </div>
+                    <div
+                        class="flex justify-between text-sm text-slate-500 italic"
+                    >
+                        <span>Envío</span>
+                        <span
+                            class="text-emerald-500 font-bold uppercase tracking-widest text-[10px]"
+                            >Gratis</span
+                        >
+                    </div>
+                    <div
+                        class="flex justify-between text-lg font-bold text-slate-800 pt-3 border-t border-slate-100"
+                    >
+                        <span class="font-serif italic text-2xl">Total</span>
+                        <span class="font-serif italic text-2xl"
+                            >{(order.total_amount / 100).toFixed(2)}€</span
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notas del Cliente / Auditoría (Placeholder) -->
+            <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100">
+                <h3
+                    class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 italic"
+                >
+                    Historial del Pedido
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shadow-lg shadow-emerald-500/20"
+                        >
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-700">
+                                Pedido creado automáticamente
+                            </p>
+                            <p class="text-[10px] text-slate-400 italic">
+                                {new Date(order.created_at).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Lateral -->
+        <div class="space-y-8">
+            <!-- Estado del Pedido -->
+            <div
+                class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm"
+            >
+                <h3 class="text-lg font-bold text-slate-800 mb-6">Estado</h3>
+
+                <div
+                    class={`p-6 rounded-2xl border mb-6 text-center ${getStatusStyle(order.status)}`}
+                >
+                    <p
+                        class="text-[10px] font-bold uppercase tracking-[0.2em] mb-1 italic opacity-80"
+                    >
+                        Estado actual
+                    </p>
+                    <p class="text-xl font-bold uppercase tracking-widest">
+                        {order.status}
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <label
+                        class="block text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        >Actualizar Estado</label
+                    >
+                    <select
+                        id="status-select"
+                        data-order-id={order.id}
+                        class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold italic text-slate-600 focus:ring-2 focus:ring-brand-gold cursor-pointer appearance-none"
+                    >
+                        <option
+                            value="pendiente"
+                            selected={order.status === "pendiente"}
+                            >Pendiente</option
+                        >
+                        <option
+                            value="procesando"
+                            selected={order.status === "procesando"}
+                            >Procesando</option
+                        >
+                        <option
+                            value="enviado"
+                            selected={order.status === "enviado"}
+                            >Enviado</option
+                        >
+                        <option
+                            value="entregado"
+                            selected={order.status === "entregado"}
+                            >Entregado</option
+                        >
+                        <option
+                            value="cancelado"
+                            selected={order.status === "cancelado"}
+                            >Cancelado</option
+                        >
+                    </select>
+                </div>
+            </div>
+
+            <!-- Cliente -->
+            <div
+                class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm"
+            >
+                <h3
+                    class="text-lg font-bold text-slate-800 mb-6 flex items-center justify-between"
+                >
+                    Cliente
+                    <User className="w-4 h-4 text-slate-300" />
+                </h3>
+
+                <div class="space-y-6">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 text-slate-400 font-serif italic text-xl"
+                        >
+                            {order.profiles?.full_name?.charAt(0) || "A"}
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800">
+                                {order.profiles?.full_name || "Anónimo"}
+                            </p>
+                            <p
+                                class="text-[10px] text-slate-400 font-bold uppercase tracking-wider"
+                            >
+                                Historial: {order.profiles?.orders_count || 1} pedidos
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 pt-6 border-t border-slate-50">
+                        <div
+                            class="flex items-center gap-3 text-slate-500 italic"
+                        >
+                            <Mail className="w-4 h-4" />
+                            <span class="text-xs"
+                                >{
+                                    order.profiles?.email || "No disponible"
+                                }</span
+                            >
+                        </div>
+                        <div
+                            class="flex items-start gap-3 text-slate-500 italic"
+                        >
+                            <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                            <span class="text-xs leading-relaxed"
+                                >{
+                                    order.shipping_address ||
+                                        "Dirección no especificada"
+                                }</span
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información Adicional -->
+            <div
+                class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm italic"
+            >
+                <h3
+                    class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4"
+                >
+                    Pago
+                </h3>
+                <div
+                    class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100"
+                >
+                    <CreditCard className="w-5 h-5 text-slate-400" />
+                    <span class="text-xs font-bold text-slate-600"
+                        >Tarjeta de Crédito</span
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+</AdminLayout>
+
+<script>
+    import { supabase } from "../../../lib/supabase";
+
+    const statusSelect = document.getElementById(
+        "status-select",
+    ) as HTMLSelectElement;
+
+    statusSelect?.addEventListener("change", async () => {
+        const orderId = statusSelect.dataset.orderId;
+        const newStatus = statusSelect.value;
+
+        if (!orderId) return;
+
+        const { error } = await supabase
+            .from("orders")
+            .update({ status: newStatus, updated_at: new Date().toISOString() })
+            .eq("id", orderId);
+
+        if (!error) {
+            window.location.reload();
+        } else {
+            alert("Error al actualizar estado: " + error.message);
+        }
+    });
+</script>

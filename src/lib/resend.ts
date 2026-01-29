@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 export const resend = new Resend(import.meta.env.RESEND_API_KEY);
 
 // Configuración del remitente
-export const EMAIL_FROM = 'FashionMarket <noreply@fashionmarket.com>';
+export const EMAIL_FROM = 'Aurum <noreply@aurum.com>';
 
 // Interfaz para el email de favorito en oferta
 export interface FavoriteOnSaleEmailData {
@@ -34,7 +34,7 @@ export async function sendFavoriteOnSaleEmail(data: FavoriteOnSaleEmailData) {
   const formatPrice = (cents: number) =>
     (cents / 100).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
 
-  const productUrl = `${import.meta.env.SITE_URL || 'https://fashionmarket.com'}/productos/${productSlug}`;
+  const productUrl = `${import.meta.env.SITE_URL || 'https://aurum.com'}/productos/${productSlug}`;
 
   try {
     const { data: result, error } = await resend.emails.send({
@@ -130,7 +130,7 @@ export async function sendFavoriteOnSaleEmail(data: FavoriteOnSaleEmailData) {
                         Has recibido este email porque guardaste este producto en favoritos.
                       </p>
                       <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                        <a href="${import.meta.env.SITE_URL || 'https://fashionmarket.com'}/mi-cuenta/preferencias" style="color: #d4a574;">
+                        <a href="${import.meta.env.SITE_URL || 'https://aurum.com'}/mi-cuenta/preferencias" style="color: #d4a574;">
                           Gestionar preferencias de email
                         </a>
                       </p>
@@ -276,7 +276,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
                   <tr>
                     <td style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
                       <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                        &copy; ${new Date().getFullYear()} FashionMarket. Todos los derechos reservados.
+                        &copy; ${new Date().getFullYear()} Aurum. Todos los derechos reservados.
                       </p>
                     </td>
                   </tr>

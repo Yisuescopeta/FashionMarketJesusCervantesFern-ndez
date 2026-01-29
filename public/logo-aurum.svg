@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <style>
+      .gold{fill:#c9a24a}
+      .black{fill:#111111}
+      .none{fill:none}
+    </style>
+  </defs>
+
+  <!-- Transparent background -->
+  <rect x="0" y="0" width="1024" height="1024" fill="none"/>
+
+  <!-- Gold square border -->
+  <rect x="190" y="210" width="644" height="644" class="none" stroke="#c9a24a" stroke-width="10"/>
+
+  <!-- Monogram (stylized AM) -->
+  <!-- Black M -->
+  <path class="black" d="M390 520
+    L450 370
+    L512 485
+    L574 370
+    L634 520
+    L604 520
+    L562 416
+    L512 506
+    L462 416
+    L420 520 Z"/>
+
+  <!-- Black A outline (simple serif-like) -->
+  <path class="black" d="M512 330
+    L420 560
+    L458 560
+    L482 500
+    L542 500
+    L566 560
+    L604 560
+    L512 330 Z
+    M500 468
+    L512 438
+    L524 468 Z"/>
+
+  <!-- Gold accent stroke on the A (center highlight) -->
+  <path class="gold" d="M512 350
+    L474 448
+    L496 448
+    L512 410
+    L528 448
+    L550 448
+    L512 350 Z"/>
+
+  <!-- Wordmark: AURUM (vector text approximation using paths would be ideal) -->
+  <!-- For portability without fonts, keep as simple paths-like shapes (minimal stylized) -->
+  <text x="512" y="690" text-anchor="middle"
+        font-family="serif" font-size="110" fill="#111111" letter-spacing="6">
+    AURUM
+  </text>
+
+  <!-- Tagline -->
+  <text x="512" y="755" text-anchor="middle"
+        font-family="sans-serif" font-size="34" fill="#c9a24a" letter-spacing="3">
+    MEN'S FINE CLOTHIERS
+  </text>
+</svg>

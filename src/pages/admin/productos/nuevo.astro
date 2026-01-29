@@ -1,118 +1,353 @@
 ---
 import AdminLayout from "../../../layouts/AdminLayout.astro";
-import { supabase } from "../../../lib/supabase";
+import { supabaseAdmin } from "../../../lib/supabase";
+
+import { ArrowLeft, Save, Upload, X, Zap, Package } from "lucide-react";
 
 export const prerender = false;
 
-const { data: categories } = await supabase.from("categories").select("*");
+const { data: categories } = await supabaseAdmin.from("categories").select("*");
 ---
 
 <AdminLayout title="Añadir Producto">
-  <div class="max-w-4xl">
-    <form
-      id="product-form"
-      class="space-y-8 bg-white p-8 border border-slate-100 shadow-sm"
-    >
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="space-y-2">
-          <label
-            class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
-            >Nombre del Producto</label
-          >
-          <input
-            name="name"
-            type="text"
-            required
-            class="w-full border-slate-200 p-3 focus:ring-brand-gold focus:border-brand-gold"
-          />
-        </div>
-        <div class="space-y-2">
-          <label
-            class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
-            >Categoría</label
-          >
-          <select name="category_id" class="w-full border-slate-200 p-3">
-            {
-              categories?.map((cat) => (
-                <option value={cat.id}>{cat.name}</option>
-              ))
-            }
-          </select>
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <label
-          class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
-          >Descripción</label
+  <!-- Header con navegación -->
+  <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center gap-4">
+      <a
+        href="/admin/productos"
+        class="p-2 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all shadow-sm group"
+      >
+        <ArrowLeft
+          className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors"
+        />
+      </a>
+      <div>
+        <h1 class="text-xl font-bold text-slate-800 font-serif italic">
+          Nuevo Producto
+        </h1>
+        <p
+          class="text-[10px] uppercase tracking-widest text-slate-400 font-bold"
         >
-        <textarea
-          name="description"
-          rows="4"
-          class="w-full border-slate-200 p-3"></textarea>
+          Crear nuevo ítem del catálogo
+        </p>
       </div>
+    </div>
+  </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="space-y-2">
-          <label
-            class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
-            >Precio (en céntimos)</label
-          >
-          <input
-            name="price"
-            type="number"
-            step="1"
-            required
-            class="w-full border-slate-200 p-3"
-            placeholder="Ej: 59900 para 599.00€"
-          />
-        </div>
-        <div class="space-y-2">
-          <label
-            class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
-            >Stock Inicial</label
-          >
-          <input
-            name="stock"
-            type="number"
-            required
-            class="w-full border-slate-200 p-3"
-          />
-        </div>
-      </div>
-
-      <!-- Drag & Drop Area -->
-      <div class="space-y-2">
-        <label
-          class="text-[10px] uppercase tracking-widest font-bold text-slate-500"
-          >Imágenes (Drag & Drop)</label
+  <form id="product-form" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Formulario Principal -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Información Básica -->
+      <div
+        class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm border-t-2 border-t-brand-gold"
+      >
+        <h3
+          class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"
         >
+          <Package className="w-5 h-5 text-brand-gold" />
+          Información Básica
+        </h3>
+
+        <div class="space-y-6">
+          <div>
+            <label
+              class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+              >Nombre del Producto *</label
+            >
+            <input
+              name="name"
+              type="text"
+              required
+              placeholder="Ej: Camisa de Lino Azul"
+              class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all placeholder:text-slate-300"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label
+                class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                >Categoría *</label
+              >
+              <select
+                name="category_id"
+                class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none bg-white transition-all appearance-none cursor-pointer"
+              >
+                <option value="" disabled selected>Seleccionar categoría</option
+                >
+                {
+                  categories?.map((cat) => (
+                    <option value={cat.id}>{cat.name}</option>
+                  ))
+                }
+              </select>
+            </div>
+            <div>
+              <label
+                class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                >Material</label
+              >
+              <input
+                name="material"
+                type="text"
+                placeholder="Ej: 100% Algodón Orgánico"
+                class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none transition-all placeholder:text-slate-300"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+              >Descripción</label
+            >
+            <textarea
+              name="description"
+              rows="5"
+              placeholder="Describe los detalles, el ajuste y el estilo del producto..."
+              class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none transition-all placeholder:text-slate-300 resize-none"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Precios y Stock -->
+      <div
+        class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm border-t-2 border-t-brand-gold"
+      >
+        <h3
+          class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"
+        >
+          <span class="text-brand-gold">€</span>
+          Precios y Stock
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label
+              class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+              >Precio (céntimos) *</label
+            >
+            <div class="relative">
+              <input
+                name="price"
+                type="number"
+                step="1"
+                required
+                placeholder="5900"
+                class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none transition-all pr-12"
+              />
+              <span
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold"
+                >cts</span
+              >
+            </div>
+            <p class="text-[10px] text-slate-400 mt-2 italic px-1">
+              Ej: 5900 = 59.00€
+            </p>
+          </div>
+          <div>
+            <label
+              class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+              >Stock Inicial *</label
+            >
+            <input
+              name="stock"
+              type="number"
+              required
+              placeholder="0"
+              class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+              >SKU / Referencia</label
+            >
+            <input
+              name="sku"
+              type="text"
+              placeholder="Opcional"
+              class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none transition-all"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Oferta Flash -->
+      <div
+        class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100 shadow-sm relative overflow-hidden group"
+      >
+        <div
+          class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity"
+        >
+          <Zap className="w-32 h-32 text-brand-gold" />
+        </div>
+
+        <div class="flex items-center justify-between mb-6 relative z-10">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20"
+            >
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">Oferta Flash</h3>
+              <p
+                class="text-[10px] uppercase tracking-widest text-slate-500 font-bold"
+              >
+                Sección de Descuentos
+              </p>
+            </div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" name="is_on_sale" class="sr-only peer" />
+            <div
+              class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-gold"
+            >
+            </div>
+          </label>
+        </div>
+
+        <div class="relative z-10">
+          <label
+            class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+            >Precio de Oferta (céntimos)</label
+          >
+          <div class="relative max-w-xs">
+            <input
+              name="sale_price"
+              type="number"
+              placeholder="Precio especial..."
+              class="w-full border border-white rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none bg-white/90 focus:bg-white transition-all pr-12"
+            />
+            <span
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold"
+              >cts</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Lateral -->
+    <div class="lg:col-span-1 space-y-6">
+      <!-- Galería de Imágenes -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <h3
+          class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"
+        >
+          <Upload className="w-5 h-5 text-brand-gold" />
+          Multimedia
+        </h3>
+
         <div
           id="drop-zone"
-          class="border-2 border-dashed border-slate-200 p-12 text-center hover:border-brand-gold transition-colors cursor-pointer group"
+          class="group border-2 border-dashed border-slate-100 rounded-2xl p-8 text-center hover:border-brand-gold hover:bg-amber-50/30 transition-all cursor-pointer mb-6"
         >
-          <p class="text-slate-400 group-hover:text-brand-gold italic">
-            Arrastra tus fotos aquí o haz clic para seleccionar
+          <div
+            class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:bg-amber-100 transition-all"
+          >
+            <Upload
+              className="w-6 h-6 text-slate-300 group-hover:text-brand-gold"
+            />
+          </div>
+          <p
+            class="text-xs font-bold text-slate-400 group-hover:text-slate-600"
+          >
+            Click para subir
+          </p>
+          <p class="text-[10px] text-slate-300 mt-1 uppercase tracking-widest">
+            JPG, PNG o WEBP
           </p>
           <input
             type="file"
             id="file-input"
             multiple
-            class="hidden"
             accept="image/*"
+            class="hidden"
           />
         </div>
-        <div id="preview-grid" class="grid grid-cols-4 gap-4 mt-4"></div>
+
+        <div id="preview-grid" class="grid grid-cols-2 gap-3">
+          {/* Previews se generarán aquí */}
+        </div>
+
+        <div id="empty-previews" class="text-center py-8 opacity-40">
+          <Package className="w-10 h-10 text-slate-200 mx-auto mb-2" />
+          <p
+            class="text-[10px] uppercase font-bold tracking-widest text-slate-300"
+          >
+            Sin imágenes
+          </p>
+        </div>
       </div>
 
-      <button
-        type="submit"
-        class="w-full bg-brand-navy text-white py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition"
-      >
-        Guardar Producto
-      </button>
-    </form>
-  </div>
+      <!-- Publicación -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <h3
+          class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"
+        >
+          <Zap className="w-5 h-5 text-brand-gold" />
+          Publicar
+        </h3>
+
+        <div class="space-y-4">
+          <div
+            class="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
+          >
+            <div>
+              <p class="text-xs font-bold text-slate-700">Estado Activo</p>
+              <p class="text-[10px] text-slate-400 font-medium">
+                Visible en tienda
+              </p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_active"
+                class="sr-only peer"
+                checked
+              />
+              <div
+                class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"
+              >
+              </div>
+            </label>
+          </div>
+
+          <div
+            class="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
+          >
+            <div>
+              <p class="text-xs font-bold text-slate-700">Destacado</p>
+              <p class="text-[10px] text-slate-400 font-medium">
+                Página de inicio
+              </p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" name="is_featured" class="sr-only peer" />
+              <div
+                class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-gold"
+              >
+              </div>
+            </label>
+          </div>
+
+          <div class="pt-4">
+            <button
+              type="submit"
+              id="submit-btn"
+              class="w-full flex items-center justify-center gap-2 bg-slate-900 border-2 border-slate-900 hover:bg-black text-white py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-900/10 active:scale-95"
+            >
+              <Save className="w-4 h-4" />
+              <span>Crear Producto</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
 </AdminLayout>
 
 <script>
@@ -123,6 +358,8 @@ const { data: categories } = await supabase.from("categories").select("*");
   const dropZone = document.getElementById("drop-zone");
   const fileInput = document.getElementById("file-input") as HTMLInputElement;
   const previewGrid = document.getElementById("preview-grid");
+  const emptyPreviews = document.getElementById("empty-previews");
+  const submitBtn = document.getElementById("submit-btn");
 
   let uploadedFiles: File[] = [];
 
@@ -130,16 +367,16 @@ const { data: categories } = await supabase.from("categories").select("*");
 
   dropZone?.addEventListener("dragover", (e) => {
     e.preventDefault();
-    dropZone.classList.add("border-brand-gold");
+    dropZone.classList.add("border-brand-gold", "bg-amber-50/30");
   });
 
   dropZone?.addEventListener("dragleave", () => {
-    dropZone.classList.remove("border-brand-gold");
+    dropZone.classList.remove("border-brand-gold", "bg-amber-50/30");
   });
 
   dropZone?.addEventListener("drop", (e) => {
     e.preventDefault();
-    dropZone.classList.remove("border-brand-gold");
+    dropZone.classList.remove("border-brand-gold", "bg-amber-50/30");
     const files = Array.from(e.dataTransfer?.files || []);
     handleFiles(files);
   });
@@ -155,13 +392,27 @@ const { data: categories } = await supabase.from("categories").select("*");
   }
 
   function renderPreviews() {
-    if (!previewGrid) return;
+    if (!previewGrid || !emptyPreviews) return;
+
+    if (uploadedFiles.length > 0) {
+      emptyPreviews.style.display = "none";
+    } else {
+      emptyPreviews.style.display = "block";
+    }
+
     previewGrid.innerHTML = "";
     uploadedFiles.forEach((file, index) => {
       const url = URL.createObjectURL(file);
       const div = document.createElement("div");
-      div.className = "aspect-square bg-slate-100 relative";
-      div.innerHTML = `<img src="${url}" class="w-full h-full object-cover" /><button type="button" class="absolute top-0 right-0 bg-red-500 text-white p-1 text-xs" onclick="window.removeImage(${index})">X</button>`;
+      div.className =
+        "group relative aspect-square bg-slate-50 rounded-xl overflow-hidden border border-slate-100 shadow-sm";
+      div.innerHTML = `
+                <img src="${url}" class="w-full h-full object-cover" />
+                <button type="button" class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onclick="window.removeImage(${index})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+                <div class="absolute bottom-0 left-0 right-0 bg-brand-gold text-[8px] text-white text-center py-0.5 font-bold uppercase tracking-wider">Nuevo</div>
+            `;
       previewGrid.appendChild(div);
     });
   }
@@ -177,37 +428,69 @@ const { data: categories } = await supabase.from("categories").select("*");
     const name = formData.get("name") as string;
     const slug = slugify(name);
 
-    // 1. Upload Images
-    const imageUrls: string[] = [];
-    for (const file of uploadedFiles) {
-      const fileName = `${Date.now()}-${file.name}`;
-      const { data, error } = await supabase.storage
-        .from("products-images")
-        .upload(fileName, file);
-
-      if (data) {
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("products-images").getPublicUrl(fileName);
-        imageUrls.push(publicUrl);
-      }
+    if (submitBtn) {
+      submitBtn.innerHTML = `
+                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Creando...</span>
+            `;
+      (submitBtn as HTMLButtonElement).disabled = true;
     }
 
-    // 2. Insert Product
-    const { error } = await supabase.from("products").insert({
-      name,
-      slug,
-      description: formData.get("description"),
-      price: parseInt(formData.get("price") as string),
-      stock: parseInt(formData.get("stock") as string),
-      category_id: formData.get("category_id"),
-      images: imageUrls,
-    });
+    try {
+      // 1. Upload Images
+      const imageUrls: string[] = [];
+      for (const file of uploadedFiles) {
+        const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+        const { data, error } = await supabase.storage
+          .from("products-images")
+          .upload(fileName, file);
 
-    if (!error) {
-      window.location.href = "/admin/productos";
-    } else {
+        if (data) {
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("products-images").getPublicUrl(fileName);
+          imageUrls.push(publicUrl);
+        } else if (error) {
+          console.error("Error subiendo imagen:", error);
+        }
+      }
+
+      // 2. Insert Product
+      const { error } = await supabase.from("products").insert({
+        name,
+        slug,
+        description: formData.get("description"),
+        price: parseInt(formData.get("price") as string),
+        stock: parseInt(formData.get("stock") as string),
+        category_id: formData.get("category_id"),
+        material: formData.get("material") || null,
+        sku: formData.get("sku") || null,
+        is_on_sale: formData.get("is_on_sale") === "on",
+        sale_price: formData.get("sale_price")
+          ? parseInt(formData.get("sale_price") as string)
+          : null,
+        is_active: formData.get("is_active") === "on",
+        is_featured: formData.get("is_featured") === "on",
+        images: imageUrls,
+      });
+
+      if (!error) {
+        window.location.href = "/admin/productos";
+      } else {
+        throw error;
+      }
+    } catch (error: any) {
       alert("Error al guardar: " + error.message);
+      if (submitBtn) {
+        submitBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg>
+                    <span>Crear Producto</span>
+                `;
+        (submitBtn as HTMLButtonElement).disabled = false;
+      }
     }
   });
 </script>

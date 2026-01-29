@@ -1,268 +1,193 @@
 ---
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { supabase } from '../../../lib/supabase';
-import { formatPrice } from '../../../lib/utils';
-import { Package, Search, Filter, PlusCircle, Edit, Trash2, Eye, Zap } from 'lucide-react';
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseAdmin } from "../../../lib/supabase";
+import {
+  Package,
+  Search,
+  Filter,
+  PlusCircle,
+  Zap,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import ProductTable from "../../../components/admin/ProductTable.astro";
+import StatCard from "../../../components/admin/StatCard.astro";
 
 export const prerender = false;
 
-// Obtener productos con categoría
-const { data: products } = await supabase
-  .from('products')
-  .select('*, categories(name)')
-  .order('created_at', { ascending: false });
+// Parámetros de paginación y filtrado
+const page = parseInt(Astro.url.searchParams.get("page") || "1");
+const limit = 10;
+const from = (page - 1) * limit;
+const to = from + limit - 1;
+
+const searchQuery = Astro.url.searchParams.get("q") || "";
+const categoryFilter = Astro.url.searchParams.get("category") || "";
+const stockFilter = Astro.url.searchParams.get("stock") || "";
+
+// Construir query de productos
+let query = supabaseAdmin
+  .from("products")
+  .select("*, categories(name)", { count: "exact" })
+  .order("created_at", { ascending: false });
+
+if (searchQuery) {
+  query = query.ilike("name", `%${searchQuery}%`);
+}
+
+if (categoryFilter) {
+  query = query.eq("category_id", categoryFilter);
+}
+
+if (stockFilter === "low") {
+  query = query.lt("stock", 10);
+} else if (stockFilter === "out") {
+  query = query.eq("stock", 0);
+}
+
+// Ejecutar query con paginación
+const { data: products, count, error } = await query.range(from, to);
+
+const totalPages = Math.ceil((count || 0) / limit);
 
 // Obtener categorías para filtro
-const { data: categories } = await supabase.from('categories').select('*');
+const { data: categories } = await supabaseAdmin.from("categories").select("*");
 
-// Estadísticas rápidas
-const totalProducts = products?.length || 0;
-const lowStock = products?.filter(p => p.stock < 10).length || 0;
-const onSale = products?.filter(p => p.is_on_sale).length || 0;
+// Estadísticas rápidas (Totales globales, no filtrados)
+const { count: totalProducts } = await supabaseAdmin
+  .from("products")
+  .select("*", { count: "exact", head: true });
+const { count: lowStock } = await supabaseAdmin
+  .from("products")
+  .select("*", { count: "exact", head: true })
+  .lt("stock", 10);
+const { count: onSale } = await supabaseAdmin
+  .from("products")
+  .select("*", { count: "exact", head: true })
+  .eq("is_on_sale", true);
 ---
 
 <AdminLayout title="Gestión de Productos">
   <!-- Barra de Estadísticas -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-    <div class="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-4">
-      <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-        <Package className="w-5 h-5 text-blue-600" />
-      </div>
-      <div>
-        <p class="text-2xl font-bold text-slate-800">{totalProducts}</p>
-        <p class="text-xs text-slate-500">Total Productos</p>
-      </div>
-    </div>
-    <div class="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-4">
-      <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-        <Package className="w-5 h-5 text-amber-600" />
-      </div>
-      <div>
-        <p class="text-2xl font-bold text-slate-800">{lowStock}</p>
-        <p class="text-xs text-slate-500">Stock Bajo (&lt;10)</p>
-      </div>
-    </div>
-    <div class="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-4">
-      <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-        <Zap className="w-5 h-5 text-orange-600" />
-      </div>
-      <div>
-        <p class="text-2xl font-bold text-slate-800">{onSale}</p>
-        <p class="text-xs text-slate-500">En Oferta</p>
-      </div>
-    </div>
-    <a href="/admin/productos/nuevo" class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 flex items-center gap-4 hover:from-amber-600 hover:to-orange-600 transition-all group">
-      <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-        <PlusCircle className="w-5 h-5 text-white" />
+    <StatCard
+      title="Total Productos"
+      value={totalProducts || 0}
+      icon={Package}
+      color="blue"
+    />
+    <StatCard
+      title="Stock Bajo"
+      value={lowStock || 0}
+      subtitle="< 10 unidades"
+      icon={Package}
+      color="amber"
+    />
+    <StatCard title="En Oferta" value={onSale || 0} icon={Zap} color="orange" />
+
+    <a
+      href="/admin/productos/nuevo"
+      class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-6 flex items-center gap-4 hover:from-amber-600 hover:to-orange-600 transition-all group shadow-lg shadow-orange-500/20"
+    >
+      <div
+        class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
+      >
+        <PlusCircle className="w-6 h-6 text-white" />
       </div>
       <div>
         <p class="text-lg font-bold text-white">Añadir Producto</p>
-        <p class="text-xs text-white/80">Crear nuevo</p>
+        <p class="text-xs text-white/80 font-medium">Crear nuevo ítem</p>
       </div>
     </a>
   </div>
 
   <!-- Filtros y Búsqueda -->
-  <div class="bg-white rounded-xl p-4 mb-6 border border-slate-100 flex flex-wrap gap-4 items-center">
+  <form
+    class="bg-white rounded-xl p-4 mb-6 border border-slate-100 flex flex-wrap gap-4 items-center shadow-sm"
+  >
     <div class="flex-1 min-w-[200px] relative">
-      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-      <input 
-        type="text" 
-        id="search-input"
-        placeholder="Buscar productos..." 
-        class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-sm"
+      <Search
+        className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
+      />
+      <input
+        type="text"
+        name="q"
+        value={searchQuery}
+        placeholder="Buscar productos..."
+        class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-sm transition-all"
       />
     </div>
+
     <div class="flex items-center gap-2">
       <Filter className="w-4 h-4 text-slate-400" />
-      <select id="category-filter" class="border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+      <select
+        name="category"
+        class="border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white min-w-[150px]"
+        onchange="this.form.submit()"
+      >
         <option value="">Todas las categorías</option>
-        {categories?.map(cat => (
-          <option value={cat.id}>{cat.name}</option>
-        ))}
+        {
+          categories?.map((cat) => (
+            <option value={cat.id} selected={cat.id === categoryFilter}>
+              {cat.name}
+            </option>
+          ))
+        }
       </select>
     </div>
+
     <div class="flex items-center gap-2">
-      <select id="stock-filter" class="border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+      <select
+        name="stock"
+        class="border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+        onchange="this.form.submit()"
+      >
         <option value="">Todo el stock</option>
-        <option value="low">Stock bajo (&lt;10)</option>
-        <option value="out">Sin stock</option>
-        <option value="ok">Stock OK</option>
+        <option value="low" selected={stockFilter === "low"}
+          >Stock bajo (&lt;10)</option
+        >
+        <option value="out" selected={stockFilter === "out"}>Sin stock</option>
       </select>
     </div>
-  </div>
+
+    {/* Resetear filtros si hay alguno activo */}
+    {
+      (searchQuery || categoryFilter || stockFilter) && (
+        <a
+          href="/admin/productos"
+          class="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 font-medium hover:bg-slate-50 rounded-lg transition-colors"
+        >
+          Limpiar filtros
+        </a>
+      )
+    }
+  </form>
 
   <!-- Tabla de Productos -->
-  <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-left" id="products-table">
-        <thead class="bg-slate-50 border-b border-slate-100">
-          <tr>
-            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Producto</th>
-            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Categoría</th>
-            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Precio</th>
-            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Stock</th>
-            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
-            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100" id="products-tbody">
-          {products?.map(product => (
-            <tr class="hover:bg-slate-50 transition-colors product-row" 
-                data-name={product.name.toLowerCase()} 
-                data-category={product.category_id}
-                data-stock={product.stock}>
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-4">
-                  <div class="w-14 h-14 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-                    {product.images?.[0] ? (
-                      <img src={product.images[0]} alt="" class="w-full h-full object-cover" />
-                    ) : (
-                      <div class="w-full h-full flex items-center justify-center">
-                        <Package className="w-6 h-6 text-slate-300" />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <p class="font-bold text-slate-800">{product.name}</p>
-                    <p class="text-xs text-slate-400 truncate max-w-[200px]">{product.description?.substring(0, 50)}...</p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                  {product.categories?.name || 'Sin categoría'}
-                </span>
-              </td>
-              <td class="px-6 py-4">
-                <div>
-                  <p class="font-bold text-slate-800">{formatPrice(product.price)}</p>
-                  {product.is_on_sale && product.sale_price && (
-                    <p class="text-xs text-red-500 font-medium">Oferta: {formatPrice(product.sale_price)}</p>
-                  )}
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <span class={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
-                  product.stock === 0 ? 'bg-red-100 text-red-700' :
-                  product.stock < 10 ? 'bg-amber-100 text-amber-700' :
-                  'bg-emerald-100 text-emerald-700'
-                }`}>
-                  {product.stock} uds
-                </span>
-              </td>
-              <td class="px-6 py-4">
-                <div class="flex flex-col gap-1">
-                  {product.is_active ? (
-                    <span class="inline-flex items-center text-xs text-emerald-600 font-medium">
-                      <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5"></span>
-                      Activo
-                    </span>
-                  ) : (
-                    <span class="inline-flex items-center text-xs text-slate-400 font-medium">
-                      <span class="w-1.5 h-1.5 bg-slate-300 rounded-full mr-1.5"></span>
-                      Inactivo
-                    </span>
-                  )}
-                  {product.is_on_sale && (
-                    <span class="inline-flex items-center text-xs text-orange-600 font-medium">
-                      <Zap className="w-3 h-3 mr-1" />
-                      En oferta
-                    </span>
-                  )}
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <div class="flex justify-end gap-2">
-                  <a href={`/productos/${product.slug}`} target="_blank" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Ver en tienda">
-                    <Eye className="w-4 h-4" />
-                  </a>
-                  <a href={`/admin/productos/${product.id}`} class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Editar">
-                    <Edit className="w-4 h-4" />
-                  </a>
-                  <button class="delete-btn p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" data-id={product.id} data-name={product.name} title="Eliminar">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-          {(!products || products.length === 0) && (
-            <tr>
-              <td colspan="6" class="px-6 py-16 text-center">
-                <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p class="text-slate-500 mb-4">No hay productos registrados</p>
-                <a href="/admin/productos/nuevo" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg font-medium text-sm hover:bg-amber-600 transition-colors">
-                  <PlusCircle className="w-4 h-4" />
-                  Añadir primer producto
-                </a>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</AdminLayout>
+  <ProductTable products={products || []} />
 
-<script>
-  import { supabase } from '../../../lib/supabase';
+  <!-- Paginación -->
+  {
+    totalPages > 1 && (
+      <div class="flex justify-center mt-8 gap-2">
+        <a
+          href={`?page=${Math.max(1, page - 1)}${searchQuery ? `&q=${searchQuery}` : ""}${categoryFilter ? `&category=${categoryFilter}` : ""}${stockFilter ? `&stock=${stockFilter}` : ""}`}
+          class={`p-2 rounded-lg border border-slate-200 ${page === 1 ? "text-slate-300 pointer-events-none" : "text-slate-600 hover:bg-white hover:shadow-sm"}`}
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </a>
 
-  // Búsqueda de productos
-  const searchInput = document.getElementById('search-input') as HTMLInputElement;
-  const categoryFilter = document.getElementById('category-filter') as HTMLSelectElement;
-  const stockFilter = document.getElementById('stock-filter') as HTMLSelectElement;
-  const rows = document.querySelectorAll('.product-row');
+        <span class="flex items-center px-4 font-medium text-slate-600">
+          Página {page} de {totalPages}
+        </span>
 
-  function filterProducts() {
-    const searchTerm = searchInput?.value.toLowerCase() || '';
-    const categoryId = categoryFilter?.value || '';
-    const stockStatus = stockFilter?.value || '';
-
-    rows.forEach(row => {
-      const name = row.getAttribute('data-name') || '';
-      const category = row.getAttribute('data-category') || '';
-      const stock = parseInt(row.getAttribute('data-stock') || '0');
-
-      let showRow = true;
-
-      // Filtrar por nombre
-      if (searchTerm && !name.includes(searchTerm)) {
-        showRow = false;
-      }
-
-      // Filtrar por categoría
-      if (categoryId && category !== categoryId) {
-        showRow = false;
-      }
-
-      // Filtrar por stock
-      if (stockStatus === 'low' && stock >= 10) showRow = false;
-      if (stockStatus === 'out' && stock > 0) showRow = false;
-      if (stockStatus === 'ok' && stock < 10) showRow = false;
-
-      (row as HTMLElement).style.display = showRow ? '' : 'none';
-    });
+        <a
+          href={`?page=${Math.min(totalPages, page + 1)}${searchQuery ? `&q=${searchQuery}` : ""}${categoryFilter ? `&category=${categoryFilter}` : ""}${stockFilter ? `&stock=${stockFilter}` : ""}`}
+          class={`p-2 rounded-lg border border-slate-200 ${page === totalPages ? "text-slate-300 pointer-events-none" : "text-slate-600 hover:bg-white hover:shadow-sm"}`}
+        >
+          <ChevronRight className="w-5 h-5" />
+        </a>
+      </div>
+    )
   }
-
-  searchInput?.addEventListener('input', filterProducts);
-  categoryFilter?.addEventListener('change', filterProducts);
-  stockFilter?.addEventListener('change', filterProducts);
-
-  // Eliminar producto
-  document.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = (btn as HTMLElement).dataset.id;
-      const name = (btn as HTMLElement).dataset.name;
-      
-      if (confirm(`¿Estás seguro de eliminar "${name}"? Esta acción no se puede deshacer.`)) {
-        const { error } = await supabase.from('products').delete().eq('id', id);
-        if (!error) {
-          window.location.reload();
-        } else {
-          alert('Error al eliminar: ' + error.message);
-        }
-      }
-    });
-  });
-</script>
+</AdminLayout>

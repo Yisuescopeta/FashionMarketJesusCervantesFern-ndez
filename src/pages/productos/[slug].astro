@@ -2,7 +2,9 @@
 import PublicLayout from "../../layouts/PublicLayout.astro";
 import ProductDetail from "../../components/islands/ProductDetail";
 import FavoriteButton from "../../components/islands/FavoriteButton";
-import CloudinaryImage from "../../components/common/CloudinaryImage.astro";
+import ZoomImage from "../../components/common/ZoomImage.astro";
+import CarruselZoom from "../../components/common/CarruselZoom.astro";
+import SizeGuide from "../../components/common/SizeGuide.astro";
 import { supabase } from "../../lib/supabase";
 import { formatPrice } from "../../lib/utils";
 
@@ -41,113 +43,321 @@ const additionalImages = p.images?.slice(1) || [];
 // Mostrar precio de oferta si está en oferta
 const displayPrice = p.is_on_sale && p.sale_price ? p.sale_price : p.price;
 const originalPrice = p.is_on_sale && p.sale_price ? p.price : null;
+
+// Color del producto (si existe)
+const productColor = p.color || "BLACK";
+
+// Obtener productos recomendados (de la misma categoría o aleatorios)
+const { data: recommendedProducts } = await supabase
+  .from("products")
+  .select("id, name, slug, price, images, is_on_sale, sale_price")
+  .neq("id", p.id)
+  .limit(6);
+
+const recommended = recommendedProducts || [];
 ---
 
 <PublicLayout title={p.name}>
-  <div class="max-w-7xl mx-auto px-6 py-12">
-    <!-- Breadcrumb -->
-    <nav
-      class="flex text-xs uppercase tracking-widest text-slate-400 mb-12 space-x-2"
+  <div class="relative w-full">
+    <!-- SECCIÓN HERO: Galería Horizontal + Panel de Compra Flotante -->
+    <div
+      class="relative w-full h-[calc(100vh-7rem)] bg-slate-100 overflow-hidden"
     >
-      <a href="/" class="hover:text-brand-navy transition-colors">Inicio</a>
-      <span>/</span>
-      <a href="/productos" class="hover:text-brand-navy transition-colors"
-        >Catálogo</a
+      <!-- Botón volver (flotante) -->
+      <a
+        href="/productos"
+        class="absolute top-6 left-6 z-20 bg-white/80 backdrop-blur px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-white transition-all"
       >
-      <span>/</span>
-      <span class="text-brand-navy font-bold">{p.categories?.name}</span>
-    </nav>
+        ← Volver
+      </a>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
-      <!-- Galería de imágenes -->
-      <div class="space-y-4">
-        <div class="aspect-[3/4] bg-slate-100 overflow-hidden relative group">
-          <CloudinaryImage
-            src={mainImage}
-            alt={p.name}
-            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            priority={true}
-          />
-          {
-            p.is_on_sale && (
-              <span class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider">
-                Oferta
-              </span>
-            )
-          }
-        </div>
-
+      <!-- Slider Horizontal de Imágenes -->
+      <div
+        class="flex w-full h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide items-center"
+      >
         {
-          additionalImages.length > 0 && (
-            <div class="grid grid-cols-4 gap-2">
-              {additionalImages.map((img: string, idx: number) => (
-                <div class="aspect-square bg-slate-100 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
-                  <CloudinaryImage
-                    src={img}
-                    alt={`${p.name} - Imagen ${idx + 2}`}
-                    class="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
+          ([mainImage, ...additionalImages] as string[]).map(
+            (img: string, idx: number) => (
+              <div class="w-full md:w-[50vw] lg:w-[33.33vw] shrink-0 h-full snap-start relative border-r border-white/10 flex items-center justify-center">
+                <ZoomImage
+                  src={img}
+                  alt={`${p.name} - Vista ${idx + 1}`}
+                  class="w-full h-full object-cover"
+                  priority={idx < 3}
+                  images={[mainImage, ...additionalImages]}
+                />
+              </div>
+            ),
           )
         }
       </div>
 
-      <!-- Información del producto -->
-      <div class="flex flex-col justify-center">
-        <div class="mb-8 border-b border-slate-100 pb-8">
-          <div class="flex items-start justify-between gap-4">
-            <h1 class="text-4xl md:text-5xl font-serif mb-4 italic">
-              {p.name}
-            </h1>
-            <FavoriteButton productId={p.id} showText={true} client:load />
-          </div>
+      <!-- Panel de Compra (Recuadro Abajo a la Derecha) -->
+      <div class="absolute bottom-8 right-8 z-30 w-full max-w-lg">
+        <div class="bg-white shadow-2xl p-10 md:p-12 animate-fade-in-up">
+          <!-- Etiqueta Oferta -->
+          {
+            p.is_on_sale && (
+              <span class="inline-block text-red-600 text-[10px] font-bold uppercase tracking-widest mb-2">
+                50% OFF
+              </span>
+            )
+          }
 
-          <div class="flex items-center gap-4">
-            <p class="text-2xl font-medium text-brand-gold">
+          <!-- Título y Precio -->
+          <h1
+            class="text-2xl font-serif italic text-brand-navy mb-2 leading-tight"
+          >
+            {p.name}
+          </h1>
+          <div class="flex items-baseline gap-3 mb-6">
+            <span class="text-xl font-medium text-brand-gold">
               {formatPrice(displayPrice)}
-            </p>
+            </span>
             {
               originalPrice && (
-                <p class="text-lg text-slate-400 line-through">
+                <span class="text-sm text-slate-400 line-through">
                   {formatPrice(originalPrice)}
-                </p>
-              )
-            }
-            {
-              p.is_on_sale && originalPrice && (
-                <span class="bg-red-100 text-red-600 px-2 py-1 text-xs font-bold rounded">
-                  -{Math.round((1 - displayPrice / originalPrice) * 100)}%
                 </span>
               )
             }
           </div>
-        </div>
 
-        <p class="text-slate-600 leading-relaxed italic mb-8">
-          {p.description}
+          <!-- Selector de Tallas y Botón -->
+          <ProductDetail
+            client:visible
+            productId={p.id}
+            productName={p.name}
+            productPrice={displayPrice}
+            productImage={mainImage}
+            availableSizes={p.sizes || []}
+            compact={true}
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DETALLES (Estilo Editorial / Segunda Imagen) -->
+    <div
+      class="bg-white py-20 px-6 md:px-12 lg:px-24 border-t border-slate-100"
+    >
+      <div class="max-w-7xl mx-auto">
+        <p
+          class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-12"
+        >
+          Detalles (4)
         </p>
 
-        {
-          p.material && (
-            <div class="mb-6 text-sm">
-              <span class="text-slate-500">Material:</span>
-              <span class="ml-2 font-medium text-slate-700">{p.material}</span>
-            </div>
-          )
-        }
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32 mb-20">
+          <!-- Imágenes de Detalle (Izquierda) -->
+          <div class="grid grid-cols-2 gap-4 h-fit">
+            {
+              (additionalImages.slice(0, 2) as string[]).map(
+                (img: string, idx: number) => (
+                  <div class="aspect-[3/4] bg-slate-50 overflow-hidden">
+                    <ZoomImage
+                      src={img}
+                      alt={`${p.name} - Detalle ${idx + 1}`}
+                      class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                      images={[mainImage, ...additionalImages]}
+                    />
+                  </div>
+                ),
+              )
+            }
+            {
+              additionalImages.length < 2 && (
+                <div class="aspect-[3/4] bg-slate-50 overflow-hidden">
+                  <ZoomImage
+                    src={mainImage}
+                    alt="Detalle principal"
+                    class="w-full h-full object-cover grayscale opacity-80"
+                  />
+                </div>
+              )
+            }
+          </div>
 
-        <!-- Componente de selección de talla y añadir al carrito -->
-        <ProductDetail
-          client:load
-          productId={p.id}
-          productName={p.name}
-          productPrice={displayPrice}
-          productImage={mainImage}
-          availableSizes={p.sizes || []}
-        />
+          <!-- Texto descriptivo (Derecha) -->
+          <div class="space-y-12 py-8">
+            <div>
+              <h3
+                class="text-xs font-bold uppercase tracking-widest text-brand-navy mb-3"
+              >
+                La Talla
+              </h3>
+              <p
+                class="text-slate-600 font-serif italic text-lg leading-relaxed"
+              >
+                El modelo lleva una talla M.
+              </p>
+              <p class="text-sm text-slate-500 mt-2 leading-relaxed">
+                Medidas del modelo: Altura 189.5cm, Pecho 93cm, Cintura 73.5cm.
+              </p>
+            </div>
+
+            <div>
+              <h3
+                class="text-xs font-bold uppercase tracking-widest text-brand-navy mb-3"
+              >
+                El Ajuste
+              </h3>
+              <p
+                class="text-slate-600 font-serif italic text-lg leading-relaxed"
+              >
+                {
+                  p.description ||
+                    "Corte regular relajado a través del cuerpo, diseñado para comodidad y estilo atemporal."
+                }
+              </p>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onclick="document.getElementById('size-guide-modal').style.display='flex'; document.body.style.overflow='hidden';"
+                class="text-xs font-bold uppercase tracking-widest text-brand-navy border-b border-brand-navy pb-1 hover:text-brand-gold hover:border-brand-gold transition-colors cursor-pointer bg-transparent"
+              >
+                Guía de tallas ↗
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de Información Técnica -->
+        <div class="border-t border-slate-200">
+          {
+            [
+              {
+                label: "MATERIAL",
+                value:
+                  p.material ||
+                  "55% Lana Reciclada, 34% Poliéster, 7% Poliuretano",
+              },
+              {
+                label: "CÓDIGO PRODUCTO",
+                value: `AUR-${p.id.slice(0, 8).toUpperCase()}`,
+              },
+              { label: "CUIDADOS", value: "Solo limpieza en seco" },
+              {
+                label: "SOSTENIBILIDAD",
+                value:
+                  "Al menos el 50% de los materiales utilizados tienen un menor impacto ambiental.",
+              },
+            ].map((item) => (
+              <div class="flex flex-col sm:flex-row py-6 border-b border-slate-200 group hover:bg-slate-50 transition-colors px-4">
+                <span class="w-full sm:w-1/3 text-xs font-bold uppercase tracking-widest text-brand-navy mb-2 sm:mb-0">
+                  {item.label}
+                </span>
+                <span class="w-full sm:w-2/3 text-slate-600 text-sm">
+                  {item.value}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección "You May Also Like" -->
+    <div class="py-16 px-8 bg-white border-t border-gray-100">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl font-serif italic text-brand-navy">
+          You May Also Like...
+        </h2>
+        <div class="flex gap-2">
+          <button
+            id="rec-prev"
+            class="w-10 h-10 border border-gray-300 flex items-center justify-center hover:border-brand-navy transition-colors"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              ><polyline points="15 18 9 12 15 6"></polyline></svg
+            >
+          </button>
+          <button
+            id="rec-next"
+            class="w-10 h-10 border border-gray-300 flex items-center justify-center hover:border-brand-navy transition-colors"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              ><polyline points="9 18 15 12 9 6"></polyline></svg
+            >
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="recommended-scroll"
+        class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4"
+        style="scrollbar-width: none; -ms-overflow-style: none;"
+      >
+        {
+          recommended.map((item) => {
+            const itemPrice =
+              item.is_on_sale && item.sale_price ? item.sale_price : item.price;
+            const itemImage =
+              item.images?.[0] ||
+              "https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=400";
+            return (
+              <a
+                href={`/productos/${item.slug}`}
+                class="flex-shrink-0 w-[280px] md:w-[320px] snap-start group"
+              >
+                <div class="aspect-[3/4] overflow-hidden bg-gray-100 mb-3">
+                  <img
+                    src={itemImage}
+                    alt={item.name}
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+                <h3 class="text-sm font-medium text-gray-900 truncate">
+                  {item.name}
+                </h3>
+                <p class="text-sm text-brand-gold">{formatPrice(itemPrice)}</p>
+              </a>
+            );
+          })
+        }
       </div>
     </div>
   </div>
+
+  <!-- Componente de Galería con Zoom (Modal) -->
+  <CarruselZoom images={[mainImage, ...additionalImages]} alt={p.name} />
+
+  <!-- Guía de Tallas (Modal) -->
+  <SizeGuide />
 </PublicLayout>
+
+<style>
+  #recommended-scroll::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<script is:inline>
+  // Navegación del carrusel de recomendados
+  document.addEventListener("click", function (e) {
+    var scrollContainer = document.getElementById("recommended-scroll");
+    if (scrollContainer) {
+      if (e.target.closest("#rec-prev")) {
+        scrollContainer.scrollBy({ left: -340, behavior: "smooth" });
+      }
+      if (e.target.closest("#rec-next")) {
+        scrollContainer.scrollBy({ left: 340, behavior: "smooth" });
+      }
+    }
+  });
+</script>

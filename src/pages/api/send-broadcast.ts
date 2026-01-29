@@ -1,6 +1,6 @@
 
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin } from '../../lib/supabase';
 import { sendBroadcastEmail } from '../../lib/email';
 
 export const POST: APIRoute = async ({ request }) => {
@@ -16,8 +16,8 @@ export const POST: APIRoute = async ({ request }) => {
             return new Response(JSON.stringify({ error: 'Faltan campos' }), { status: 400 });
         }
 
-        // Crear cliente autenticado si tenemos token
-        let client = supabase;
+        // Usar supabaseAdmin para bypass de RLS en tareas administrativas
+        let client = supabaseAdmin;
         if (token) {
             const { createClient } = await import('@supabase/supabase-js');
             client = createClient(

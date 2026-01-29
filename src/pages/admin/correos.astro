@@ -1,135 +1,217 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
+import { Send, Bell, Info, Mail, Users, TrendingUp } from "lucide-react";
 
-// Nota: Esta página será accesible solo para admins (controlado por AdminLayout o middleware)
+export const prerender = false;
 ---
 
-<AdminLayout title="Gestión de Correos">
-    <div class="space-y-8">
-        <div>
-            <h1 class="text-2xl font-serif text-brand-navy">
-                Gestión de Correos y Marketing
-            </h1>
-            <p class="text-slate-500">
-                Envía comunicaciones a tus clientes o gestiona notificaciones
-                automáticas.
-            </p>
-        </div>
+<AdminLayout title="Marketing & Correos">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-800 font-serif italic">
+            Marketing & Comunicaciones
+        </h1>
+        <p class="text-sm text-slate-500">
+            Conecta con tus clientes a través de campañas de correo
+            personalizadas.
+        </p>
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Panel de Envío Masivo -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Panel de Envío Masivo -->
+        <div class="lg:col-span-2">
             <div
-                class="bg-white p-6 rounded-lg shadow-sm border border-slate-100"
+                class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm border-t-4 border-t-brand-gold"
             >
-                <h2
-                    class="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2"
-                >
-                    <span>📢</span> Nueva Campaña
-                </h2>
-                <form id="broadcastForm" class="space-y-4">
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-slate-700 mb-1"
-                            >Título de la Cabecera</label
-                        >
-                        <input
-                            type="text"
-                            name="title"
-                            placeholder="Ej: Nueva Colección de Verano"
-                            class="w-full border-slate-300 rounded-md shadow-sm focus:border-brand-gold focus:ring-brand-gold"
-                            required
-                        />
+                <div class="flex items-center gap-3 mb-8">
+                    <div
+                        class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center shadow-sm"
+                    >
+                        <Send className="w-6 h-6 text-brand-gold" />
                     </div>
                     <div>
-                        <label
-                            class="block text-sm font-medium text-slate-700 mb-1"
-                            >Asunto del Correo</label
+                        <h3 class="text-lg font-bold text-slate-800">
+                            Nueva Campaña
+                        </h3>
+                        <p
+                            class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"
                         >
-                        <input
-                            type="text"
-                            name="subject"
-                            placeholder="Ej: ¡Llegó lo que esperabas!"
-                            class="w-full border-slate-300 rounded-md shadow-sm focus:border-brand-gold focus:ring-brand-gold"
-                            required
-                        />
+                            Envío masivo a todos los usuarios
+                        </p>
                     </div>
+                </div>
+
+                <form id="broadcastForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label
+                                class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                                >Título de la Cabecera</label
+                            >
+                            <input
+                                type="text"
+                                name="title"
+                                placeholder="Ej: Nueva Colección de Verano"
+                                class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none text-sm transition-all"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label
+                                class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                                >Asunto del Correo</label
+                            >
+                            <input
+                                type="text"
+                                name="subject"
+                                placeholder="Ej: ¡Llegó lo que esperabas!"
+                                class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none text-sm transition-all"
+                                required
+                            />
+                        </div>
+                    </div>
+
                     <div>
                         <label
-                            class="block text-sm font-medium text-slate-700 mb-1"
-                            >Mensaje</label
+                            class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                            >Cuerpo del Mensaje</label
                         >
                         <textarea
                             name="message"
-                            rows="6"
-                            class="w-full border-slate-300 rounded-md shadow-sm focus:border-brand-gold focus:ring-brand-gold"
+                            rows="10"
+                            class="w-full border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-brand-gold outline-none text-sm transition-all resize-none"
                             placeholder="Escribe aquí el contenido de tu correo..."
                             required></textarea>
-                        <p class="text-xs text-slate-400 mt-1">
-                            Se respetarán los saltos de línea.
-                        </p>
+                        <div
+                            class="flex items-center gap-2 mt-2 text-slate-400"
+                        >
+                            <Info className="w-3.5 h-3.5" />
+                            <p class="text-[10px] font-medium font-bold italic">
+                                Se respetarán los saltos de línea automáticos.
+                            </p>
+                        </div>
                     </div>
 
                     <div class="pt-4">
                         <button
                             type="submit"
-                            class="w-full bg-brand-navy text-white px-4 py-2 rounded hover:bg-black transition-colors flex items-center justify-center gap-2"
+                            id="submit-btn"
+                            class="w-full md:w-auto bg-slate-900 text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-black transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-3 active:scale-95 group"
                         >
-                            <span class="default-text"
-                                >Enviar a Todos los Usuarios</span
+                            <span class="default-text">Enviar Campaña</span>
+                            <Send
+                                className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"
+                            />
+                            <span class="loading-text hidden"
+                                >Enviando correos...</span
                             >
-                            <span class="loading-text hidden">Enviando...</span>
                         </button>
                     </div>
                     <div
                         id="formStatus"
-                        class="hidden p-3 rounded text-sm text-center"
+                        class="hidden p-4 rounded-2xl text-xs font-bold uppercase tracking-widest text-center"
                     >
                     </div>
                 </form>
             </div>
+        </div>
 
-            <!-- Panel de Acciones Automáticas -->
-            <div class="space-y-8">
-                <!-- Notificar Ofertas en Favoritos -->
-                <div
-                    class="bg-white p-6 rounded-lg shadow-sm border border-slate-100"
-                >
-                    <h2
-                        class="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2"
-                    >
-                        <span>❤️</span> Ofertas en Favoritos
-                    </h2>
-                    <p class="text-sm text-slate-600 mb-6">
-                        Este sistema busca productos que han bajado de precio en
-                        las últimas 24 horas y envía automáticamente un correo a
-                        los usuarios que los tienen en favoritos.
-                    </p>
-
-                    <button
-                        id="triggerFavorites"
-                        class="w-full border border-brand-navy text-brand-navy px-4 py-2 rounded hover:bg-brand-navy hover:text-white transition-colors"
-                    >
-                        Ejecutar Notificaciones Ahora
-                    </button>
+        <!-- Panel de Acciones Automáticas -->
+        <div class="space-y-8">
+            <!-- Automatizaciones -->
+            <div
+                class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm"
+            >
+                <div class="flex items-center gap-3 mb-8">
                     <div
-                        id="favoritesStatus"
-                        class="hidden mt-3 p-3 rounded text-sm text-center"
+                        class="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center"
                     >
+                        <Bell className="w-5 h-5 text-rose-500" />
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">
+                        Automatizaciones
+                    </h3>
+                </div>
+
+                <div class="space-y-6">
+                    <div
+                        class="p-4 bg-slate-50 rounded-2xl border border-slate-100 italic"
+                    >
+                        <h4
+                            class="text-xs font-bold text-slate-700 flex items-center gap-2 mb-2"
+                        >
+                            <TrendingUp
+                                className="w-3.5 h-3.5 text-emerald-500"
+                            />
+                            Ofertas en Favoritos
+                        </h4>
+                        <p
+                            class="text-[11px] text-slate-500 leading-relaxed mb-4"
+                        >
+                            Detecta productos en favoritos con bajada de precio
+                            y notifica a los usuarios interesados.
+                        </p>
+                        <button
+                            id="triggerFavorites"
+                            class="w-full border-2 border-slate-900 text-slate-900 px-4 py-2.5 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-slate-900 hover:text-white transition-all active:scale-95"
+                        >
+                            Ejecutar Ahora
+                        </button>
+                        <div
+                            id="favoritesStatus"
+                            class="hidden mt-3 p-3 rounded-xl text-[10px] font-bold text-center uppercase tracking-wider"
+                        >
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas Rápidas -->
+                    <div class="space-y-4">
+                        <div
+                            class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm italic"
+                        >
+                            <div class="flex items-center gap-3">
+                                <Users className="w-4 h-4 text-slate-400" />
+                                <span class="text-xs font-bold text-slate-500"
+                                    >Suscriptores</span
+                                >
+                            </div>
+                            <span class="text-sm font-bold text-slate-800"
+                                >--</span
+                            >
+                        </div>
+                        <div
+                            class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm italic"
+                        >
+                            <div class="flex items-center gap-3">
+                                <Mail className="w-4 h-4 text-slate-400" />
+                                <span class="text-xs font-bold text-slate-500"
+                                    >Enviados (mes)</span
+                                >
+                            </div>
+                            <span class="text-sm font-bold text-slate-800"
+                                >--</span
+                            >
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Estadísticas Rápidas (Placeholder) -->
-                <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
-                    <h3 class="text-sm font-bold text-brand-navy mb-2">
-                        Consejo Pro
-                    </h3>
-                    <p class="text-xs text-slate-500">
-                        Evita enviar correos masivos con demasiada frecuencia
-                        para no molestar a tus clientes. Para anuncios
-                        importantes, intenta hacerlo en horarios laborales (9:00
-                        - 18:00).
-                    </p>
+            <!-- Consejo Pro -->
+            <div
+                class="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl shadow-slate-900/20 italic"
+            >
+                <div class="absolute -right-2 -bottom-2 opacity-10">
+                    <Info className="w-24 h-24" />
                 </div>
+                <h3 class="text-base font-bold mb-4 flex items-center gap-2">
+                    <Info className="w-4 h-4 text-brand-gold" />
+                    Mejores Prácticas
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Evita enviar correos masivos más de una vez por semana. Los
+                    martes y jueves a las 10:00 AM suelen tener las mejores
+                    tasas de apertura.
+                </p>
             </div>
         </div>
     </div>
@@ -139,9 +221,11 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     import { supabase } from "../../lib/supabase";
 
     // Manejo del formulario de broadcast
-    const form = document.getElementById("broadcastForm");
+    const form = document.getElementById("broadcastForm") as HTMLFormElement;
     const statusDiv = document.getElementById("formStatus");
-    const submitBtn = form?.querySelector("button");
+    const submitBtn = document.getElementById(
+        "submit-btn",
+    ) as HTMLButtonElement;
 
     form?.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -150,6 +234,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
         // UI Loading
         submitBtn.disabled = true;
         submitBtn.querySelector(".default-text")?.classList.add("hidden");
+        submitBtn.querySelector("svg")?.classList.add("hidden");
         submitBtn.querySelector(".loading-text")?.classList.remove("hidden");
         statusDiv.classList.add("hidden");
 
@@ -177,16 +262,16 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             statusDiv.classList.remove("hidden");
             if (res.ok) {
                 statusDiv.className =
-                    "mt-4 p-3 rounded text-sm text-center bg-green-50 text-green-700 border border-green-100";
-                statusDiv.textContent = `¡Éxito! Mensaje enviado a ${result.sent} usuarios.`;
-                (e.target as HTMLFormElement).reset();
+                    "mt-4 p-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-center bg-emerald-50 text-emerald-600 border border-emerald-100";
+                statusDiv.textContent = `¡Enviado con éxito a ${result.sent} usuarios!`;
+                form.reset();
             } else {
-                throw new Error(result.error || "Error desconocido");
+                throw new Error(result.error || "Error al enviar");
             }
         } catch (error: any) {
             statusDiv.classList.remove("hidden");
             statusDiv.className =
-                "mt-4 p-3 rounded text-sm text-center bg-red-50 text-red-700 border border-red-100";
+                "mt-4 p-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-center bg-rose-50 text-rose-600 border border-rose-100";
             statusDiv.textContent =
                 error.message || "Error al enviar la campaña";
         } finally {
@@ -194,29 +279,29 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             submitBtn
                 .querySelector(".default-text")
                 ?.classList.remove("hidden");
+            submitBtn.querySelector("svg")?.classList.remove("hidden");
             submitBtn.querySelector(".loading-text")?.classList.add("hidden");
         }
     });
 
     // Manejo del disparador de favoritos
-    const favBtn = document.getElementById("triggerFavorites");
+    const favBtn = document.getElementById(
+        "triggerFavorites",
+    ) as HTMLButtonElement;
     const favStatus = document.getElementById("favoritesStatus");
 
     favBtn?.addEventListener("click", async () => {
         if (!favBtn || !favStatus) return;
 
         favBtn.disabled = true;
+        const originalText = favBtn.textContent;
         favBtn.textContent = "Procesando...";
         favStatus.classList.add("hidden");
 
         try {
-            // Nota: En un entorno real deberíamos pasar un token de admin
             const res = await fetch("/api/notify-favorites-on-sale", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    // 'Authorization': 'Bearer ...' // Si configuraste seguridad
-                },
+                headers: { "Content-Type": "application/json" },
             });
 
             const result = await res.json();
@@ -224,23 +309,22 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
             favStatus.classList.remove("hidden");
             if (res.ok) {
                 favStatus.className =
-                    "mt-3 p-3 rounded text-sm text-center bg-green-50 text-green-700 border border-green-100";
-                favStatus.textContent =
-                    result.message || "Proceso completado correctamente";
+                    "mt-3 p-3 rounded-xl text-[10px] font-bold text-center bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-widest";
+                favStatus.textContent = result.message || "Proceso completado";
             } else {
                 favStatus.className =
-                    "mt-3 p-3 rounded text-sm text-center bg-yellow-50 text-yellow-700 border border-yellow-100";
+                    "mt-3 p-3 rounded-xl text-[10px] font-bold text-center bg-orange-50 text-orange-600 border border-orange-100 uppercase tracking-widest";
                 favStatus.textContent =
-                    result.message || "No se pudo completar el proceso";
+                    result.message || "Sin cambios detectados";
             }
         } catch (e) {
             favStatus.classList.remove("hidden");
             favStatus.className =
-                "mt-3 p-3 rounded text-sm text-center bg-red-50 text-red-700 border border-red-100";
-            favStatus.textContent = "Error de conexión con el servidor";
+                "mt-3 p-3 rounded-xl text-[10px] font-bold text-center bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-widest";
+            favStatus.textContent = "Error de conexión";
         } finally {
             favBtn.disabled = false;
-            favBtn.textContent = "Ejecutar Notificaciones Ahora";
+            favBtn.textContent = originalText;
         }
     });
 </script>

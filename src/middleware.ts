@@ -1,66 +1,28 @@
-import { defineMiddleware } from "astro:middleware";
-import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+import { defineMiddleware } from "astro:middleware";
+import { supabase } from "./lib/supabase";
 
 export const onRequest = defineMiddleware(async (context, next) => {
-    const { pathname } = context.url;
+    const { url, redirect } = context;
 
-    // ============================================
-    // SEGURIDAD: Protección de Rutas de Admin
-    // ============================================
-    
-    if (pathname.startsWith("/admin")) {
-        // Leer token de acceso de la cookie
+    // Proteger rutas de administración
+    if (url.pathname.startsWith("/admin") && !url.pathname.startsWith("/admin/login")) {
         const accessToken = context.cookies.get("sb-access-token")?.value;
-        
-        // Si no hay token, redirigir a login
-        if (!accessToken) {
-            return context.redirect("/login?redirect=" + encodeURIComponent(pathname));
+        const refreshToken = context.cookies.get("sb-refresh-token")?.value;
+
+        if (!accessToken || !refreshToken) {
+            // Si no hay tokens en cookies, redirigir al login
+            return redirect("/admin/login");
         }
-
-        // Crear cliente de Supabase y verificar el token
-        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-            global: {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                }
-            }
-        });
-        
-        const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-
-        // Si el token es inválido o expirado
-        if (error || !user) {
-            // Limpiar cookies inválidas
-            context.cookies.delete("sb-access-token", { path: "/" });
-            context.cookies.delete("sb-refresh-token", { path: "/" });
-            return context.redirect("/login?redirect=" + encodeURIComponent(pathname));
-        }
-
-        // Verificar rol de admin en la tabla de perfiles
-        const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", user.id)
-            .single();
-
-        // Si el usuario NO es admin, redirigir a inicio
-        if (profile?.role !== "admin") {
-            return context.redirect("/");
-        }
-        
-        // Usuario es admin, permitir acceso
     }
 
-    // Security Headers
-    const response = await next();
-    response.headers.set("X-Frame-Options", "DENY");
-    response.headers.set("X-Content-Type-Options", "nosniff");
-    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-    response.headers.set("X-XSS-Protection", "1; mode=block");
-    response.headers.set("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+    // Si intenta acceder al login estando ya autenticado
+    if (url.pathname === "/admin/login") {
+        const accessToken = context.cookies.get("sb-access-token")?.value;
+        if (accessToken) {
+            return redirect("/admin");
+        }
+    }
 
-    return response;
+    return next();
 });

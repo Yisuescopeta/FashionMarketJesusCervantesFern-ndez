@@ -11,7 +11,7 @@ export const transporter = nodemailer.createTransport({
   }
 });
 
-export const EMAIL_FROM = import.meta.env.EMAIL_USER || 'noreply@fashionmarket.com';
+export const EMAIL_FROM = import.meta.env.EMAIL_USER || 'noreply@aurum.com';
 
 // Interfaz para el email de confirmación de pedido
 export interface OrderConfirmationEmailData {
@@ -70,7 +70,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
 
   try {
     const info = await transporter.sendMail({
-      from: `"FashionMarket" <${EMAIL_FROM}>`,
+      from: `"Aurum" <${EMAIL_FROM}>`,
       to: customerEmail,
       subject: `🧾 Factura de Pedido #${orderId.slice(0, 8)}`,
       html: `
@@ -145,7 +145,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
             </div>
             
             <div style="background-color: #f8fafc; padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0;">
-              <p>&copy; ${new Date().getFullYear()} FashionMarket. Todos los derechos reservados.</p>
+              <p>&copy; ${new Date().getFullYear()} Aurum. Todos los derechos reservados.</p>
             </div>
           </div>
         </body>
@@ -195,7 +195,7 @@ export async function sendFavoriteOnSaleEmail(data: FavoriteOnSaleEmailData) {
 
   try {
     const info = await transporter.sendMail({
-      from: `"FashionMarket" <${EMAIL_FROM}>`,
+      from: `"Aurum" <${EMAIL_FROM}>`,
       to: userEmail,
       subject: `🔥 ¡${productName} está en oferta! -${discountPercent}%`,
       html: `
@@ -213,7 +213,7 @@ export async function sendFavoriteOnSaleEmail(data: FavoriteOnSaleEmailData) {
         <body>
           <div class="container">
             <div class="header">
-              <h1>FashionMarket</h1>
+              <h1>Aurum</h1>
             </div>
             <div style="padding: 20px;">
               <h2>¡Oferta en tus Favoritos!</h2>
@@ -271,7 +271,7 @@ export async function sendBroadcastEmail(data: BroadcastEmailData) {
 
   try {
     const info = await transporter.sendMail({
-      from: `"FashionMarket" <${EMAIL_FROM}>`,
+      from: `"Aurum" <${EMAIL_FROM}>`,
       to: userEmail,
       subject: subject,
       html: `
@@ -309,8 +309,8 @@ export async function sendBroadcastEmail(data: BroadcastEmailData) {
             </div>
 
             <div class="footer">
-              <p>Recibes este correo porque estás suscrito a FashionMarket.</p>
-              <p>&copy; ${new Date().getFullYear()} FashionMarket. Todos los derechos reservados.</p>
+              <p>Recibes este correo porque estás suscrito a Aurum.</p>
+              <p>&copy; ${new Date().getFullYear()} Aurum. Todos los derechos reservados.</p>
             </div>
           </div>
         </body>

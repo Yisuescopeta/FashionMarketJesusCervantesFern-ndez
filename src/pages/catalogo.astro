@@ -1,60 +1,68 @@
 ---
-import PublicLayout from '../layouts/PublicLayout.astro';
-import ProductCard from '../components/product/ProductCard.astro';
-import { supabase } from '../lib/supabase';
-import { SlidersHorizontal, ChevronDown, X } from 'lucide-react';
+import PublicLayout from "../layouts/PublicLayout.astro";
+import ProductCard from "../components/product/ProductCard.astro";
+import { supabase } from "../lib/supabase";
+import { SlidersHorizontal, ChevronDown, X } from "lucide-react";
 
 export const prerender = false;
 
 // Obtener parámetros de filtros desde URL
 const url = new URL(Astro.request.url);
-const categoriaParam = url.searchParams.get('categoria');
-const precioMin = url.searchParams.get('precio_min');
-const precioMax = url.searchParams.get('precio_max');
-const ordenar = url.searchParams.get('ordenar') || 'recientes';
+const categoriaParam = url.searchParams.get("categoria");
+const precioMin = url.searchParams.get("precio_min");
+const precioMax = url.searchParams.get("precio_max");
+const ordenar = url.searchParams.get("ordenar") || "recientes";
+const search = url.searchParams.get("search");
 
 // Obtener categorías
-const { data: categories } = await supabase.from('categories').select('*').order('name');
+const { data: categories } = await supabase
+  .from("categories")
+  .select("*")
+  .order("name");
 
 // Si hay filtro de categoría, obtener el ID de la categoría
 let categoryId: string | null = null;
 if (categoriaParam && categories) {
-  const foundCategory = categories.find(cat => cat.slug === categoriaParam);
+  const foundCategory = categories.find((cat) => cat.slug === categoriaParam);
   categoryId = foundCategory?.id || null;
 }
 
 // Construir query con filtros
 let query = supabase
-  .from('products')
-  .select('*, categories(name, slug)')
-  .eq('is_active', true);
+  .from("products")
+  .select("*, categories(name, slug)")
+  .eq("is_active", true);
 
 // Filtrar por categoría usando category_id
 if (categoryId) {
-  query = query.eq('category_id', categoryId);
+  query = query.eq("category_id", categoryId);
+}
+
+if (search) {
+  query = query.ilike("name", `%${search}%`);
 }
 
 if (precioMin) {
-  query = query.gte('price', parseInt(precioMin) * 100);
+  query = query.gte("price", parseInt(precioMin) * 100);
 }
 
 if (precioMax) {
-  query = query.lte('price', parseInt(precioMax) * 100);
+  query = query.lte("price", parseInt(precioMax) * 100);
 }
 
 // Ordenamiento
 switch (ordenar) {
-  case 'precio-asc':
-    query = query.order('price', { ascending: true });
+  case "precio-asc":
+    query = query.order("price", { ascending: true });
     break;
-  case 'precio-desc':
-    query = query.order('price', { ascending: false });
+  case "precio-desc":
+    query = query.order("price", { ascending: false });
     break;
-  case 'nombre':
-    query = query.order('name', { ascending: true });
+  case "nombre":
+    query = query.order("name", { ascending: true });
     break;
   default:
-    query = query.order('created_at', { ascending: false });
+    query = query.order("created_at", { ascending: false });
 }
 
 const { data: products } = await query;
@@ -72,36 +80,38 @@ const getPrecioSeleccionado = (min: number, max: number | null): boolean => {
 };
 
 // Mapear productos
-const displayProducts = (products || []).map(p => ({
+const displayProducts = (products || []).map((p) => ({
   id: p.id,
   name: p.name,
   price: p.is_on_sale && p.sale_price ? p.sale_price : p.price,
   originalPrice: p.is_on_sale ? p.price : null,
   slug: p.slug,
-  image: p.images?.[0] || 'https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800',
-  category: p.categories?.name || 'Moda',
-  isOnSale: p.is_on_sale
+  image:
+    p.images?.[0] ||
+    "https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800",
+  category: p.categories?.name || "Moda",
+  isOnSale: p.is_on_sale,
 }));
 
 // Rangos de precio predefinidos
 const rangosPrecios = [
-  { label: 'Hasta 30€', min: 0, max: 30 },
-  { label: '30€ - 60€', min: 30, max: 60 },
-  { label: '60€ - 100€', min: 60, max: 100 },
-  { label: 'Más de 100€', min: 100, max: null },
+  { label: "Hasta 30€", min: 0, max: 30 },
+  { label: "30€ - 60€", min: 30, max: 60 },
+  { label: "60€ - 100€", min: 60, max: 100 },
+  { label: "Más de 100€", min: 100, max: null },
 ];
 
 // Tallas disponibles
-const tallas = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const tallas = ["XS", "S", "M", "L", "XL", "XXL"];
 
 // Colores disponibles
 const colores = [
-  { nombre: 'Negro', valor: '#000000' },
-  { nombre: 'Blanco', valor: '#FFFFFF' },
-  { nombre: 'Azul Marino', valor: '#1e3a5f' },
-  { nombre: 'Gris', valor: '#6b7280' },
-  { nombre: 'Beige', valor: '#d4a574' },
-  { nombre: 'Verde', valor: '#166534' },
+  { nombre: "Negro", valor: "#000000" },
+  { nombre: "Blanco", valor: "#FFFFFF" },
+  { nombre: "Azul Marino", valor: "#1e3a5f" },
+  { nombre: "Gris", valor: "#6b7280" },
+  { nombre: "Beige", valor: "#d4a574" },
+  { nombre: "Verde", valor: "#166534" },
 ];
 ---
 
@@ -110,125 +120,157 @@ const colores = [
     <!-- Cabecera del catálogo -->
     <div class="max-w-7xl mx-auto px-6 mb-12">
       <div class="text-center">
-        <h2 class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4">Explora Nuestra Colección</h2>
-        <h1 class="text-5xl md:text-6xl font-serif italic mb-4">Catálogo Completo</h1>
+        <h2
+          class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4"
+        >
+          Explora Nuestra Colección
+        </h2>
+        <h1 class="text-5xl md:text-6xl font-serif italic mb-4">
+          Catálogo Completo
+        </h1>
         <p class="text-slate-500 max-w-2xl mx-auto">
-          Descubre todas nuestras prendas seleccionadas bajo los más altos estándares de calidad y diseño.
+          Descubre todas nuestras prendas seleccionadas bajo los más altos
+          estándares de calidad y diseño.
         </p>
       </div>
     </div>
 
     <div class="max-w-7xl mx-auto px-6">
       <!-- Barra de filtros activos y ordenamiento -->
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pb-6 border-b border-slate-100">
+      <div
+        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pb-6 border-b border-slate-100"
+      >
         <div class="flex items-center gap-4">
-          <button 
+          <button
             id="toggle-filters-btn"
             class="flex items-center gap-2 px-4 py-2 border border-slate-200 hover:border-brand-navy transition-colors text-sm font-medium"
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filtros
           </button>
-          
+
           <span class="text-sm text-slate-500">
-            {displayProducts.length} {displayProducts.length === 1 ? 'producto' : 'productos'}
+            {displayProducts.length}
+            {displayProducts.length === 1 ? "producto" : "productos"}
           </span>
         </div>
 
         <div class="flex items-center gap-2">
           <span class="text-sm text-slate-500">Ordenar por:</span>
-          <select 
+          <select
             id="ordenar-select"
             class="border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-brand-navy bg-white"
           >
-            <option value="recientes" selected={ordenar === 'recientes'}>Más recientes</option>
-            <option value="precio-asc" selected={ordenar === 'precio-asc'}>Precio: menor a mayor</option>
-            <option value="precio-desc" selected={ordenar === 'precio-desc'}>Precio: mayor a menor</option>
-            <option value="nombre" selected={ordenar === 'nombre'}>Nombre A-Z</option>
+            <option value="recientes" selected={ordenar === "recientes"}
+              >Más recientes</option
+            >
+            <option value="precio-asc" selected={ordenar === "precio-asc"}
+              >Precio: menor a mayor</option
+            >
+            <option value="precio-desc" selected={ordenar === "precio-desc"}
+              >Precio: mayor a menor</option
+            >
+            <option value="nombre" selected={ordenar === "nombre"}
+              >Nombre A-Z</option
+            >
           </select>
         </div>
       </div>
 
       <div class="flex flex-col lg:flex-row gap-8">
         <!-- Panel de filtros lateral -->
-        <aside id="filters-panel" class="hidden lg:block w-full lg:w-72 flex-shrink-0">
+        <aside
+          id="filters-panel"
+          class="hidden lg:block w-full lg:w-72 flex-shrink-0"
+        >
           <div class="sticky top-36 space-y-8">
-            
             <!-- Filtro: Tipo de Prenda -->
             <div class="border-b border-slate-100 pb-6">
-              <h3 class="text-xs font-bold uppercase tracking-widest mb-4 flex items-center justify-between">
+              <h3
+                class="text-xs font-bold uppercase tracking-widest mb-4 flex items-center justify-between"
+              >
                 Tipo de Prenda
                 <ChevronDown className="w-4 h-4" />
               </h3>
               <ul class="space-y-3">
                 <li>
-                  <a 
-                    href="/catalogo" 
-                    class={`text-sm transition-colors ${!categoriaParam ? 'text-brand-navy font-semibold' : 'text-slate-500 hover:text-brand-navy'}`}
+                  <a
+                    href="/catalogo"
+                    class={`text-sm transition-colors ${!categoriaParam ? "text-brand-navy font-semibold" : "text-slate-500 hover:text-brand-navy"}`}
                   >
                     Todas las prendas
                   </a>
                 </li>
-                {categories?.map(cat => (
-                  <li>
-                    <a 
-                      href={`/catalogo?categoria=${cat.slug}`}
-                      class={`text-sm transition-colors ${categoriaParam === cat.slug ? 'text-brand-navy font-semibold' : 'text-slate-500 hover:text-brand-navy'}`}
-                    >
-                      {cat.name}
-                    </a>
-                  </li>
-                ))}
+                {
+                  categories?.map((cat) => (
+                    <li>
+                      <a
+                        href={`/catalogo?categoria=${cat.slug}`}
+                        class={`text-sm transition-colors ${categoriaParam === cat.slug ? "text-brand-navy font-semibold" : "text-slate-500 hover:text-brand-navy"}`}
+                      >
+                        {cat.name}
+                      </a>
+                    </li>
+                  ))
+                }
               </ul>
             </div>
 
             <!-- Filtro: Precio -->
             <div class="border-b border-slate-100 pb-6">
-              <h3 class="text-xs font-bold uppercase tracking-widest mb-4 flex items-center justify-between">
+              <h3
+                class="text-xs font-bold uppercase tracking-widest mb-4 flex items-center justify-between"
+              >
                 Precio
                 <ChevronDown className="w-4 h-4" />
               </h3>
               <ul class="space-y-3">
-                {rangosPrecios.map(rango => (
-                  <li>
-                    <label class={`flex items-center gap-3 cursor-pointer group ${getPrecioSeleccionado(rango.min, rango.max) ? 'text-brand-navy font-semibold' : ''}`}>
-                      <input 
-                        type="radio" 
-                        name="precio" 
-                        value={`${rango.min}-${rango.max || ''}`}
-                        class="w-4 h-4 accent-brand-navy"
-                        data-min={rango.min}
-                        data-max={rango.max}
-                        checked={getPrecioSeleccionado(rango.min, rango.max)}
-                      />
-                      <span class={`text-sm transition-colors ${getPrecioSeleccionado(rango.min, rango.max) ? 'text-brand-navy font-semibold' : 'text-slate-500 group-hover:text-brand-navy'}`}>
-                        {rango.label}
-                      </span>
-                    </label>
-                  </li>
-                ))}
+                {
+                  rangosPrecios.map((rango) => (
+                    <li>
+                      <label
+                        class={`flex items-center gap-3 cursor-pointer group ${getPrecioSeleccionado(rango.min, rango.max) ? "text-brand-navy font-semibold" : ""}`}
+                      >
+                        <input
+                          type="radio"
+                          name="precio"
+                          value={`${rango.min}-${rango.max || ""}`}
+                          class="w-4 h-4 accent-brand-navy"
+                          data-min={rango.min}
+                          data-max={rango.max}
+                          checked={getPrecioSeleccionado(rango.min, rango.max)}
+                        />
+                        <span
+                          class={`text-sm transition-colors ${getPrecioSeleccionado(rango.min, rango.max) ? "text-brand-navy font-semibold" : "text-slate-500 group-hover:text-brand-navy"}`}
+                        >
+                          {rango.label}
+                        </span>
+                      </label>
+                    </li>
+                  ))
+                }
               </ul>
-              
+
               <!-- Precio personalizado -->
               <div class="mt-4 pt-4 border-t border-slate-50">
                 <p class="text-xs text-slate-400 mb-3">Precio personalizado</p>
                 <div class="flex items-center gap-2">
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     id="precio-min-custom"
                     placeholder="Min"
-                    value={precioMin || ''}
+                    value={precioMin || ""}
                     class="w-20 px-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-brand-navy"
                   />
                   <span class="text-slate-400">-</span>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     id="precio-max-custom"
                     placeholder="Max"
-                    value={precioMax || ''}
+                    value={precioMax || ""}
                     class="w-20 px-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-brand-navy"
                   />
-                  <button 
+                  <button
                     id="aplicar-precio-btn"
                     class="px-3 py-2 bg-brand-navy text-white text-xs font-bold hover:bg-black transition-colors"
                   >
@@ -240,49 +282,57 @@ const colores = [
 
             <!-- Filtro: Talla -->
             <div class="border-b border-slate-100 pb-6">
-              <h3 class="text-xs font-bold uppercase tracking-widest mb-4 flex items-center justify-between">
+              <h3
+                class="text-xs font-bold uppercase tracking-widest mb-4 flex items-center justify-between"
+              >
                 Talla
                 <ChevronDown className="w-4 h-4" />
               </h3>
               <div class="flex flex-wrap gap-2">
-                {tallas.map(talla => (
-                  <button 
-                    class="px-4 py-2 border border-slate-200 text-sm hover:border-brand-navy hover:bg-brand-navy hover:text-white transition-all"
-                    data-talla={talla}
-                  >
-                    {talla}
-                  </button>
-                ))}
+                {
+                  tallas.map((talla) => (
+                    <button
+                      class="px-4 py-2 border border-slate-200 text-sm hover:border-brand-navy hover:bg-brand-navy hover:text-white transition-all"
+                      data-talla={talla}
+                    >
+                      {talla}
+                    </button>
+                  ))
+                }
               </div>
             </div>
 
             <!-- Filtro: Color -->
             <div class="pb-6">
-              <h3 class="text-xs font-bold uppercase tracking-widest mb-4 flex items-center justify-between">
+              <h3
+                class="text-xs font-bold uppercase tracking-widest mb-4 flex items-center justify-between"
+              >
                 Color
                 <ChevronDown className="w-4 h-4" />
               </h3>
               <div class="flex flex-wrap gap-3">
-                {colores.map(color => (
-                  <button 
-                    class="group flex flex-col items-center gap-1"
-                    data-color={color.nombre}
-                    title={color.nombre}
-                  >
-                    <span 
-                      class="w-8 h-8 rounded-full border-2 border-slate-200 group-hover:border-brand-navy transition-colors"
-                      style={`background-color: ${color.valor}`}
-                    ></span>
-                    <span class="text-[10px] text-slate-400 group-hover:text-brand-navy transition-colors">
-                      {color.nombre}
-                    </span>
-                  </button>
-                ))}
+                {
+                  colores.map((color) => (
+                    <button
+                      class="group flex flex-col items-center gap-1"
+                      data-color={color.nombre}
+                      title={color.nombre}
+                    >
+                      <span
+                        class="w-8 h-8 rounded-full border-2 border-slate-200 group-hover:border-brand-navy transition-colors"
+                        style={`background-color: ${color.valor}`}
+                      />
+                      <span class="text-[10px] text-slate-400 group-hover:text-brand-navy transition-colors">
+                        {color.nombre}
+                      </span>
+                    </button>
+                  ))
+                }
               </div>
             </div>
 
             <!-- Botón limpiar filtros -->
-            <a 
+            <a
               href="/catalogo"
               class="block w-full text-center py-3 border border-slate-200 text-sm font-medium hover:bg-slate-50 transition-colors"
             >
@@ -293,20 +343,27 @@ const colores = [
 
         <!-- Grid de productos -->
         <div class="flex-1">
-          {displayProducts.length > 0 ? (
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-12">
-              {displayProducts.map(product => (
-                <ProductCard {...product} />
-              ))}
-            </div>
-          ) : (
-            <div class="text-center py-24">
-              <p class="text-slate-400 text-lg mb-4">No se encontraron productos con los filtros seleccionados.</p>
-              <a href="/catalogo" class="text-brand-gold font-bold uppercase tracking-widest text-sm hover:underline">
-                Ver todos los productos
-              </a>
-            </div>
-          )}
+          {
+            displayProducts.length > 0 ? (
+              <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-12">
+                {displayProducts.map((product) => (
+                  <ProductCard {...product} />
+                ))}
+              </div>
+            ) : (
+              <div class="text-center py-24">
+                <p class="text-slate-400 text-lg mb-4">
+                  No se encontraron productos con los filtros seleccionados.
+                </p>
+                <a
+                  href="/catalogo"
+                  class="text-brand-gold font-bold uppercase tracking-widest text-sm hover:underline"
+                >
+                  Ver todos los productos
+                </a>
+              </div>
+            )
+          }
         </div>
       </div>
     </div>
@@ -315,64 +372,70 @@ const colores = [
 
 <script>
   // Toggle panel de filtros en móvil
-  const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
-  const filtersPanel = document.getElementById('filters-panel');
-  
-  toggleFiltersBtn?.addEventListener('click', () => {
-    filtersPanel?.classList.toggle('hidden');
-    filtersPanel?.classList.toggle('block');
+  const toggleFiltersBtn = document.getElementById("toggle-filters-btn");
+  const filtersPanel = document.getElementById("filters-panel");
+
+  toggleFiltersBtn?.addEventListener("click", () => {
+    filtersPanel?.classList.toggle("hidden");
+    filtersPanel?.classList.toggle("block");
   });
 
   // Ordenamiento
-  const ordenarSelect = document.getElementById('ordenar-select') as HTMLSelectElement;
-  ordenarSelect?.addEventListener('change', () => {
+  const ordenarSelect = document.getElementById(
+    "ordenar-select",
+  ) as HTMLSelectElement;
+  ordenarSelect?.addEventListener("change", () => {
     const url = new URL(window.location.href);
-    url.searchParams.set('ordenar', ordenarSelect.value);
+    url.searchParams.set("ordenar", ordenarSelect.value);
     window.location.href = url.toString();
   });
 
   // Filtros de precio predefinidos
   const precioRadios = document.querySelectorAll('input[name="precio"]');
-  precioRadios.forEach(radio => {
-    radio.addEventListener('change', (e) => {
+  precioRadios.forEach((radio) => {
+    radio.addEventListener("change", (e) => {
       const target = e.target as HTMLInputElement;
       const min = target.dataset.min;
       const max = target.dataset.max;
       const url = new URL(window.location.href);
-      
-      if (min) url.searchParams.set('precio_min', min);
-      else url.searchParams.delete('precio_min');
-      
-      if (max) url.searchParams.set('precio_max', max);
-      else url.searchParams.delete('precio_max');
-      
+
+      if (min) url.searchParams.set("precio_min", min);
+      else url.searchParams.delete("precio_min");
+
+      if (max) url.searchParams.set("precio_max", max);
+      else url.searchParams.delete("precio_max");
+
       window.location.href = url.toString();
     });
   });
 
   // Filtro de precio personalizado
-  const precioMinCustom = document.getElementById('precio-min-custom') as HTMLInputElement;
-  const precioMaxCustom = document.getElementById('precio-max-custom') as HTMLInputElement;
-  const aplicarPrecioBtn = document.getElementById('aplicar-precio-btn');
+  const precioMinCustom = document.getElementById(
+    "precio-min-custom",
+  ) as HTMLInputElement;
+  const precioMaxCustom = document.getElementById(
+    "precio-max-custom",
+  ) as HTMLInputElement;
+  const aplicarPrecioBtn = document.getElementById("aplicar-precio-btn");
 
-  aplicarPrecioBtn?.addEventListener('click', () => {
+  aplicarPrecioBtn?.addEventListener("click", () => {
     const url = new URL(window.location.href);
     const minVal = precioMinCustom?.value;
     const maxVal = precioMaxCustom?.value;
 
-    if (minVal) url.searchParams.set('precio_min', minVal);
-    else url.searchParams.delete('precio_min');
+    if (minVal) url.searchParams.set("precio_min", minVal);
+    else url.searchParams.delete("precio_min");
 
-    if (maxVal) url.searchParams.set('precio_max', maxVal);
-    else url.searchParams.delete('precio_max');
+    if (maxVal) url.searchParams.set("precio_max", maxVal);
+    else url.searchParams.delete("precio_max");
 
     window.location.href = url.toString();
   });
 
   // También permitir Enter en los campos de precio
-  [precioMinCustom, precioMaxCustom].forEach(input => {
-    input?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
+  [precioMinCustom, precioMaxCustom].forEach((input) => {
+    input?.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
         aplicarPrecioBtn?.click();
       }
     });

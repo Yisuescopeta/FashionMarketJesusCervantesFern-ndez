@@ -1,12 +1,14 @@
 ---
 import '../styles/global.css';
+import LoadingScreen from '../components/LoadingScreen.astro';
 
 interface Props {
   title: string;
   description?: string;
+  showLoading?: boolean;
 }
 
-const { title, description = "FashionMarket - Moda Masculina Premium" } = Astro.props;
+const { title, description = "Aurum - Men's Fine Clothiers", showLoading = true } = Astro.props;
 ---
 
 <!doctype html>
@@ -14,12 +16,74 @@ const { title, description = "FashionMarket - Moda Masculina Premium" } = Astro.
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title} | FashionMarket</title>
+    <title>{title} | Aurum</title>
     <meta name="description" content={description} />
+    
+    <!-- Preload del logo para la pantalla de carga -->
+    <link rel="preload" href="/logo-aurum.jpg" as="image" />
+    
+    <!-- Prevenir flash de contenido antes de cargar -->
+    <style>
+      .page-content {
+        opacity: 0;
+        animation: pageReveal 0.6s ease-out 1.5s forwards;
+      }
+      
+      @keyframes pageReveal {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
   </head>
-  <body class="bg-brand-offwhite text-brand-navy font-sans antialiased">
-    <slot />
+  <body class="bg-brand-offwhite text-brand-navy font-sans antialiased overflow-x-hidden">
+    <!-- Pantalla de carga -->
+    {showLoading && <LoadingScreen />}
+    
+    <!-- Contenido principal con animación de entrada -->
+    <div class="page-content">
+      <slot />
+    </div>
+    
+    <!-- Script para animaciones al hacer scroll -->
+    <script>
+      // Intersection Observer para animaciones al scroll
+      const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+
+      // Observar elementos con clase scroll-animate
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.scroll-animate').forEach(el => {
+          observer.observe(el);
+        });
+      });
+
+      // Smooth scroll para enlaces internos
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            target.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        });
+      });
+    </script>
   </body>
 </html>
