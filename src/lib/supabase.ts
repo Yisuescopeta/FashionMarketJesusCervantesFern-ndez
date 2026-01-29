@@ -16,9 +16,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Cliente de Supabase estándar (para cliente/anon)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Service role key - In Astro, import.meta.env works for server-side code
-// Non-PUBLIC_ prefixed vars are only available server-side (which is fine for supabaseAdmin)
-const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
+// Service role key - accessed differently in server vs client
+// In Astro, import.meta.env only works for PUBLIC_ prefixed vars in client
+// For server-side, we need to use process.env or make it PUBLIC (not recommended for secrets)
+let supabaseServiceKey: string | undefined;
+
+if (typeof process !== 'undefined' && process.env) {
+    // Server-side (Node.js environment)
+    supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+} else {
+    // Fallback for other environments
+    supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+}
 
 console.log('Service Role Key:', supabaseServiceKey ? `Loaded (${supabaseServiceKey.substring(0, 20)}...)` : 'MISSING ⚠️');
 

@@ -1,6 +1,6 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "../../lib/supabase";
 import {
     Users,
     Search,
@@ -15,14 +15,6 @@ import {
 
 export const prerender = false;
 
-// Crear cliente admin DIRECTAMENTE aquí
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAdmin = createClient(
-    supabaseUrl,
-    supabaseServiceKey || import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
-);
-
 // Paginación
 const url = new URL(Astro.request.url);
 const page = parseInt(url.searchParams.get("page") || "1");
@@ -33,7 +25,7 @@ const to = from + pageSize - 1;
 // Búsqueda
 const searchFilter = url.searchParams.get("search") || "";
 
-// Consulta
+// Consulta simplificada (SIN JOIN con user_notification_preferences)
 let query = supabaseAdmin
     .from("profiles")
     .select("*", { count: "exact" })
@@ -47,14 +39,9 @@ if (searchFilter) {
 
 const { data: clients, count, error } = await query.range(from, to);
 
-console.log(
-    "CLIENTES DEBUG - Count:",
-    count,
-    "Error:",
-    error,
-    "Data:",
-    clients?.length,
-);
+if (error) {
+    console.error("Error fetching clients:", error);
+}
 
 const totalPages = Math.ceil((count || 0) / pageSize);
 ---
@@ -100,94 +87,132 @@ const totalPages = Math.ceil((count || 0) / pageSize);
         </form>
     </div>
 
-    <!-- Grid de Clientes -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {
-            clients?.map((client) => (
-                <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
-                    <div class="absolute -top-4 -right-4 w-24 h-24 bg-slate-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
+    <!-- Tabla de Clientes -->
+    <div
+        class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden border-t-4 border-t-brand-gold"
+    >
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100">
+                        <th
+                            class="text-left py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Usuario</th
+                        >
+                        <th
+                            class="text-left py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Contacto</th
+                        >
+                        <th
+                            class="text-left py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Rol</th
+                        >
+                        <th
+                            class="text-left py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Fecha Registro</th
+                        >
+                        <th
+                            class="text-right py-4 px-6 text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                            >Acciones</th
+                        >
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {
+                        clients?.map((client) => (
+                            <tr class="hover:bg-slate-50/50 transition-colors group">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden border border-slate-200">
+                                            {client.avatar_url ? (
+                                                <img
+                                                    src={client.avatar_url}
+                                                    alt={client.full_name}
+                                                    class="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <UserCircle className="w-6 h-6" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-slate-800">
+                                                {client.full_name ||
+                                                    "Sin nombre"}
+                                            </p>
+                                            <p class="text-[10px] text-slate-400 font-mono">
+                                                ID: {client.id.slice(0, 8)}...
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex flex-col">
+                                        <div class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+                                            <Mail className="w-3 h-3 text-slate-400" />
+                                            {client.email}
+                                        </div>
+                                        {client.phone && (
+                                            <div class="flex items-center gap-1.5 text-[10px] text-slate-500 mt-1">
+                                                <span>📞</span> {client.phone}
+                                            </div>
+                                        )}
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span
+                                        class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                            client.role === "admin"
+                                                ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                                : "bg-blue-100 text-blue-800 border border-blue-200"
+                                        }`}
+                                    >
+                                        {client.role === "admin"
+                                            ? "Administrador"
+                                            : "Cliente"}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                                        <Calendar className="w-3 h-3 text-brand-gold" />
+                                        {new Date(
+                                            client.created_at,
+                                        ).toLocaleDateString("es-ES", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                        })}
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button
+                                            class="p-2 text-slate-400 hover:text-brand-gold hover:bg-amber-50 rounded-xl transition-all"
+                                            title="Ver detalles"
+                                        >
+                                            <ArrowUpRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))
+                    }
 
-                    <div class="flex items-start gap-4 mb-6">
-                        <div class="w-14 h-14 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-amber-50 group-hover:border-amber-100 group-hover:text-brand-gold transition-all duration-500">
-                            {client.avatar_url ? (
-                                <img
-                                    src={client.avatar_url}
-                                    alt=""
-                                    class="w-full h-full object-cover rounded-2xl"
-                                />
-                            ) : (
-                                <UserCircle className="w-8 h-8" />
-                            )}
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="font-bold text-slate-800 line-clamp-1">
-                                {client.full_name || "Sin nombre"}
-                            </h3>
-                            <p class="text-xs text-slate-400 italic truncate">
-                                {client.email}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="space-y-3 mb-6">
-                        <div class="flex items-center justify-between text-[10px] font-medium text-slate-400 uppercase tracking-widest italic">
-                            <span class="flex items-center gap-1.5">
-                                <Calendar className="w-3 h-3" /> Registro
-                            </span>
-                            <span class="text-slate-600 font-bold">
-                                {new Date(
-                                    client.created_at,
-                                ).toLocaleDateString()}
-                            </span>
-                        </div>
-                        <div class="flex items-center justify-between text-[10px] font-medium text-slate-400 uppercase tracking-widest italic">
-                            <span class="flex items-center gap-1.5">
-                                <Mail className="w-3 h-3" /> Marketing
-                            </span>
-                            <span
-                                class={
-                                    client.user_notification_preferences?.[0]
-                                        ?.marketing_emails
-                                        ? "text-emerald-500 font-bold"
-                                        : "text-slate-300 font-bold"
-                                }
-                            >
-                                {client.user_notification_preferences?.[0]
-                                    ?.marketing_emails
-                                    ? "Suscrito"
-                                    : "No"}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-50 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center">
-                                <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
-                            </div>
-                            <span class="text-xs font-bold text-slate-700 italic">
-                                -- Pedidos
-                            </span>
-                        </div>
-                        <button class="text-[10px] font-bold text-brand-gold uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all">
-                            Ver ficha <ArrowUpRight className="w-3 h-3" />
-                        </button>
-                    </div>
-                </div>
-            ))
-        }
+                    {
+                        (!clients || clients.length === 0) && (
+                            <tr>
+                                <td colspan="5" class="py-16 text-center">
+                                    <Users className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                                    <p class="text-slate-400 text-sm italic">
+                                        No se encontraron clientes.
+                                    </p>
+                                </td>
+                            </tr>
+                        )
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
-
-    {
-        (!clients || clients.length === 0) && (
-            <div class="bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm italic">
-                <Users className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                <p class="text-slate-400 text-sm">
-                    No se encontraron clientes para esta búsqueda.
-                </p>
-            </div>
-        )
-    }
 
     <!-- Paginación -->
     {

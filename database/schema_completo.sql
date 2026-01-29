@@ -633,3 +633,4 @@ comment on function prevent_role_self_elevation() is 'Previene que usuarios se a
 -- ==========================================
 -- FIN DEL ESQUEMA
 -- ==========================================
+
