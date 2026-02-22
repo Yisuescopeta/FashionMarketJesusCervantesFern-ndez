@@ -15,7 +15,7 @@ interface CartItem {
 export const POST: APIRoute = async ({ request, url }) => {
     try {
         const body = await request.json();
-        const { items, shipping, userId, couponCode } = body as {
+        const { items, shipping, userId, couponCode, email } = body as {
             items: CartItem[];
             shipping?: {
                 full_name: string;
@@ -26,6 +26,7 @@ export const POST: APIRoute = async ({ request, url }) => {
             };
             userId?: string;
             couponCode?: string;
+            email?: string;
         };
 
         if (!items || items.length === 0) {
@@ -197,7 +198,7 @@ export const POST: APIRoute = async ({ request, url }) => {
                 shipping_city: shipping?.city || '',
                 shipping_postal_code: shipping?.postal_code || '',
             },
-            customer_email: undefined,
+            customer_email: email || undefined,
         });
 
         return new Response(

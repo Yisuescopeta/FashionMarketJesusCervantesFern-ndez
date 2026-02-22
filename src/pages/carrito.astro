@@ -60,6 +60,23 @@ export const prerender = false;
                         Datos de Envío
                     </h3>
                     <form id="shipping-form" class="space-y-4">
+                        <div id="guest-email-container" class="mb-6">
+                            <label
+                                for="guest_email"
+                                class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2"
+                                >Correo Electrónico <span class="text-brand-gold">*</span></label
+                            >
+                            <input
+                                type="email"
+                                id="guest_email"
+                                name="guest_email"
+                                required
+                                class="w-full border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-brand-navy bg-slate-50"
+                                placeholder="tu@email.com"
+                            />
+                            <p class="text-[10px] text-slate-400 mt-1 italic">Lo usaremos para enviarte el código de seguimiento.</p>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label
@@ -351,6 +368,9 @@ export const prerender = false;
         }
     }
 
+    const guestEmailInput = document.getElementById("guest_email") as HTMLInputElement;
+    const guestEmailContainer = document.getElementById("guest-email-container");
+
     let isAuthenticated = false;
     let userProfile: any = null;
 
@@ -380,6 +400,13 @@ export const prerender = false;
                 if (profile.postal_code)
                     postalCodeInput.value = profile.postal_code;
             }
+
+            // Ocultar campo de email si ya está logueado ya que lo sacaremos de su cuenta
+            if (guestEmailContainer) guestEmailContainer.classList.add('hidden');
+            if (guestEmailInput) guestEmailInput.required = false;
+        } else {
+             if (guestEmailContainer) guestEmailContainer.classList.remove('hidden');
+             if (guestEmailInput) guestEmailInput.required = true;
         }
 
         updateAuthUI();
@@ -387,30 +414,20 @@ export const prerender = false;
 
     // Actualizar UI según estado de autenticación
     function updateAuthUI() {
-        if (!isAuthenticated && cartItems.get().length > 0) {
-            loginRequiredMsg?.classList.remove("hidden");
-            shippingFormContainer?.classList.add("hidden");
-            if (checkoutBtn) {
-                checkoutBtn.textContent = "Iniciar Sesión para Comprar";
-            }
-        } else {
-            loginRequiredMsg?.classList.add("hidden");
-            if (cartItems.get().length > 0) {
-                shippingFormContainer?.classList.remove("hidden");
-            }
-            if (checkoutBtn) {
-                checkoutBtn.textContent = "Tramitar Pedido";
-            }
+        // Ya no bloqueamos la UI por no estar autenticado
+        loginRequiredMsg?.classList.add("hidden");
+        
+        if (cartItems.get().length > 0) {
+            shippingFormContainer?.classList.remove("hidden");
+        }
+        
+        if (checkoutBtn) {
+            checkoutBtn.textContent = "Tramitar Pedido";
         }
     }
 
     // Manejar click en checkout
     checkoutBtn?.addEventListener("click", async () => {
-        if (!isAuthenticated) {
-            window.location.href = "/login?redirect=/carrito";
-            return;
-        }
-
         const items = cartItems.get();
         if (items.length === 0) {
             alert("Tu carrito está vacío");
@@ -433,6 +450,7 @@ export const prerender = false;
             address: addressInput.value,
             city: cityInput.value,
             postal_code: postalCodeInput.value,
+            email: isAuthenticated ? undefined : guestEmailInput.value,
         };
 
         try {
@@ -465,6 +483,7 @@ export const prerender = false;
                     shipping: shippingData,
                     userId: user?.id,
                     couponCode: currentCouponCode,
+                    email: shippingData.email,
                 }),
             });
 

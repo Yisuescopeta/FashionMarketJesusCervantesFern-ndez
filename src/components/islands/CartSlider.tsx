@@ -97,11 +97,7 @@ export default function CartSlider() {
     };
 
     const handleCheckout = () => {
-        if (!isAuthenticated) {
-            window.location.href = '/login?redirect=/carrito';
-        } else {
-            window.location.href = '/carrito';
-        }
+        window.location.href = '/carrito';
     };
 
     // Si el carrito está cerrado, no renderizar nada para evitar problemas de overflow
@@ -179,27 +175,11 @@ export default function CartSlider() {
                             <span className="text-xl font-serif font-bold italic">{formatPrice($cartTotal)}</span>
                         </div>
 
-                        {!isLoading && !isAuthenticated && (
-                            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded text-center">
-                                <p className="text-xs text-amber-700">
-                                    <LogIn className="w-4 h-4 inline mr-1" />
-                                    Inicia sesión para completar tu compra
-                                </p>
-                            </div>
-                        )}
-
                         <button
                             onClick={handleCheckout}
-                            className="w-full bg-brand-navy text-white py-4 font-bold tracking-[0.2em] uppercase text-sm hover:bg-black transition-all flex items-center justify-center space-x-2"
+                            className="w-full bg-brand-navy text-white py-4 font-bold tracking-[0.2em] uppercase text-sm hover:bg-black transition-all flex items-center justify-center space-x-2 shadow-lg active:scale-95 transition-transform"
                         >
-                            {!isAuthenticated ? (
-                                <>
-                                    <LogIn className="w-5 h-5" />
-                                    <span>Iniciar Sesión para Comprar</span>
-                                </>
-                            ) : (
-                                <span>Tramitar Pedido</span>
-                            )}
+                            <span>Tramitar Pedido</span>
                         </button>
                     </div>
                 )}
