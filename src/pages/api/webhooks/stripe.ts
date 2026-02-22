@@ -2,7 +2,7 @@
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '../../../lib/supabase-admin';
-import { sendOrderConfirmationEmail } from '../../../lib/email';
+import { sendOrderConfirmationEmail, sendRefundInvoiceEmail } from '../../../lib/email';
 import { stripe } from '../../../lib/stripe';
 
 export const POST: APIRoute = async ({ request }) => {
@@ -37,6 +37,16 @@ export const POST: APIRoute = async ({ request }) => {
             // Return 200 to acknowledge receipt even on error to prevent Stripe retries loop if logic is broken?
             // Ideally return 500 to retry, but for now let's return 500 to allow retry.
             return new Response('Error processing order', { status: 500 });
+        }
+    } else if (event.type === 'charge.refunded') {
+        const charge = event.data.object as Stripe.Charge;
+        console.log(`🔔 Refund processed for charge: ${charge.id}`);
+
+        try {
+            await handleChargeRefunded(charge);
+        } catch (error) {
+            console.error('❌ Error processing refund webhook:', error);
+            return new Response('Error processing refund', { status: 500 });
         }
     }
 
@@ -205,4 +215,64 @@ async function recordCouponUsage(couponId: string, userId: string, orderId: stri
     } else {
         console.log('✅ Coupon usage recorded.');
     }
+}
+
+async function handleChargeRefunded(charge: Stripe.Charge) {
+    const paymentIntentId = charge.payment_intent as string;
+    if (!paymentIntentId) return;
+
+    // 1. Get the order from Supabase
+    // We need to find the order associated with this payment intent
+    // First, let's get the session ID if we can, or search by payment_intent if stored
+    // Actually, looking at handleCheckoutSessionCompleted, we don't store payment_intent_id.
+    // However, we can use the stripe_session_id if we fetch the session from Stripe
+    // OR, we can update the orders table to include payment_intent_id (better)
+    // But for now, let's try to find by customer_email and amount if needed, 
+    // or better: list sessions and find the one with this PI.
+
+    // Simplest for now: Find order by stripe_session_id by listing sessions for this PI? 
+    // Stripe doesn't easily map PI -> Session in reverse without search.
+
+    // Let's search in our orders table. If we have many PI IDs we might need a migration.
+    // Wait, I can search Stripe sessions by payment_intent.
+    const sessions = await stripe.checkout.sessions.list({
+        payment_intent: paymentIntentId,
+        limit: 1
+    });
+
+    const session = sessions.data[0];
+    if (!session) {
+        console.error(`❌ No session found for payment intent ${paymentIntentId}`);
+        return;
+    }
+
+    const { data: order, error } = await supabaseAdmin
+        .from('orders')
+        .select('*')
+        .eq('stripe_session_id', session.id)
+        .single();
+
+    if (error || !order) {
+        console.error(`❌ No order found for session ${session.id}`);
+        return;
+    }
+
+    // 2. Update order status to refunded if not already
+    await supabaseAdmin
+        .from('orders')
+        .update({
+            refund_status: 'refunded',
+            refunded_at: new Date().toISOString()
+        })
+        .eq('id', order.id);
+
+    // 3. Send Credit Note Email
+    console.log(`📧 Sending Refund Invoice for order ${order.id}...`);
+    await sendRefundInvoiceEmail({
+        orderId: order.id,
+        customerName: charge.billing_details.name || order.notes?.replace('Destinatario: ', '') || 'Cliente',
+        customerEmail: charge.billing_details.email || order.customer_email,
+        refundAmount: charge.amount_refunded || charge.amount,
+        reason: charge.refunds?.data[0]?.reason || 'Devolución de pedido'
+    });
 }

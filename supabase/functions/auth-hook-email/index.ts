@@ -154,10 +154,12 @@ serve(async (req) => {
         if (!res.ok) {
             const errorData = await res.text()
             console.error('Failed to send email via Resend:', errorData)
-            // Bubble up the error to Supabase so it knows the email failed
+            // EMERGENCY FIX: Do NOT return 500. Returning 500 blocks the Supabase Auth flow (signup/login).
+            // We return 200 to allow the user to proceed, even if the custom email failed to send.
+            // Check your RESEND_API_KEY in Supabase Secrets!
             return new Response(
-                JSON.stringify({ error: 'failed_to_send_email' }),
-                { status: 500, headers: { 'Content-Type': 'application/json' } }
+                JSON.stringify({ warning: 'email_failed_but_flow_continued' }),
+                { status: 200, headers: { 'Content-Type': 'application/json' } }
             )
         }
 

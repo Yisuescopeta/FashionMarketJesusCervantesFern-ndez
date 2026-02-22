@@ -29,6 +29,15 @@ export interface OrderConfirmationEmailData {
   shippingAddress?: string; // Dirección completa
 }
 
+// Interfaz para el email de abono (reembolso)
+export interface RefundInvoiceEmailData {
+  orderId: string;
+  customerName: string;
+  customerEmail: string;
+  refundAmount: number;
+  reason?: string;
+}
+
 // El entorno se carga automáticamente en Astro
 // No es necesario importar dotenv aquí
 
@@ -180,6 +189,111 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
     if (error instanceof Error) {
       console.error('Detalle error:', error.message);
     }
+    return { success: false, error };
+  }
+}
+
+export async function sendRefundInvoiceEmail(data: RefundInvoiceEmailData) {
+  const {
+    orderId,
+    customerName,
+    customerEmail,
+    refundAmount,
+    reason
+  } = data;
+
+  const formatPrice = (cents: number) =>
+    (cents / 100).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+
+  const invoiceDate = new Date().toLocaleDateString('es-ES', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"Aurum" <${EMAIL_FROM}>`,
+      to: customerEmail,
+      subject: `🧾 Factura de Abono #${orderId.slice(0, 8)}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e2e8f0; }
+            .header { background: #0f172a; padding: 40px 20px; text-align: center; border-bottom: 3px solid #d4af37; }
+            .header h1 { color: white; margin: 0; letter-spacing: 6px; font-size: 28px; font-weight: 300; }
+            .header p { color: #94a3b8; margin: 10px 0 0; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; }
+            .invoice-box { padding: 40px 30px; }
+            .title { text-align: center; margin-bottom: 40px; }
+            .title h2 { margin: 0; color: #dc2626; font-weight: 800; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+            .title p { color: #64748b; margin-top: 8px; font-size: 15px; }
+            .tracking-box { background: #fef2f2; border-radius: 8px; padding: 25px; text-align: center; margin: 35px 0; color: #dc2626; border: 1px solid #fecaca; }
+            .btn { background: #0f172a; color: white !important; padding: 14px 28px; text-decoration: none; display: inline-block; border-radius: 6px; font-weight: bold; margin-top: 20px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+            .footer { background-color: #f8fafc; padding: 30px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>AURUM</h1>
+              <p>The Gold Standard of Fashion</p>
+            </div>
+            
+            <div class="invoice-box">
+              <div class="title">
+                <h2>Factura de Abono</h2>
+                <p>Se ha procesado un reembolso para tu pedido</p>
+              </div>
+
+              <table style="width: 100%; margin-bottom: 35px; border-collapse: separate; border-spacing: 15px 0; margin-left: -15px; margin-right: -15px;">
+                <tr>
+                   <td style="vertical-align: top; width: 50%; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #f1f5f9;">
+                      <strong style="color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 1px;">Cliente:</strong><br>
+                      <div style="color: #475569; font-size: 14px; line-height: 1.5; margin-top: 8px;">
+                        <strong>${customerName}</strong><br>
+                        ${customerEmail}
+                      </div>
+                   </td>
+                   <td style="vertical-align: top; width: 50%; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #f1f5f9;">
+                      <strong style="color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 1px;">Detalles del Abono:</strong><br>
+                      <div style="color: #475569; font-size: 14px; line-height: 1.6; margin-top: 8px;">
+                        <strong>Ref. Pedido:</strong> <span style="font-family: monospace;">#${orderId.slice(0, 8).toUpperCase()}</span><br>
+                        <strong>Fecha Abono:</strong> ${invoiceDate}
+                      </div>
+                   </td>
+                </tr>
+              </table>
+
+              <div class="tracking-box">
+                <p style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #dc2626; font-weight: bold;">Importe Reembolsado</p>
+                <span style="font-size: 24px; font-weight: bold; display: block; margin: 10px 0;">-${formatPrice(refundAmount)}</span>
+                ${reason ? `<p style="margin: 10px 0 0; font-size: 13px; color: #991b1b;">Razón: ${reason}</p>` : ''}
+              </div>
+
+              <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px dashed #e2e8f0;">
+                <p style="color: #475569; font-size: 14px; margin-bottom: 25px; line-height: 1.6;">
+                  El abono se ha realizado al mismo método de pago utilizado en la compra original. Dependiendo de tu entidad bancaria, podría tardar entre 5 y 10 días hábiles en aparecer reflejado.
+                </p>
+                <a href="${import.meta.env.SITE_URL || 'http://localhost:4321'}" class="btn">Volver a la tienda</a>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p style="margin: 0;">&copy; ${new Date().getFullYear()} Aurum. Todos los derechos reservados.</p>
+              <p style="margin: 5px 0 0;">Una marca de excelencia y exclusividad.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    });
+
+    console.log("Email de abono enviado exitosamente: %s", info.messageId);
+    return { success: true, data: info };
+  } catch (error) {
+    console.error('Error enviando email de abono:', error);
     return { success: false, error };
   }
 }
