@@ -71,7 +71,7 @@ export const POST: APIRoute = async ({ request }) => {
 
             const result = await sendAdminReportEmail({
                 adminEmail,
-                subject: `📊 Informe ${periodLabel} — FashionMarket`,
+                subject: `📊 Informe ${periodLabel} — Aurum`,
                 html
             });
 
@@ -143,7 +143,7 @@ export const POST: APIRoute = async ({ request }) => {
 
             const result = await sendAdminReportEmail({
                 adminEmail,
-                subject: `📊 Informe ${periodLabel} — FashionMarket`,
+                subject: `📊 Informe ${periodLabel} — Aurum`,
                 html
             });
 

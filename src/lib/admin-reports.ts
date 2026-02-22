@@ -444,8 +444,8 @@ export function buildReportHtml(report: FullReportData, adminName: string): stri
               <!-- Header -->
               <tr>
                 <td style="background: linear-gradient(135deg, #0f172a, #1e293b); padding: 30px; text-align: center;">
-                  <h1 style="margin: 0; color: #ffffff; font-size: 22px; letter-spacing: 2px;">
-                    FASHION<span style="color: #d4a574;">MARKET</span>
+                  <h1 style="margin: 0; color: #ffffff; font-size: 26px; letter-spacing: 3px; font-family: 'Georgia', serif; font-style: italic;">
+                    AURUM
                   </h1>
                   <p style="margin: 8px 0 0; color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 3px;">
                     Informe de Gestión
@@ -472,7 +472,7 @@ export function buildReportHtml(report: FullReportData, adminName: string): stri
               <tr>
                 <td style="background-color: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
                   <p style="margin: 0 0 8px; color: #94a3b8; font-size: 11px;">
-                    Este es un informe automático de FashionMarket Admin.
+                    Este es un informe automático de Aurum Admin.
                   </p>
                 <p style="margin: 0; color: #94a3b8; font-size: 11px;">
                     Puedes configurar tus preferencias de informes desde el <a href="${(import.meta.env as any).SITE_URL || 'http://localhost:4321'}/admin/informes" style="color: #d4a574;">panel de administración</a>.

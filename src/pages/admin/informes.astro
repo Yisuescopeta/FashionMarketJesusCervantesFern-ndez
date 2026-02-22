@@ -21,67 +21,24 @@ import {
 export const prerender = false;
 ---
 
-<AdminLayout title="Informes Automáticos">
+<AdminLayout title="Enviar Informe">
   <!-- Header -->
   <div class="mb-8">
     <h1 class="text-xl sm:text-2xl font-bold text-slate-800 font-serif italic">
-      Informes Automáticos
+      Enviar Informe
     </h1>
     <p class="text-[10px] sm:text-sm text-slate-500">
-      Configura y programa tus informes por correo.
+      Genera y envía informes de ventas y rendimiento manualmente.
     </p>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Panel Principal de Configuración -->
     <div class="lg:col-span-2 space-y-8">
-      <!-- Toggle General -->
-      <div
-        id="toggle-container"
-        class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md transition-all border-t-4 border-t-slate-200"
-      >
-        <div class="flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3 sm:gap-4">
-            <div
-              id="toggle-icon-bg"
-              class="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center bg-slate-100 transition-all flex-shrink-0"
-            >
-              <FileBarChart
-                id="toggle-icon"
-                className="w-5 h-5 sm:w-7 sm:h-7 text-slate-400 transition-all"
-              />
-            </div>
-            <div>
-              <h3 class="text-base sm:text-xl font-bold text-slate-800">
-                Informes por Email
-              </h3>
-              <p
-                id="toggle-label"
-                class="text-[10px] sm:text-sm text-slate-400 font-medium"
-              >
-                Cargando...
-              </p>
-            </div>
-          </div>
-          <div id="toggle-switch" class="relative flex-shrink-0">
-            <div
-              class="w-12 h-6 sm:w-16 sm:h-8 bg-slate-200 rounded-full transition-all duration-300"
-              id="toggle-track"
-            >
-            </div>
-            <div
-              class="absolute top-1 left-1 w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transition-all duration-300"
-              id="toggle-dot"
-            >
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Tipos de Informe -->
       <div
         id="report-types-section"
-        class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm transition-all"
+        class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm transition-all border-t-4 border-t-slate-200"
       >
         <div class="flex items-center gap-3 mb-6">
           <div
@@ -241,79 +198,32 @@ export const prerender = false;
     <!-- Panel Lateral -->
     <div class="space-y-8">
       <!-- Programación -->
+      <!-- Panel de Envío -->
       <div
-        id="schedule-section"
+        id="send-section"
         class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm"
       >
         <div class="flex items-center gap-3 mb-6">
           <div
             class="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0"
           >
-            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
+            <Send className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
           </div>
           <h3 class="text-base sm:text-lg font-bold text-slate-800">
-            Programación
+            Estado de Envío
           </h3>
         </div>
 
         <div class="space-y-6">
-          <!-- Hora de envío -->
-          <div>
-            <label
-              class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
-              >Hora de envío</label
-            >
-            <div class="relative">
-              <select
-                id="send_hour"
-                class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all cursor-pointer"
-              >
-                {
-                  Array.from({ length: 24 }, (_, i) => (
-                    <option value={i} selected={i === 8}>
-                      {i.toString().padStart(2, "0")}:00
-                    </option>
-                  ))
-                }
-              </select>
-              <Clock
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
-              />
-            </div>
-          </div>
-
-          <!-- Frecuencia -->
-          <div>
-            <label
-              class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
-              >Frecuencia</label
-            >
-            <div class="relative">
-              <select
-                id="frequency_days"
-                class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all cursor-pointer"
-              >
-                <option value="1" selected>Cada día</option>
-                <option value="2">Cada 2 días</option>
-                <option value="3">Cada 3 días</option>
-                <option value="7">Cada semana</option>
-                <option value="14">Cada 2 semanas</option>
-                <option value="30">Cada mes</option>
-              </select>
-              <Calendar
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
-              />
-            </div>
-          </div>
-
           <!-- Último envío -->
-          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-            <p
-              class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1"
-            >
-              Último envío
-            </p>
-            <p id="last-sent-label" class="text-sm font-bold text-slate-600">
+          <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group transition-all hover:bg-white hover:shadow-md">
+            <div class="flex items-center gap-3 mb-2">
+              <Clock className="w-4 h-4 text-slate-400" />
+              <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400">
+                Último informe enviado
+              </p>
+            </div>
+            <p id="last-sent-label" class="text-lg font-bold text-slate-800 ml-7">
               Nunca
             </p>
           </div>
@@ -323,23 +233,12 @@ export const prerender = false;
       <!-- Botones de acción -->
       <div class="space-y-3">
         <button
-          id="save-btn"
-          class="w-full bg-slate-900 text-white px-6 py-3.5 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] sm:text-xs hover:bg-black transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 sm:gap-3 active:scale-95 group"
-        >
-          <span class="save-default">Guardar Cambios</span>
-          <CheckCircle
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform save-default"
-          />
-          <span class="save-loading hidden">Guardando...</span>
-        </button>
-
-        <button
           id="send-now-btn"
-          class="w-full border-2 border-brand-gold text-brand-gold px-6 py-3.5 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] sm:text-xs hover:bg-brand-gold hover:text-white transition-all flex items-center justify-center gap-2 sm:gap-3 active:scale-95 group"
+          class="w-full bg-slate-900 text-white px-6 py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] sm:text-xs hover:bg-black transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 sm:gap-3 active:scale-95 group"
         >
-          <span class="send-default">Enviar Ahora</span>
+          <span class="send-default text-brand-gold">Enviar Informe Ahora</span>
           <Send
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform send-default"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform send-default text-brand-gold"
           />
           <span class="send-loading hidden">Enviando...</span>
         </button>
@@ -353,6 +252,7 @@ export const prerender = false;
       </div>
 
       <!-- Info -->
+      <!-- Info -->
       <div
         class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl shadow-slate-900/20 italic"
       >
@@ -362,12 +262,11 @@ export const prerender = false;
         <h3
           class="text-sm sm:text-base font-bold mb-3 sm:mb-4 flex items-center gap-2"
         >
-          <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-gold" />
-          Envío Automático
+          <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-gold" />
+          Informes Manuales
         </h3>
-        <p class="text-[11px] sm:text-xs text-slate-400 leading-relaxed mb-3">
-          Los informes se envían a la hora configurada. Prueba con "Enviar
-          Ahora" para una previsualización inmediata.
+        <p class="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
+          Selecciona los módulos que deseas incluir en el reporte y pulsa el botón para enviarlo a tu correo inmediatamente.
         </p>
       </div>
     </div>
@@ -378,18 +277,9 @@ export const prerender = false;
   import { supabase } from "../../lib/supabase";
 
   // State
-  let enabled = false;
   let isLoading = true;
 
   // DOM elements
-  const toggleContainer = document.getElementById("toggle-container")!;
-  const toggleTrack = document.getElementById("toggle-track")!;
-  const toggleDot = document.getElementById("toggle-dot")!;
-  const toggleLabel = document.getElementById("toggle-label")!;
-  const toggleIconBg = document.getElementById("toggle-icon-bg")!;
-  const container = toggleContainer;
-
-  const saveBtn = document.getElementById("save-btn") as HTMLButtonElement;
   const sendNowBtn = document.getElementById(
     "send-now-btn",
   ) as HTMLButtonElement;
@@ -412,47 +302,6 @@ export const prerender = false;
   const reportTopProducts = document.getElementById(
     "report_top_products",
   ) as HTMLInputElement;
-
-  // Selects
-  const sendHour = document.getElementById("send_hour") as HTMLSelectElement;
-  const frequencyDays = document.getElementById(
-    "frequency_days",
-  ) as HTMLSelectElement;
-
-  // Update toggle visuals
-  function updateToggleUI() {
-    if (enabled) {
-      toggleTrack.className =
-        "w-12 h-6 sm:w-16 sm:h-8 bg-emerald-500 rounded-full transition-all duration-300";
-      toggleDot.className =
-        "absolute top-1 left-7 sm:left-9 w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transition-all duration-300";
-      toggleLabel.textContent = "Activados — recibes informes";
-      toggleLabel.className =
-        "text-[10px] sm:text-sm text-emerald-600 font-bold";
-      toggleIconBg.className =
-        "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center bg-emerald-100 transition-all";
-      container.className =
-        "bg-white rounded-3xl p-6 sm:p-8 border border-emerald-200 shadow-sm cursor-pointer hover:shadow-md transition-all border-t-4 border-t-emerald-500";
-    } else {
-      toggleTrack.className =
-        "w-12 h-6 sm:w-16 sm:h-8 bg-slate-200 rounded-full transition-all duration-300";
-      toggleDot.className =
-        "absolute top-1 left-1 w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transition-all duration-300";
-      toggleLabel.textContent = "Desactivados — sin informes";
-      toggleLabel.className =
-        "text-[10px] sm:text-sm text-slate-400 font-medium";
-      toggleIconBg.className =
-        "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center bg-slate-100 transition-all";
-      container.className =
-        "bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md transition-all border-t-4 border-t-slate-200";
-    }
-  }
-
-  // Toggle handler
-  toggleContainer.addEventListener("click", () => {
-    enabled = !enabled;
-    updateToggleUI();
-  });
 
   // Get auth token
   async function getToken() {
@@ -488,14 +337,11 @@ export const prerender = false;
 
       if (res.ok) {
         const prefs = await res.json();
-        enabled = prefs.enabled ?? false;
         reportSales.checked = prefs.report_sales ?? true;
         reportNewCustomers.checked = prefs.report_new_customers ?? true;
         reportReturns.checked = prefs.report_returns ?? true;
         reportLowStock.checked = prefs.report_low_stock ?? true;
         reportTopProducts.checked = prefs.report_top_products ?? true;
-        sendHour.value = String(prefs.send_hour ?? 8);
-        frequencyDays.value = String(prefs.frequency_days ?? 1);
 
         if (prefs.last_sent_at) {
           const date = new Date(prefs.last_sent_at);
@@ -507,8 +353,6 @@ export const prerender = false;
             minute: "2-digit",
           });
         }
-
-        updateToggleUI();
       }
     } catch (e) {
       console.error("Error loading preferences:", e);
@@ -516,62 +360,6 @@ export const prerender = false;
       isLoading = false;
     }
   }
-
-  // Save preferences
-  saveBtn?.addEventListener("click", async () => {
-    saveBtn.disabled = true;
-    saveBtn
-      .querySelectorAll(".save-default")
-      .forEach((el) => el.classList.add("hidden"));
-    saveBtn.querySelector(".save-loading")?.classList.remove("hidden");
-
-    try {
-      const token = await getToken();
-      if (!token) throw new Error("No autenticado");
-
-      const res = await fetch("/api/admin/report-preferences", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          enabled,
-          report_sales: reportSales.checked,
-          report_new_customers: reportNewCustomers.checked,
-          report_returns: reportReturns.checked,
-          report_low_stock: reportLowStock.checked,
-          report_top_products: reportTopProducts.checked,
-          send_hour: parseInt(sendHour.value),
-          send_minute: 0,
-          frequency_days: parseInt(frequencyDays.value),
-        }),
-      });
-
-      if (res.ok) {
-        showStatus("¡Configuración guardada correctamente!", "success");
-      } else {
-        const text = await res.text();
-        let err;
-        try {
-          err = JSON.parse(text);
-        } catch (e) {
-          throw new Error(
-            `Error ${res.status}: Respuesta no válida del servidor.`,
-          );
-        }
-        throw new Error(err.error || "Error guardando");
-      }
-    } catch (e: any) {
-      showStatus(e.message || "Error al guardar", "error");
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn
-        .querySelectorAll(".save-default")
-        .forEach((el) => el.classList.remove("hidden"));
-      saveBtn.querySelector(".save-loading")?.classList.add("hidden");
-    }
-  });
 
   // Send now
   sendNowBtn?.addEventListener("click", async () => {
@@ -584,6 +372,22 @@ export const prerender = false;
     try {
       const token = await getToken();
       if (!token) throw new Error("No autenticado");
+
+      // First save the current module selections as the user probably wants to send THAT
+      await fetch("/api/admin/report-preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          report_sales: reportSales.checked,
+          report_new_customers: reportNewCustomers.checked,
+          report_returns: reportReturns.checked,
+          report_low_stock: reportLowStock.checked,
+          report_top_products: reportTopProducts.checked,
+        }),
+      });
 
       const res = await fetch("/api/admin/send-reports", {
         method: "POST",
