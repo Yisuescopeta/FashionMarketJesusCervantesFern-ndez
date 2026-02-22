@@ -113,6 +113,7 @@ const { data: categories } = await supabaseAdmin.from("categories").select("*");
                             >
                             <select
                                 name="category_id"
+                                id="category-select"
                                 class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none bg-white transition-all appearance-none cursor-pointer"
                             >
                                 {
@@ -127,6 +128,9 @@ const { data: categories } = await supabaseAdmin.from("categories").select("*");
                                         </option>
                                     ))
                                 }
+                                <option value="new_category" class="font-bold text-brand-gold bg-amber-50">
+                                  + Crear nueva categoría
+                                </option>
                             </select>
                         </div>
                         <div>
@@ -484,6 +488,46 @@ const { data: categories } = await supabaseAdmin.from("categories").select("*");
     const newPreviews = document.getElementById("new-previews");
     const submitBtn = document.getElementById("submit-btn");
     const productId = form?.dataset.id;
+    const previewGrid = document.getElementById("preview-grid");
+    const emptyPreviews = document.getElementById("empty-previews");
+    const categorySelect = document.getElementById("category-select") as HTMLSelectElement;
+
+    // Categorías Rápidas
+    let previousCategoryValue = categorySelect ? categorySelect.value : "";
+    categorySelect?.addEventListener("change", async (e) => {
+        const select = e.target as HTMLSelectElement;
+        if (select.value === "new_category") {
+            const newCategoryName = prompt("Introduce el nombre de la nueva categoría:");
+            if (newCategoryName && newCategoryName.trim() !== "") {
+                try {
+                select.disabled = true;
+                const response = await fetch("/api/admin/categories", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: newCategoryName.trim() })
+                });
+                
+                if (!response.ok) throw new Error("Error al crear la categoría");
+                
+                const newCategory = await response.json();
+                const newOption = new Option(newCategory.name, newCategory.id);
+                select.insertBefore(newOption, select.lastElementChild);
+                
+                select.value = newCategory.id;
+                previousCategoryValue = newCategory.id;
+                } catch (error) {
+                alert("Hubo un error al crear la categoría. Por favor, inténtalo de nuevo.");
+                select.value = previousCategoryValue;
+                } finally {
+                select.disabled = false;
+                }
+            } else {
+                select.value = previousCategoryValue;
+            }
+        } else {
+            previousCategoryValue = select.value;
+        }
+    });
 
     let currentImages: string[] = JSON.parse(form?.dataset.images || "[]");
     let newFiles: File[] = [];
