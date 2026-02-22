@@ -74,9 +74,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         customer_email: customerEmail,
         total_amount: session.amount_total || 0,
         status: 'paid', // Or 'procesando'
-        shipping_address: metadata.shipping_address || session.shipping_details?.address?.line1 || 'No especificada',
-        shipping_city: metadata.shipping_city || session.shipping_details?.address?.city || 'No especificada',
-        shipping_postal_code: metadata.shipping_postal_code || session.shipping_details?.address?.postal_code || '00000',
+        tracking_number: `AURUM-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+        shipping_address: metadata.shipping_address || (session as any).shipping_details?.address?.line1 || 'No especificada',
+        shipping_city: metadata.shipping_city || (session as any).shipping_details?.address?.city || 'No especificada',
+        shipping_postal_code: metadata.shipping_postal_code || (session as any).shipping_details?.address?.postal_code || '00000',
         shipping_phone: metadata.shipping_phone || session.customer_details?.phone || null,
         notes: metadata.shipping_full_name ? `Destinatario: ${metadata.shipping_full_name}` : null,
     };
@@ -165,7 +166,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
             customerEmail,
             totalAmount: order.total_amount,
             items: emailItems,
-            shippingAddress: shippingAddressStr
+            shippingAddress: shippingAddressStr,
+            trackingId: order.tracking_number
         });
     }
 }

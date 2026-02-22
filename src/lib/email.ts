@@ -40,7 +40,8 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
     customerEmail,
     totalAmount,
     items,
-    shippingAddress // Nueva propiedad
+    shippingAddress, // Nueva propiedad
+    trackingId
   } = data;
 
   console.log('Intento de envío de correo a:', customerEmail);
@@ -79,73 +80,93 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
         <head>
           <meta charset="utf-8">
           <style>
-             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
-            .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; }
-            .header { background: #0f172a; padding: 30px; text-align: center; }
-            .invoice-box { padding: 30px; }
-            .invoice-details { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
-            .customer-details { margin-bottom: 30px; background-color: #f1f5f9; padding: 20px; border-radius: 8px; }
-            .btn { background: #0f172a; color: white; padding: 12px 25px; text-decoration: none; display: inline-block; border-radius: 6px; font-weight: bold; margin-top: 20px; }
-            table { width: 100%; border-collapse: collapse; }
-            th { text-align: left; color: #64748b; font-size: 12px; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
-            .total-row td { padding-top: 20px; border-top: 2px solid #cbd5e1; font-size: 18px; color: #0f172a; }
+             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e2e8f0; }
+            .header { background: #0f172a; padding: 40px 20px; text-align: center; border-bottom: 3px solid #d4af37; }
+            .header h1 { color: white; margin: 0; letter-spacing: 6px; font-size: 28px; font-weight: 300; }
+            .header p { color: #94a3b8; margin: 10px 0 0; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; }
+            .invoice-box { padding: 40px 30px; }
+            .title { text-align: center; margin-bottom: 40px; }
+            .title h2 { margin: 0; color: #0f172a; font-weight: 800; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+            .title p { color: #64748b; margin-top: 8px; font-size: 15px; }
+            .tracking-box { background: #0f172a; border-radius: 8px; padding: 25px; text-align: center; margin: 35px 0; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            .tracking-box .code { font-family: 'Courier New', Courier, monospace; font-size: 22px; color: #d4af37; font-weight: bold; letter-spacing: 3px; margin: 15px 0; display: block; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; border: 1px dashed rgba(212, 175, 55, 0.3); }
+            .btn { background: #d4af37; color: #0f172a !important; padding: 14px 28px; text-decoration: none; display: inline-block; border-radius: 6px; font-weight: bold; margin-top: 20px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+            table.items { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            table.items th { text-align: left; color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding-bottom: 12px; border-bottom: 2px solid #f1f5f9; }
+            .total-row td { padding-top: 25px; border-top: 2px solid #e2e8f0; font-size: 18px; color: #0f172a; font-weight: 800; }
+            .footer { background-color: #f8fafc; padding: 30px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1 style="color: white; margin: 0; letter-spacing: 2px; font-size: 24px;">FASHION<span style="color: #fbbf24;">MARKET</span></h1>
-              <p style="color: #94a3b8; margin: 5px 0 0; font-size: 12px; letter-spacing: 1px;">YOUR PREMIUM STYLE</p>
+              <h1>AURUM</h1>
+              <p>The Gold Standard of Fashion</p>
             </div>
             
             <div class="invoice-box">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h2 style="margin: 0; color: #0f172a;">Confirmación de Pedido</h2>
-                <p style="color: #64748b; margin-top: 5px;">Gracias por tu confianza</p>
+              <div class="title">
+                <h2>Confirmación de Pedido</h2>
+                <p>Tu estilo prémium está asegurado, ${customerName.split(' ')[0]}</p>
               </div>
 
-              <table style="width: 100%; margin-bottom: 30px;">
+              <table style="width: 100%; margin-bottom: 35px; border-collapse: separate; border-spacing: 15px 0; margin-left: -15px; margin-right: -15px;">
                 <tr>
-                   <td style="vertical-align: top;">
-                      <strong>Factura A:</strong><br>
-                      ${customerName}<br>
-                      ${customerEmail}<br>
-                      ${shippingAddress ? shippingAddress.replace(/,/g, '<br>') : ''}
+                   <td style="vertical-align: top; width: 50%; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #f1f5f9;">
+                      <strong style="color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 1px;">Enviar a:</strong><br>
+                      <div style="color: #475569; font-size: 14px; line-height: 1.5; margin-top: 8px;">
+                        <strong>${customerName}</strong><br>
+                        ${shippingAddress ? shippingAddress.replace(/,/g, '<br>') : 'Dirección no especificada'}
+                      </div>
                    </td>
-                   <td style="text-align: right; vertical-align: top;">
-                      <strong>Nº Pedido:</strong> #${orderId.slice(0, 8)}<br>
-                      <strong>Fecha:</strong> ${invoiceDate}<br>
+                   <td style="vertical-align: top; width: 50%; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #f1f5f9;">
+                      <strong style="color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 1px;">Detalles:</strong><br>
+                      <div style="color: #475569; font-size: 14px; line-height: 1.6; margin-top: 8px;">
+                        <strong>Nº Pedido:</strong> <span style="font-family: monospace;">#${orderId.slice(0, 8).toUpperCase()}</span><br>
+                        <strong>Fecha:</strong> ${invoiceDate}
+                      </div>
                    </td>
                 </tr>
               </table>
 
-              <table width="100%" cellspacing="0">
+              <table class="items" cellspacing="0">
                 <thead>
                   <tr>
-                    <th width="60%" style="padding-left: 10px;">Producto</th>
-                    <th width="15%" style="text-align: center;">Cant.</th>
+                    <th width="65%" style="padding-left: 10px;">Artículo</th>
+                    <th width="10%" style="text-align: center;">Cant.</th>
                     <th width="25%" style="text-align: right; padding-right: 10px;">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${itemsHtml}
                   <tr class="total-row">
-                    <td colspan="2" style="text-align: right; font-weight: bold; padding-right: 20px;">TOTAL</td>
-                    <td style="text-align: right; font-weight: bold; padding-right: 10px;">${formatPrice(totalAmount)}</td>
+                    <td colspan="2" style="text-align: right; padding-right: 20px;">TOTAL</td>
+                    <td style="text-align: right; padding-right: 10px;">${formatPrice(totalAmount)}</td>
                   </tr>
                 </tbody>
               </table>
 
-              <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px dashed #e2e8f0;">
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
-                  Hemos recibido tu pedido y estamos preparándolo para el envío. Te notificaremos cuando salga de nuestro almacén.
-                </p>
-                <a href="${import.meta.env.SITE_URL || ''}/mi-cuenta/pedidos" class="btn">Ver Mi Pedido</a>
+              ${trackingId ? `
+              <div class="tracking-box">
+                <p style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8;">Número de Seguimiento</p>
+                <span class="code">${trackingId}</span>
+                <p style="margin: 15px 0 0; font-size: 13px; color: #cbd5e1; line-height: 1.5;">Usa este código en nuestra web para conocer el estado exacto de tu envío en todo momento.</p>
+                <a href="${import.meta.env.SITE_URL || 'http://localhost:4321'}/seguimiento" class="btn">Rastrear mi pedido</a>
               </div>
+              ` : `
+              <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px dashed #e2e8f0;">
+                <p style="color: #475569; font-size: 14px; margin-bottom: 25px; line-height: 1.6;">
+                  Hemos recibido tu pedido y estamos preparándolo cuidadosamente. Te notificaremos en cuanto salga de nuestro almacén.
+                </p>
+                <a href="${import.meta.env.SITE_URL || 'http://localhost:4321'}/mi-cuenta/pedidos" class="btn">Ver estado de mi pedido</a>
+              </div>
+              `}
             </div>
             
-            <div style="background-color: #f8fafc; padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0;">
-              <p>&copy; ${new Date().getFullYear()} Aurum. Todos los derechos reservados.</p>
+            <div class="footer">
+              <p style="margin: 0;">&copy; ${new Date().getFullYear()} Aurum. Todos los derechos reservados.</p>
+              <p style="margin: 5px 0 0;">Una marca de excelencia y exclusividad.</p>
             </div>
           </div>
         </body>
@@ -204,35 +225,44 @@ export async function sendFavoriteOnSaleEmail(data: FavoriteOnSaleEmailData) {
         <head>
           <meta charset="utf-8">
           <style>
-             body { font-family: sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; }
-            .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; }
-            .header { background: #18181b; padding: 20px; text-align: center; color: white; }
-            .btn { background: #18181b; color: white; padding: 12px 24px; text-decoration: none; display: inline-block; border-radius: 4px; }
+             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e2e8f0; }
+            .header { background: #0f172a; padding: 40px 20px; text-align: center; border-bottom: 3px solid #d4af37; }
+            .header h1 { color: white; margin: 0; letter-spacing: 6px; font-size: 28px; font-weight: 300; }
+            .header p { color: #94a3b8; margin: 10px 0 0; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; }
+             .content-box { padding: 40px 30px; text-align: center; }
+            .btn { background: #d4af37; color: #0f172a !important; padding: 14px 28px; text-decoration: none; display: inline-block; border-radius: 6px; font-weight: bold; margin-top: 25px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+            .footer { background-color: #f8fafc; padding: 30px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1>Aurum</h1>
+              <h1>AURUM</h1>
+              <p>The Gold Standard of Fashion</p>
             </div>
-            <div style="padding: 20px;">
-              <h2>¡Oferta en tus Favoritos!</h2>
-              <p>Hola ${userName || 'Usuario'},</p>
-              <p>Un producto que te gusta ha bajado de precio.</p>
+            <div class="content-box">
+              <h2 style="margin-top: 0; color: #0f172a; font-weight: 800; font-size: 22px; text-transform: uppercase; letter-spacing: 1px;">¡Oferta en tus Favoritos!</h2>
+              <p style="color: #64748b; font-size: 15px; margin-bottom: 30px;">Hola ${userName || 'Usuario'},<br>Un producto que te gusta acaba de bajar de precio.</p>
               
-              <div style="text-align: center; padding: 20px;">
-                 <img src="${productImage}" alt="${productName}" style="max-width: 200px; border-radius: 8px;">
-                 <h3>${productName}</h3>
-                 <p>
-                    <span style="text-decoration: line-through; color: #71717a;">${formatPrice(originalPrice)}</span>
-                    <span style="font-weight: bold; color: #ef4444; font-size: 1.2em; margin-left: 10px;">${formatPrice(salePrice)}</span>
+              <div style="background: #f8fafc; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; display: inline-block; width: 100%; box-sizing: border-box;">
+                 <img src="${productImage}" alt="${productName}" style="max-width: 180px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                 <h3 style="color: #0f172a; margin: 20px 0 10px;">${productName}</h3>
+                 <p style="margin: 0;">
+                    <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.9em;">${formatPrice(originalPrice)}</span>
+                    <span style="font-weight: 800; color: #ef4444; font-size: 1.4em; margin-left: 10px;">${formatPrice(salePrice)}</span>
                  </p>
-                 <p style="color: #ef4444; font-weight: bold;">¡-${discountPercent}% de Descuento!</p>
+                 <div style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-top: 15px;">
+                   ¡-${discountPercent}% DE DESCUENTO!
+                 </div>
               </div>
 
-              <div style="text-align: center; margin-top: 20px;">
-                <a href="${productUrl}" class="btn">Ver Oferta</a>
+              <div>
+                <a href="${productUrl}" class="btn">Comprar Ahora</a>
               </div>
+            </div>
+            <div class="footer">
+              <p style="margin: 0;">&copy; ${new Date().getFullYear()} Aurum. Todos los derechos reservados.</p>
             </div>
           </div>
         </body>
@@ -280,26 +310,29 @@ export async function sendBroadcastEmail(data: BroadcastEmailData) {
         <head>
           <meta charset="utf-8">
           <style>
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; }
-            .container { max-width: 600px; margin: 0 auto; background: white; }
-            .header { background: #18181b; padding: 30px 20px; text-align: center; }
+             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e2e8f0; }
+            .header { background: #0f172a; padding: 40px 20px; text-align: center; border-bottom: 3px solid #d4af37; }
+            .header h1 { color: white; margin: 0; letter-spacing: 6px; font-size: 28px; font-weight: 300; }
+            .header p { color: #94a3b8; margin: 10px 0 0; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; }
             .content { padding: 40px 30px; color: #334155; line-height: 1.6; }
-            .btn { background: #18181b; color: white; padding: 12px 24px; text-decoration: none; display: inline-block; border-radius: 4px; font-weight: bold; }
-            .footer { background: #f4f4f5; padding: 20px; text-align: center; color: #71717a; font-size: 12px; }
+            .btn { background: #d4af37; color: #0f172a !important; padding: 14px 28px; text-decoration: none; display: inline-block; border-radius: 6px; font-weight: bold; margin-top: 25px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+            .footer { background-color: #f8fafc; padding: 30px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1 style="color: white; margin: 0; font-size: 24px; letter-spacing: 2px;">FASHION<span style="color: #d4a574;">MARKET</span></h1>
+              <h1>AURUM</h1>
+              <p>The Gold Standard of Fashion</p>
             </div>
             
             <div class="content">
-              ${title ? `<h2 style="margin-top: 0; color: #18181b;">${title}</h2>` : ''}
+              ${title ? `<h2 style="margin-top: 0; color: #0f172a; font-weight: 800; font-size: 22px; text-transform: uppercase; letter-spacing: 1px;">${title}</h2>` : ''}
               
-              <p>Hola ${userName || 'Suscriptor'},</p>
+              <p style="font-size: 15px; color: #64748b;">Hola ${userName || 'Suscriptor'},</p>
               
-              <div style="margin: 20px 0;">
+              <div style="margin: 25px 0; font-size: 15px;">
                 ${formattedMessage}
               </div>
 
@@ -309,8 +342,8 @@ export async function sendBroadcastEmail(data: BroadcastEmailData) {
             </div>
 
             <div class="footer">
-              <p>Recibes este correo porque estás suscrito a Aurum.</p>
-              <p>&copy; ${new Date().getFullYear()} Aurum. Todos los derechos reservados.</p>
+              <p style="margin: 0;">Recibes este correo porque estás suscrito a las novedades de Aurum.</p>
+              <p style="margin: 5px 0 0;">&copy; ${new Date().getFullYear()} Aurum. Todos los derechos reservados.</p>
             </div>
           </div>
         </body>

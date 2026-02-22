@@ -253,6 +253,34 @@ const getStatusStyle = (status: string) => {
                 </div>
             </div>
 
+            <!-- Información de Envío -->
+            <div
+                class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm"
+            >
+                <h3
+                    class="text-lg font-bold text-slate-800 mb-6 flex items-center justify-between"
+                >
+                    Envío
+                    <Truck className="w-5 h-5 text-slate-300" />
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 italic">
+                            Número de Seguimiento
+                        </p>
+                        {order.tracking_number ? (
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 font-bold text-sm">
+                                    {order.tracking_number}
+                                </span>
+                            </div>
+                        ) : (
+                            <p class="text-sm text-slate-500 italic">No asignado</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             <!-- Cliente -->
             <div
                 class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm"
