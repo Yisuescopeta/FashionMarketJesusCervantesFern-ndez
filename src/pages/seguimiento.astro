@@ -375,7 +375,23 @@ const AFTERSHIP_TRACKING_URL = `https://jesuscervantesfernan.aftership.com/`;
       const numeroTracking = document
         .getElementById("numeroTracking")
         .value.trim();
-      if (numeroTracking && iframe) {
+      
+      if (!numeroTracking) return;
+
+      // Smart Search: Si el código empieza por AURUM- o tiene el patrón de Aurum, usamos búsqueda nativa
+      const isAurumCode = /^AURUM-/i.test(numeroTracking) || /^[A-Z0-9]{8}$/i.test(numeroTracking);
+
+      if (isAurumCode) {
+        // Cambiar a la pestaña nativa automáticamente y realizar la búsqueda
+        tabNative?.click();
+        const lookupOrderId = document.getElementById("lookupOrderId");
+        if (lookupOrderId) lookupOrderId.value = numeroTracking;
+        // El usuario aún tendrá que poner su email por seguridad, 
+        // o podemos intentar buscarlo si ya tenemos el email en localStorage (si existe)
+        return;
+      }
+
+      if (iframe) {
         // Obtenemos la URL base desde el iframe actual o recalculamos
         const baseUrl = iframe.src
           .split("?")[0]
@@ -392,11 +408,14 @@ const AFTERSHIP_TRACKING_URL = `https://jesuscervantesfernan.aftership.com/`;
       const orderId = document.getElementById("lookupOrderId").value.trim();
       const email = document.getElementById("lookupEmail").value.trim();
 
-      if (!orderId || !email) return;
+      if (!orderId || !email) {
+          alert("Por favor, introduce el ID de pedido (o código de seguimiento) y tu email.");
+          return;
+      }
 
       if (nativeResults) {
         nativeResults.innerHTML =
-          '<div class="flex justify-center py-4"><div class="animate-spin h-6 w-6 border-2 border-brand-navy border-t-transparent rounded-full"></div></div>';
+          '<div class="flex justify-center py-8"><div class="animate-spin h-8 w-8 border-4 border-brand-navy border-t-transparent rounded-full"></div></div>';
       }
       wrapperNative?.classList.remove("hidden");
 
@@ -423,55 +442,51 @@ const AFTERSHIP_TRACKING_URL = `https://jesuscervantesfernan.aftership.com/`;
 
           nativeResults.innerHTML = `
             <div class="space-y-6 not-italic font-sans">
-              <div class="flex justify-between items-start border-b border-slate-100 pb-4">
+              <div class="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-slate-100 pb-6">
                 <div>
-                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Estado Actual</p>
-                  <span class="px-3 py-1 bg-brand-navy text-white text-xs font-bold uppercase tracking-widest rounded-full">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Estado del Pedido</p>
+                  <span class="px-4 py-1.5 bg-brand-navy text-white text-xs font-bold uppercase tracking-widest rounded-full shadow-sm">
                     ${statusMap[order.status] || order.status}
                   </span>
                 </div>
-                <div class="text-right">
-                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">ID de Pedido</p>
-                  <p class="text-sm font-mono font-bold">#${order.id.substring(0, 8)}...</p>
+                <div class="sm:text-right">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Referencia</p>
+                  <p class="text-sm font-mono font-bold text-brand-navy">${order.tracking_number || '#' + order.id.substring(0, 8).toUpperCase()}</p>
                 </div>
               </div>
               
-              <div class="grid grid-cols-2 gap-4 text-sm">
+              <div class="grid grid-cols-2 gap-6 py-2">
                 <div>
-                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Fecha</p>
-                  <p class="font-medium">${new Date(order.date).toLocaleDateString()}</p>
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Fecha de Compra</p>
+                  <p class="font-medium text-slate-700">${new Date(order.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                 </div>
                 <div>
-                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total</p>
-                  <p class="font-medium">${(order.total / 100).toFixed(2)}€</p>
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Importe Total</p>
+                  <p class="font-bold text-brand-navy text-lg">${(order.total / 100).toFixed(2)}€</p>
                 </div>
               </div>
 
-              ${
-                order.tracking_number
-                  ? `
-                <div class="bg-brand-offwhite p-4 rounded border border-brand-navy/10">
-                  <p class="text-[10px] font-bold uppercase tracking-widest text-brand-navy mb-2">Información de Envío</p>
-                  <p class="text-sm mb-1 text-slate-700">Número de seguimiento: <strong>${order.tracking_number}</strong></p>
-                  ${order.tracking_url ? `<a href="${order.tracking_url}" target="_blank" class="text-xs text-brand-gold underline font-bold">Rastrear en transportista ↗</a>` : ""}
+              <div class="bg-brand-offwhite p-5 rounded-xl border border-brand-navy/5">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-brand-navy mb-3">Resumen de Envío</p>
+                <div class="text-sm text-slate-600 mb-3">
+                  ${order.shipping_address || 'Dirección no especificada'}
                 </div>
-              `
-                  : `
-                <div class="bg-slate-50 p-4 rounded border border-slate-200">
-                  <p class="text-xs text-slate-500 italic">Aún no se ha asignado un número de seguimiento. Te avisaremos por email cuando el pedido sea enviado.</p>
-                </div>
-              `
-              }
+                ${
+                  order.tracking_number
+                    ? `<p class="text-xs text-slate-500">Tu código de seguimiento es: <strong class="text-brand-navy font-mono">${order.tracking_number}</strong></p>`
+                    : `<p class="text-xs text-slate-400 italic">El número de seguimiento se asignará cuando el paquete sea enviado.</p>`
+                }
+              </div>
 
-              <div class="pt-2">
-                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Artículos</p>
-                <div class="space-y-2">
+              <div class="pt-4">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4 border-b border-slate-50 pb-2">Artículos en este pedido</p>
+                <div class="space-y-3">
                   ${order.items
                     .map(
                       (item) => `
-                    <div class="flex justify-between text-xs py-1 border-b border-slate-50">
-                      <span>${item.products.name} x${item.quantity}</span>
-                      <span class="font-mono">${(item.price / 100).toFixed(2)}€</span>
+                    <div class="flex justify-between items-center text-xs py-2 group">
+                      <span class="text-slate-700 font-medium">${item.product_name} <span class="text-slate-400 ml-1">x${item.quantity}</span></span>
+                      <span class="font-mono text-slate-500 font-bold">${(item.price / 100).toFixed(2)}€</span>
                     </div>
                   `,
                     )
