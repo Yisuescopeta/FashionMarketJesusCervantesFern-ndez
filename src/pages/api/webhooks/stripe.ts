@@ -90,6 +90,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         shipping_postal_code: metadata.shipping_postal_code || (session as any).shipping_details?.address?.postal_code || '00000',
         shipping_phone: metadata.shipping_phone || session.customer_details?.phone || null,
         notes: metadata.shipping_full_name ? `Destinatario: ${metadata.shipping_full_name}` : null,
+        payment_intent_id: session.payment_intent as string || null,
     };
 
     console.log(`📝 Creating order for ${customerEmail}...`);
@@ -221,39 +222,17 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     const paymentIntentId = charge.payment_intent as string;
     if (!paymentIntentId) return;
 
-    // 1. Get the order from Supabase
-    // We need to find the order associated with this payment intent
-    // First, let's get the session ID if we can, or search by payment_intent if stored
-    // Actually, looking at handleCheckoutSessionCompleted, we don't store payment_intent_id.
-    // However, we can use the stripe_session_id if we fetch the session from Stripe
-    // OR, we can update the orders table to include payment_intent_id (better)
-    // But for now, let's try to find by customer_email and amount if needed, 
-    // or better: list sessions and find the one with this PI.
-
-    // Simplest for now: Find order by stripe_session_id by listing sessions for this PI? 
-    // Stripe doesn't easily map PI -> Session in reverse without search.
-
-    // Let's search in our orders table. If we have many PI IDs we might need a migration.
-    // Wait, I can search Stripe sessions by payment_intent.
-    const sessions = await stripe.checkout.sessions.list({
-        payment_intent: paymentIntentId,
-        limit: 1
-    });
-
-    const session = sessions.data[0];
-    if (!session) {
-        console.error(`❌ No session found for payment intent ${paymentIntentId}`);
-        return;
-    }
-
+    // 1. Get the order from Supabase directly using payment_intent_id
     const { data: order, error } = await supabaseAdmin
         .from('orders')
         .select('*')
-        .eq('stripe_session_id', session.id)
+        .eq('payment_intent_id', paymentIntentId)
         .single();
 
     if (error || !order) {
-        console.error(`❌ No order found for session ${session.id}`);
+        console.error(`❌ No order found for payment intent ${paymentIntentId}`);
+        // Fallback: If for some reason it's an old order without payment_intent_id, 
+        // we could still try the session search, but for new orders this is much faster.
         return;
     }
 
