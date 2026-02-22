@@ -409,7 +409,7 @@ const AFTERSHIP_TRACKING_URL = `https://jesuscervantesfernan.aftership.com/`;
       const email = document.getElementById("lookupEmail").value.trim();
 
       if (!orderId || !email) {
-          alert("Por favor, introduce el ID de pedido (o código de seguimiento) y tu email.");
+          await window.AppDialog.alert("Por favor, introduce el ID de pedido (o código de seguimiento) y tu email.", "Aviso");
           return;
       }
 

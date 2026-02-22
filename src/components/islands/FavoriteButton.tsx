@@ -22,7 +22,7 @@ export default function FavoriteButton({ productId, className = '', showText = f
     try {
       const response = await fetch(`/api/favorites?productId=${productId}`);
       const data = await response.json();
-      
+
       setIsAuthenticated(data.authenticated);
       setIsFavorite(data.isFavorite);
     } catch (error) {
@@ -52,9 +52,9 @@ export default function FavoriteButton({ productId, className = '', showText = f
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
           setIsFavorite(false);
         } else {
@@ -67,14 +67,14 @@ export default function FavoriteButton({ productId, className = '', showText = f
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
           setIsFavorite(true);
         } else {
           console.error('Error:', data.error);
-          alert('Error al guardar favorito: ' + data.error);
+          await window.AppDialog.alert('Error al guardar favorito: ' + data.error, "Error");
         }
       }
     } catch (error) {
@@ -95,8 +95,8 @@ export default function FavoriteButton({ productId, className = '', showText = f
         disabled={isLoading}
         className={`
           group flex items-center gap-2 p-2 rounded-full transition-all duration-300
-          ${isFavorite 
-            ? 'bg-red-50 text-red-500 hover:bg-red-100' 
+          ${isFavorite
+            ? 'bg-red-50 text-red-500 hover:bg-red-100'
             : 'bg-white/80 text-slate-400 hover:text-red-500 hover:bg-red-50'
           }
           ${isLoading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}
@@ -105,12 +105,11 @@ export default function FavoriteButton({ productId, className = '', showText = f
         aria-label={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
         title={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
       >
-        <Heart 
-          className={`w-5 h-5 transition-all duration-300 ${
-            isFavorite 
-              ? 'fill-red-500 scale-110' 
+        <Heart
+          className={`w-5 h-5 transition-all duration-300 ${isFavorite
+              ? 'fill-red-500 scale-110'
               : 'fill-transparent group-hover:scale-110'
-          }`}
+            }`}
         />
         {showText && (
           <span className="text-sm font-medium pr-1">

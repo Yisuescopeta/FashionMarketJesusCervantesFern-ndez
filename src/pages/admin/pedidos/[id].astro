@@ -380,7 +380,7 @@ const getStatusStyle = (status: string) => {
         if (!error) {
             window.location.reload();
         } else {
-            alert("Error al actualizar estado: " + error.message);
+            await window.AppDialog.alert("Error al actualizar estado: " + error.message, "Error");
         }
     });
 </script>

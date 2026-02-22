@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import LoadingScreen from '../components/LoadingScreen.astro';
+import GlobalDialog from '../components/common/GlobalDialog.astro';
 
 interface Props {
   title: string;
@@ -88,5 +89,6 @@ const { title, description = "Aurum - Men's Fine Clothiers", showLoading = true 
         });
       });
     </script>
+    <GlobalDialog />
   </body>
 </html>

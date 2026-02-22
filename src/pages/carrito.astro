@@ -430,7 +430,7 @@ export const prerender = false;
     checkoutBtn?.addEventListener("click", async () => {
         const items = cartItems.get();
         if (items.length === 0) {
-            alert("Tu carrito está vacío");
+            await window.AppDialog.alert("Tu carrito está vacío", "Aviso");
             return;
         }
 
@@ -497,7 +497,7 @@ export const prerender = false;
             }
         } catch (error) {
             console.error("Error:", error);
-            alert("Error al procesar el pago. Por favor, inténtalo de nuevo.");
+            await window.AppDialog.alert("Error al procesar el pago. Por favor, inténtalo de nuevo.", "Error");
             checkoutBtn.disabled = false;
             checkoutBtn.textContent = "Tramitar Pedido";
         }

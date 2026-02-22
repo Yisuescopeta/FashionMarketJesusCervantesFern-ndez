@@ -497,7 +497,7 @@ const { data: categories } = await supabaseAdmin.from("categories").select("*");
     categorySelect?.addEventListener("change", async (e) => {
         const select = e.target as HTMLSelectElement;
         if (select.value === "new_category") {
-            const newCategoryName = prompt("Introduce el nombre de la nueva categoría:");
+            const newCategoryName = await window.AppDialog.prompt("Introduce el nombre de la nueva categoría:");
             if (newCategoryName && newCategoryName.trim() !== "") {
                 try {
                 select.disabled = true;
@@ -516,7 +516,7 @@ const { data: categories } = await supabaseAdmin.from("categories").select("*");
                 select.value = newCategory.id;
                 previousCategoryValue = newCategory.id;
                 } catch (error) {
-                alert("Hubo un error al crear la categoría. Por favor, inténtalo de nuevo.");
+                await window.AppDialog.alert("Hubo un error al crear la categoría. Por favor, inténtalo de nuevo.", "Error");
                 select.value = previousCategoryValue;
                 } finally {
                 select.disabled = false;
@@ -726,7 +726,7 @@ const { data: categories } = await supabaseAdmin.from("categories").select("*");
 
             window.location.href = "/admin/productos";
         } catch (error: any) {
-            alert("Error: " + error.message);
+            await window.AppDialog.alert("Error: " + error.message, "Error al guardar");
             if (submitBtn) {
                 submitBtn.innerHTML = `<span>Actualizar</span>`;
                 (submitBtn as HTMLButtonElement).disabled = false;
@@ -736,11 +736,12 @@ const { data: categories } = await supabaseAdmin.from("categories").select("*");
 
     // Eliminar producto
     deleteBtn?.addEventListener("click", async () => {
-        if (
-            confirm(
-                "¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.",
-            )
-        ) {
+        const confirmed = await window.AppDialog.confirm(
+            "¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.",
+            "Eliminar Producto"
+        );
+        
+        if (confirmed) {
             const { error } = await supabase
                 .from("products")
                 .delete()
@@ -748,7 +749,7 @@ const { data: categories } = await supabaseAdmin.from("categories").select("*");
             if (!error) {
                 window.location.href = "/admin/productos";
             } else {
-                alert("Error al eliminar: " + error.message);
+                await window.AppDialog.alert("Error al eliminar: " + error.message, "Error");
             }
         }
     });

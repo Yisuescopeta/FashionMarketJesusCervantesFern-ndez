@@ -230,11 +230,12 @@ const { products } = Astro.props;
             const id = (btn as HTMLElement).dataset.id;
             const name = (btn as HTMLElement).dataset.name;
 
-            if (
-                confirm(
-                    `¿Estás seguro de eliminar "${name}"? Esta acción no se puede deshacer.`,
-                )
-            ) {
+            const confirmed = await window.AppDialog.confirm(
+                `¿Estás seguro de eliminar "${name}"? Esta acción no se puede deshacer.`,
+                "Eliminar Producto"
+            );
+            
+            if (confirmed) {
                 const { error } = await supabase
                     .from("products")
                     .delete()
@@ -242,7 +243,7 @@ const { products } = Astro.props;
                 if (!error) {
                     window.location.reload();
                 } else {
-                    alert("Error al eliminar: " + error.message);
+                    await window.AppDialog.alert("Error al eliminar: " + error.message, "Error");
                 }
             }
         });

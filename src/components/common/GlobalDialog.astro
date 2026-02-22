@@ -1,0 +1,167 @@
+---
+// GlobalDialog.astro
+---
+<div id="global-dialog-overlay" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+    <div id="global-dialog-container" class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 border border-slate-100">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 id="global-dialog-title" class="text-lg font-bold text-slate-800 font-serif italic">Atención</h3>
+            <button id="global-dialog-close-icon" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6">
+            <p id="global-dialog-message" class="text-slate-600 text-sm leading-relaxed mb-6"></p>
+            
+            <!-- Prompt Input (Hidden by default) -->
+            <div id="global-dialog-prompt-container" class="hidden mb-2">
+                <input 
+                    type="text" 
+                    id="global-dialog-input" 
+                    class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-gold outline-none transition-all focus:border-brand-gold"
+                    placeholder="Escribe aquí..."
+                />
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button id="global-dialog-cancel-btn" class="hidden px-4 md:px-5 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all focus:ring-2 focus:ring-slate-200 outline-none">
+                    Cancelar
+                </button>
+                <button id="global-dialog-confirm-btn" class="px-5 md:px-6 py-2 md:py-2.5 bg-brand-navy hover:bg-black text-white rounded-full text-xs md:text-sm font-bold shadow-md shadow-brand-navy/10 transition-all transform hover:-translate-y-0.5 focus:ring-2 focus:ring-brand-navy focus:ring-offset-2 outline-none flex items-center gap-2">
+                    Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global AppDialog Implementation
+    class DialogController {
+        overlay = document.getElementById('global-dialog-overlay') as HTMLDivElement;
+        container = document.getElementById('global-dialog-container') as HTMLDivElement;
+        titleEl = document.getElementById('global-dialog-title') as HTMLHeadingElement;
+        messageEl = document.getElementById('global-dialog-message') as HTMLParagraphElement;
+        inputContainer = document.getElementById('global-dialog-prompt-container') as HTMLDivElement;
+        inputEl = document.getElementById('global-dialog-input') as HTMLInputElement;
+        
+        closeIcon = document.getElementById('global-dialog-close-icon') as HTMLButtonElement;
+        cancelBtn = document.getElementById('global-dialog-cancel-btn') as HTMLButtonElement;
+        confirmBtn = document.getElementById('global-dialog-confirm-btn') as HTMLButtonElement;
+        
+        resolvePromise: ((value: any) => void) | null = null;
+        isPrompt = false;
+
+        constructor() {
+            if (!this.overlay) return;
+            
+            // Event Listeners
+            this.closeIcon.addEventListener('click', () => this.handleClose(this.isPrompt ? null : false));
+            this.cancelBtn.addEventListener('click', () => this.handleClose(this.isPrompt ? null : false));
+            
+            this.confirmBtn.addEventListener('click', () => {
+                if (this.isPrompt) {
+                    this.handleClose(this.inputEl.value);
+                } else {
+                    this.handleClose(true);
+                }
+            });
+
+            this.inputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.confirmBtn.click();
+                }
+            });
+
+            // Prevent closing when clicking inside container
+            this.container.addEventListener('click', (e) => e.stopPropagation());
+            // Optional: Close on overlay click
+            // this.overlay.addEventListener('click', () => this.handleClose(this.isPrompt ? null : false));
+        }
+
+        private show(title: string, message: string, showCancel: boolean, isPrompt: boolean, defaultInputValue: string = "") {
+            return new Promise((resolve) => {
+                // Reset State
+                this.titleEl.textContent = title;
+                this.messageEl.innerHTML = message; // Using innerHTML intentionally for formatted messages if needed
+                
+                this.isPrompt = isPrompt;
+                this.resolvePromise = resolve;
+
+                if (showCancel) {
+                    this.cancelBtn.classList.remove('hidden');
+                } else {
+                    this.cancelBtn.classList.add('hidden');
+                }
+
+                if (isPrompt) {
+                    this.inputContainer.classList.remove('hidden');
+                    this.inputEl.value = defaultInputValue;
+                } else {
+                    this.inputContainer.classList.add('hidden');
+                }
+
+                // Show DOM
+                document.body.classList.add('overflow-hidden'); // Prevent background scrolling
+                this.overlay.classList.remove('hidden');
+                
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    this.overlay.classList.remove('opacity-0');
+                    this.container.classList.remove('scale-95');
+                });
+
+                // Focus
+                if (isPrompt) {
+                    setTimeout(() => this.inputEl.focus(), 100);
+                } else {
+                    setTimeout(() => this.confirmBtn.focus(), 100);
+                }
+            });
+        }
+
+        private handleClose(value: any) {
+            if (this.resolvePromise) {
+                this.resolvePromise(value);
+                this.resolvePromise = null;
+            }
+            this.hide();
+        }
+
+        private hide() {
+            this.overlay.classList.add('opacity-0');
+            this.container.classList.add('scale-95');
+            
+            setTimeout(() => {
+                this.overlay.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }, 300); // Matches Tailwind transition duration
+        }
+        
+        async alert(message: string, title = "Aviso") {
+             await this.show(title, message, false, false);
+             return undefined; // Native alert returns undefined
+        }
+
+        async confirm(message: string, title = "Confirmar Acción") {
+            return await this.show(title, message, true, false) as boolean;
+        }
+
+        async prompt(message: string, defaultText = "", title = "Entrada Requerida") {
+            return await this.show(title, message, true, true, defaultText) as string | null;
+        }
+    }
+
+    // Initialize exactly once and attach to window
+    if (typeof window !== 'undefined' && !(window as any).AppDialog) {
+        // Run after DOM is fully ready
+        document.addEventListener('DOMContentLoaded', () => {
+             (window as any).AppDialog = new DialogController();
+        });
+    }
+</script>

@@ -10,3 +10,11 @@ interface ImportMetaEnv {
 interface ImportMeta {
     readonly env: ImportMetaEnv;
 }
+
+interface Window {
+    AppDialog: {
+        alert: (message: string, title?: string) => Promise<void>;
+        confirm: (message: string, title?: string) => Promise<boolean>;
+        prompt: (message: string, defaultText?: string, title?: string) => Promise<string | null>;
+    };
+}

@@ -441,7 +441,7 @@ const { data: allProducts } = await supabaseAdmin
                 }, 2000);
             }
         } else {
-            alert("Error al guardar: " + error.message);
+            await window.AppDialog.alert("Error al guardar: " + error.message, "Error");
         }
     });
 
@@ -468,15 +468,15 @@ const { data: allProducts } = await supabaseAdmin
         if (!error) {
             window.location.reload();
         } else {
-            alert("Error: " + error.message);
+            await window.AppDialog.alert("Error: " + error.message, "Error");
         }
     });
 
     // Quitar producto de ofertas
     document.querySelectorAll(".remove-sale-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
-            if (!confirm("¿Quitar este producto de la sección de ofertas?"))
-                return;
+            const confirmed = await window.AppDialog.confirm("¿Quitar este producto de la sección de ofertas?", "Quitar Oferta");
+            if (!confirmed) return;
 
             const productId = (btn as HTMLElement).dataset.id;
 
@@ -492,7 +492,7 @@ const { data: allProducts } = await supabaseAdmin
             if (!error) {
                 window.location.reload();
             } else {
-                alert("Error: " + error.message);
+                await window.AppDialog.alert("Error: " + error.message, "Error");
             }
         });
     });

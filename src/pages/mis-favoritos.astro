@@ -218,7 +218,8 @@ if (favorites && favorites.length > 0) {
       if (!productId) return;
       
       // Confirmar eliminación
-      if (!confirm('¿Quitar este producto de favoritos?')) return;
+      const confirmed = await window.AppDialog.confirm('¿Quitar este producto de favoritos?', 'Quitar Favorito');
+      if (!confirmed) return;
       
       try {
         const response = await fetch('/api/favorites', {
@@ -235,7 +236,7 @@ if (favorites && favorites.length > 0) {
           // Recargar la página para actualizar la lista
           window.location.reload();
         } else {
-          alert('Error: ' + data.error);
+          await window.AppDialog.alert('Error: ' + data.error, "Error");
         }
       } catch (error) {
         console.error('Error al eliminar favorito:', error);

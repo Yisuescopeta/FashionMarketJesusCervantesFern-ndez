@@ -355,17 +355,17 @@ const isCancelled = order.status === 'cancelled';
                     const result = await response.json();
 
                     if (response.ok) {
-                        alert(result.message || 'Operación exitosa');
+                        await window.AppDialog.alert(result.message || 'Operación exitosa', "Éxito");
                         window.location.reload();
                     } else {
-                        alert(result.error || 'Error al procesar la solicitud');
+                        await window.AppDialog.alert(result.error || 'Error al procesar la solicitud', "Error");
                         submitBtn.textContent = originalText;
                         submitBtn.disabled = false;
                         modal.close();
                     }
                 } catch (error) {
                     console.error(error);
-                    alert('Error de conexión');
+                    await window.AppDialog.alert('Error de conexión', "Error");
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }

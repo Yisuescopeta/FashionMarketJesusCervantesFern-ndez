@@ -75,7 +75,7 @@ export default function ProductDetail({
         return cartItem?.quantity || 0;
     };
 
-    const handleAddToCart = () => {
+    const handleAddToCart = async () => {
         if (!selectedSize) return;
 
         const sizeInfo = sizeStock.find(s => s.size === selectedSize);
@@ -85,7 +85,7 @@ export default function ProductDetail({
         const currentInCart = getCartQuantity(selectedSize);
         if (currentInCart >= sizeInfo.stock) {
             // Ya tiene el máximo en carrito
-            alert(`No puedes añadir más. Solo hay ${sizeInfo.stock} unidades disponibles y ya tienes ${currentInCart} en tu carrito.`);
+            await window.AppDialog.alert(`No puedes añadir más. Solo hay ${sizeInfo.stock} unidades disponibles y ya tienes ${currentInCart} en tu carrito.`, "Stock Insuficiente");
             return;
         }
 

@@ -415,9 +415,9 @@ if (error) {
         }
 
         if (error) {
-            alert("Error: " + error.message);
+            await window.AppDialog.alert("Error: " + error.message, "Error");
         } else {
-            alert(id ? "Cupón actualizado" : "Cupón creado con éxito");
+            await window.AppDialog.alert(id ? "Cupón actualizado" : "Cupón creado con éxito", "Éxito");
             window.location.reload();
         }
     });
@@ -425,7 +425,9 @@ if (error) {
     // Delete Logic
     document.querySelectorAll(".delete-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
-            if (!confirm("¿Estás seguro de eliminar este cupón?")) return;
+            const confirmed = await window.AppDialog.confirm("¿Estás seguro de eliminar este cupón?", "Eliminar Cupón");
+            if (!confirmed) return;
+            
             const id = (btn as HTMLButtonElement).dataset.id;
 
             const { error } = await supabase
@@ -434,7 +436,7 @@ if (error) {
                 .eq("id", id);
 
             if (error) {
-                alert("Error al eliminar: " + error.message);
+                await window.AppDialog.alert("Error al eliminar: " + error.message, "Error");
             } else {
                 window.location.reload();
             }
