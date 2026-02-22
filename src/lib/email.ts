@@ -29,9 +29,8 @@ export interface OrderConfirmationEmailData {
   shippingAddress?: string; // Dirección completa
 }
 
-// Cargar variables de entorno
-import dotenv from 'dotenv';
-dotenv.config();
+// El entorno se carga automáticamente en Astro
+// No es necesario importar dotenv aquí
 
 export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailData) {
   const {
