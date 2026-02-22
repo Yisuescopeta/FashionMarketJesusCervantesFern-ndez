@@ -1,0 +1,127 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { CheckCircle } from "lucide-react";
+
+import { stripe } from "../lib/stripe";
+import { supabaseAdmin } from "../lib/supabase-admin";
+import { sendOrderConfirmationEmail } from "../lib/email";
+
+export const prerender = false;
+
+// Obtener session_id de la URL
+const sessionId = Astro.url.searchParams.get("session_id");
+let isSuccess = false;
+let message = "";
+let customerEmail = "";
+let orderFound = false;
+
+if (sessionId) {
+    try {
+        // 1. Verificar estado en Stripe (Solo lectura)
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+        if (session.payment_status === "paid") {
+            customerEmail =
+                session.customer_details?.email || session.customer_email || "";
+            isSuccess = true;
+
+            // 2. Intentar buscar el pedido en la BD (Creado por Webhook)
+            // Es posible que el webhook tarde unos segundos, así que no es garantia que esté aquí inmediatamente
+            const { data: order } = await supabaseAdmin
+                .from("orders")
+                .select("id")
+                .eq("stripe_session_id", sessionId)
+                .single();
+
+            if (order) {
+                orderFound = true;
+            }
+        } else {
+            message = "El pago no se ha completado.";
+        }
+    } catch (e) {
+        console.error("Error recuperando sesión:", e);
+        message = "No pudimos verificar la información de su pago.";
+    }
+} else {
+    message = "No se encontró información del pedido.";
+}
+---
+
+<PublicLayout title="Pago Exitoso">
+    <div class="max-w-2xl mx-auto px-6 py-24 text-center">
+        <div class="bg-white border border-slate-100 shadow-sm p-12">
+            {
+                isSuccess ? (
+                    <>
+                        <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                            <CheckCircle className="w-10 h-10 text-green-500" />
+                        </div>
+
+                        <h2 class="text-[10px] uppercase tracking-[0.4em] text-brand-gold font-bold mb-4">
+                            Pedido Confirmado
+                        </h2>
+                        <h1 class="text-4xl font-serif italic mb-6">
+                            ¡Gracias por tu compra!
+                        </h1>
+
+                        <p class="text-slate-500 mb-8 leading-relaxed">
+                            Tu pedido ha sido recibido y se está procesando en
+                            nuestro sistema.
+                            {orderFound ? (
+                                <span>Ya hemos guardado tu pedido. </span>
+                            ) : (
+                                <span>
+                                    Estamos finalizando el registro de tu
+                                    compra.{" "}
+                                </span>
+                            )}
+                            En breve recibirás un correo electrónico a{" "}
+                            <strong>{customerEmail || "tu dirección"}</strong>{" "}
+                            con los detalles.
+                        </p>
+                    </>
+                ) : (
+                    <>
+                        <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                            <span class="text-4xl">⚠️</span>
+                        </div>
+                        <h1 class="text-2xl font-serif mb-6">
+                            Hubo un problema
+                        </h1>
+                        <p class="text-slate-500 mb-8">{message}</p>
+                    </>
+                )
+            }
+
+            <div class="space-y-4">
+                <a
+                    href="/productos"
+                    class="inline-block bg-brand-navy text-white px-10 py-4 font-bold uppercase tracking-widest text-sm hover:bg-black transition-all"
+                >
+                    Seguir Comprando
+                </a>
+                <p>
+                    <a
+                        href="/"
+                        class="text-brand-gold font-bold text-xs uppercase tracking-widest hover:underline"
+                    >
+                        Volver al Inicio
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</PublicLayout>
+
+<script>
+    import { cartItems } from "../stores/cart";
+
+    // Limpiar el carrito solo si fue exitoso
+    const isSuccess = document
+        .querySelector("h1")
+        ?.textContent?.includes("Gracias");
+    if (isSuccess) {
+        cartItems.set([]);
+    }
+</script>

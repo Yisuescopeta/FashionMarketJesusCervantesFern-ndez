@@ -1,0 +1,81 @@
+# ================================
+# Build & Generated
+# ================================
+dist/
+.astro/
+
+# ================================
+# Dependencies
+# ================================
+node_modules/
+
+# ================================
+# Environment & Secrets
+# ================================
+.env
+.env.local
+.env.production
+.env.staging
+
+# ================================
+# Logs
+# ================================
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+error.log
+error_*.txt
+server_log*.txt
+build_log*.txt
+insert_log.txt
+error_cmd.txt
+
+# ================================
+# Temp & Debug Scripts
+# ================================
+check_db*.js
+debug_*.js
+inspect_*.js
+find_*.js
+test_*.js
+migrate_images.js
+generate_migration_sql.js
+
+# ================================
+# Temp SQL migrations (one-off)
+# ================================
+fix_*.sql
+full_db_fix.sql
+final_migration.sql
+add_email_to_profiles.sql
+fix_sizes_stock.sql
+
+# ================================
+# IDE & Editor
+# ================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ================================
+# OS files
+# ================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ================================
+# MCP config (contains API keys)
+# ================================
+mcp_config.json
+
+# ================================
+# Agent workspace (not needed in repo)
+# ================================
+.agent/
+.gemini/

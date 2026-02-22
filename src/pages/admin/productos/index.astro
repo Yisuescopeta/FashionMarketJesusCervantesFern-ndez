@@ -1,0 +1,197 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseAdmin } from "../../../lib/supabase-admin";
+import {
+  Package,
+  Search,
+  Filter,
+  PlusCircle,
+  Zap,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import ProductTable from "../../../components/admin/ProductTable.astro";
+import StatCard from "../../../components/admin/StatCard.astro";
+
+export const prerender = false;
+
+// Parámetros de paginación y filtrado
+const page = parseInt(Astro.url.searchParams.get("page") || "1");
+const limit = 10;
+const from = (page - 1) * limit;
+const to = from + limit - 1;
+
+const searchQuery = Astro.url.searchParams.get("q") || "";
+const categoryFilter = Astro.url.searchParams.get("category") || "";
+const stockFilter = Astro.url.searchParams.get("stock") || "";
+
+// Construir query de productos
+let query = supabaseAdmin
+  .from("products")
+  .select("*, categories(name)", { count: "exact" })
+  .order("created_at", { ascending: false });
+
+if (searchQuery) {
+  query = query.ilike("name", `%${searchQuery}%`);
+}
+
+if (categoryFilter) {
+  query = query.eq("category_id", categoryFilter);
+}
+
+if (stockFilter === "low") {
+  query = query.lt("stock", 10);
+} else if (stockFilter === "out") {
+  query = query.eq("stock", 0);
+}
+
+// Ejecutar query con paginación
+const { data: products, count, error } = await query.range(from, to);
+
+const totalPages = Math.ceil((count || 0) / limit);
+
+// Obtener categorías para filtro
+const { data: categories } = await supabaseAdmin.from("categories").select("*");
+
+// Estadísticas rápidas (Totales globales, no filtrados)
+const { count: totalProducts } = await supabaseAdmin
+  .from("products")
+  .select("*", { count: "exact", head: true });
+const { count: lowStock } = await supabaseAdmin
+  .from("products")
+  .select("*", { count: "exact", head: true })
+  .lt("stock", 10);
+const { count: onSale } = await supabaseAdmin
+  .from("products")
+  .select("*", { count: "exact", head: true })
+  .eq("is_on_sale", true);
+---
+
+<AdminLayout title="Gestión de Productos">
+  <!-- Barra de Estadísticas -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <StatCard
+      title="Total Productos"
+      value={totalProducts || 0}
+      icon={Package}
+      color="blue"
+    />
+    <StatCard
+      title="Stock Bajo"
+      value={lowStock || 0}
+      subtitle="< 10 unidades"
+      icon={Package}
+      color="amber"
+    />
+    <StatCard title="En Oferta" value={onSale || 0} icon={Zap} color="orange" />
+
+    <a
+      href="/admin/productos/nuevo"
+      class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 sm:p-6 flex items-center gap-3 sm:gap-4 hover:from-amber-600 hover:to-orange-600 transition-all group shadow-lg shadow-orange-500/20 col-span-2 lg:col-span-1"
+    >
+      <div
+        class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
+      >
+        <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      </div>
+      <div>
+        <p class="text-base sm:text-lg font-bold text-white leading-tight">
+          Añadir Producto
+        </p>
+        <p class="text-[10px] sm:text-xs text-white/80 font-medium">
+          Crear nuevo ítem
+        </p>
+      </div>
+    </a>
+  </div>
+
+  <!-- Filtros y Búsqueda -->
+  <form
+    class="bg-white rounded-xl p-4 mb-6 border border-slate-100 flex flex-wrap gap-4 items-center shadow-sm"
+  >
+    <div class="flex-1 min-w-[200px] relative">
+      <Search
+        className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
+      />
+      <input
+        type="text"
+        name="q"
+        value={searchQuery}
+        placeholder="Buscar productos..."
+        class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-sm transition-all"
+      />
+    </div>
+
+    <div class="flex items-center gap-2">
+      <Filter className="w-4 h-4 text-slate-400" />
+      <select
+        name="category"
+        class="border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white min-w-[150px]"
+        onchange="this.form.submit()"
+      >
+        <option value="">Todas las categorías</option>
+        {
+          categories?.map((cat) => (
+            <option value={cat.id} selected={cat.id === categoryFilter}>
+              {cat.name}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <select
+        name="stock"
+        class="border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+        onchange="this.form.submit()"
+      >
+        <option value="">Todo el stock</option>
+        <option value="low" selected={stockFilter === "low"}
+          >Stock bajo (&lt;10)</option
+        >
+        <option value="out" selected={stockFilter === "out"}>Sin stock</option>
+      </select>
+    </div>
+
+    {/* Resetear filtros si hay alguno activo */}
+    {
+      (searchQuery || categoryFilter || stockFilter) && (
+        <a
+          href="/admin/productos"
+          class="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 font-medium hover:bg-slate-50 rounded-lg transition-colors"
+        >
+          Limpiar filtros
+        </a>
+      )
+    }
+  </form>
+
+  <!-- Tabla de Productos -->
+  <ProductTable products={products || []} />
+
+  <!-- Paginación -->
+  {
+    totalPages > 1 && (
+      <div class="flex justify-center mt-8 gap-2">
+        <a
+          href={`?page=${Math.max(1, page - 1)}${searchQuery ? `&q=${searchQuery}` : ""}${categoryFilter ? `&category=${categoryFilter}` : ""}${stockFilter ? `&stock=${stockFilter}` : ""}`}
+          class={`p-2 rounded-lg border border-slate-200 ${page === 1 ? "text-slate-300 pointer-events-none" : "text-slate-600 hover:bg-white hover:shadow-sm"}`}
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </a>
+
+        <span class="flex items-center px-4 font-medium text-slate-600">
+          Página {page} de {totalPages}
+        </span>
+
+        <a
+          href={`?page=${Math.min(totalPages, page + 1)}${searchQuery ? `&q=${searchQuery}` : ""}${categoryFilter ? `&category=${categoryFilter}` : ""}${stockFilter ? `&stock=${stockFilter}` : ""}`}
+          class={`p-2 rounded-lg border border-slate-200 ${page === totalPages ? "text-slate-300 pointer-events-none" : "text-slate-600 hover:bg-white hover:shadow-sm"}`}
+        >
+          <ChevronRight className="w-5 h-5" />
+        </a>
+      </div>
+    )
+  }
+</AdminLayout>

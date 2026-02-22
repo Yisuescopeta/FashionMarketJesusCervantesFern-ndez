@@ -1,0 +1,380 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+import ProductCard from "../components/product/ProductCard.astro";
+import CloudinaryImage from "../components/common/CloudinaryImage.astro";
+import { supabase } from "../lib/supabase";
+import { ArrowRight, Truck, RefreshCw, Shield, Sparkles, Flame } from "lucide-react";
+
+export const prerender = false;
+
+// Obtener configuración del sitio
+const { data: siteSettings } = await supabase
+  .from("site_settings")
+  .select("*")
+  .eq("id", "main")
+  .single();
+
+const showFlashSales = siteSettings?.show_flash_sales || false;
+
+// Obtener productos en oferta
+let saleProducts: any[] = [];
+const { data: sales } = await supabase
+  .from("products")
+  .select("*, categories(name)")
+  .eq("is_on_sale", true)
+  .eq("is_active", true)
+  .limit(4);
+
+saleProducts = (sales || []).map((p) => ({
+  id: p.id,
+  name: p.name,
+  price: p.sale_price || p.price,
+  originalPrice: p.price,
+  slug: p.slug,
+  image:
+    p.images?.[0] ||
+    "https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800",
+  category: p.categories?.name || "Oferta",
+  isOnSale: true,
+  discount: p.sale_price ? Math.round((1 - p.sale_price / p.price) * 100) : 0,
+}));
+
+// Obtener novedades (productos más recientes)
+const { data: newProducts } = await supabase
+  .from("products")
+  .select("*, categories(name)")
+  .eq("is_active", true)
+  .order("created_at", { ascending: false })
+  .limit(4);
+
+// Obtener productos destacados (diferentes a las novedades)
+const { data: featuredProducts } = await supabase
+  .from("products")
+  .select("*, categories(name)")
+  .eq("is_active", true)
+  .limit(8);
+
+// Mapear productos
+const mapProduct = (p: any) => ({
+  id: p.id,
+  name: p.name,
+  price: p.is_on_sale && p.sale_price ? p.sale_price : p.price,
+  originalPrice: p.is_on_sale ? p.price : null,
+  slug: p.slug,
+  image:
+    p.images?.[0] ||
+    "https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=800",
+  category: p.categories?.name || "Moda",
+  isOnSale: p.is_on_sale,
+});
+
+const novedades = (newProducts || []).map(mapProduct);
+const destacados = (featuredProducts || []).slice(0, 4).map(mapProduct);
+
+// Obtener categorías para la navegación visual
+const { data: categories } = await supabase
+  .from("categories")
+  .select("*")
+  .limit(4);
+
+const categoryImages: Record<string, string> = {
+  camisas:
+    "https://images.unsplash.com/photo-1598033129183-c4f50c7176c8?q=80&w=600",
+  camisetas:
+    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=600",
+  pantalones:
+    "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=600",
+  chalecos:
+    "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=600",
+};
+---
+
+<PublicLayout title="Inicio">
+  <!-- Hero Section - Impactante y clara -->
+  <section
+    class="relative h-screen flex items-center justify-center overflow-hidden"
+  >
+    <div class="absolute inset-0 z-0">
+      <CloudinaryImage
+        src="https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?q=80&w=2000"
+        alt="Fashion Hero"
+        class="w-full h-full object-cover"
+        priority={true}
+      />
+      <div
+        class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"
+      >
+      </div>
+    </div>
+
+    <div class="relative z-10 text-center text-white px-6 max-w-5xl mx-auto">
+      <p
+        class="text-[9px] md:text-[11px] uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4 md:mb-6 font-medium text-brand-gold"
+      >
+        Colección Primavera 2026
+      </p>
+      <h1
+        class="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif mb-6 md:mb-8 leading-[1.1] italic"
+      >
+        Elegancia que<br />Define tu Estilo
+      </h1>
+      <p
+        class="text-base md:text-xl text-white/80 mb-8 md:text-xl mb-10 max-w-2xl mx-auto font-light"
+      >
+        Prendas seleccionadas bajo los más altos estándares de calidad y diseño
+        europeo.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <a
+          href="/catalogo"
+          class="w-full sm:w-auto inline-block bg-white text-brand-navy px-8 md:px-10 py-3.5 md:py-4 font-bold tracking-[0.1em] md:tracking-[0.2em] uppercase text-xs md:text-sm hover:bg-brand-gold hover:text-white transition-all duration-300"
+        >
+          Explorar Catálogo
+        </a>
+        <a
+          href="/novedades"
+          class="w-full sm:w-auto inline-block border-2 border-white text-white px-8 md:px-10 py-3.5 md:py-4 font-bold tracking-[0.1em] md:tracking-[0.2em] uppercase text-xs md:text-sm hover:bg-white hover:text-brand-navy transition-all duration-300"
+        >
+          Ver Novedades
+        </a>
+      </div>
+    </div>
+
+    <!-- Indicador de scroll -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <div
+        class="w-6 h-10 border-2 border-white/50 rounded-full flex items-start justify-center p-2"
+      >
+        <div class="w-1 h-2 bg-white rounded-full"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Barra de beneficios -->
+  <section class="bg-slate-50 border-y border-slate-100">
+    <div class="max-w-7xl mx-auto px-6 py-6 sm:py-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 text-center">
+        <div class="flex items-center justify-center gap-3">
+          <Truck className="w-5 h-5 text-brand-gold" />
+          <span class="text-xs sm:text-sm font-medium">Envío gratis +80€</span>
+        </div>
+        <div class="flex items-center justify-center gap-3">
+          <RefreshCw className="w-5 h-5 text-brand-gold" />
+          <span class="text-xs sm:text-sm font-medium">Devoluciones gratuitas 30 días</span
+          >
+        </div>
+        <div class="flex items-center justify-center gap-3 sm:col-span-2 md:col-span-1">
+          <Shield className="w-5 h-5 text-brand-gold" />
+          <span class="text-xs sm:text-sm font-medium">Pago 100% seguro</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección de Ofertas (si hay productos en oferta) -->
+  {
+    saleProducts.length > 0 && (
+      <section class="py-20 bg-gradient-to-br from-brand-navy via-brand-charcoal to-brand-navy text-white relative overflow-hidden">
+        <!-- Elementos decorativos de fondo -->
+        <div class="absolute inset-0 opacity-20 pointer-events-none">
+          <div class="absolute top-10 left-10 w-64 h-64 bg-brand-gold rounded-full blur-3xl"></div>
+          <div class="absolute bottom-10 right-10 w-96 h-96 bg-brand-gold/30 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
+            <div class="text-white">
+              <span class="inline-flex items-center gap-2 bg-brand-gold/20 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 border border-brand-gold/30 text-brand-gold">
+                <Flame className="w-3 h-3" /> Tiempo Limitado
+              </span>
+              <h2 class="text-4xl md:text-5xl font-serif italic mb-2">
+                Ofertas Especiales
+              </h2>
+              <p class="text-brand-offwhite/70 max-w-lg">
+                Descubre nuestra selección exclusiva con descuentos únicos.
+              </p>
+            </div>
+            <a
+              href="/ofertas"
+              class="mt-6 md:mt-0 text-white font-bold text-sm uppercase tracking-widest hover:text-brand-gold transition-colors flex items-center gap-2 group"
+            >
+              Ver todas <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </a>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {saleProducts.map((product: any) => (
+              <a
+                href={`/productos/${product.slug}`}
+                class="bg-white overflow-hidden shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 group border border-transparent hover:border-brand-gold/30"
+              >
+                <div class="relative aspect-[3/4] overflow-hidden">
+                  <CloudinaryImage
+                    src={product.image}
+                    alt={product.name}
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <span class="absolute top-3 right-3 bg-brand-gold text-brand-navy px-3 py-1 text-xs font-bold rounded">
+                    -{product.discount}%
+                  </span>
+                </div>
+                <div class="p-5">
+                  <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-bold">
+                    {product.category}
+                  </p>
+                  <h3 class="font-serif text-lg italic text-brand-navy group-hover:text-brand-gold transition-colors">
+                    {product.name}
+                  </h3>
+                  <div class="mt-3 flex items-center gap-2">
+                    <span class="text-brand-navy font-bold text-lg">
+                      {new Intl.NumberFormat("es-ES", {
+                        style: "currency",
+                        currency: "EUR",
+                      }).format(product.price / 100)}
+                    </span>
+                    <span class="text-slate-400 line-through text-sm">
+                      {new Intl.NumberFormat("es-ES", {
+                        style: "currency",
+                        currency: "EUR",
+                      }).format(product.originalPrice / 100)}
+                    </span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Novedades -->
+  {
+    novedades.length > 0 && (
+      <section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-12">
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <Sparkles className="w-4 h-4 text-brand-gold" />
+              <span class="text-[10px] uppercase tracking-[0.3em] text-brand-gold font-bold">
+                Recién llegado
+              </span>
+            </div>
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-serif italic">Novedades</h2>
+          </div>
+          <a
+            href="/novedades"
+            class="mt-4 md:mt-0 text-brand-navy font-bold text-sm uppercase tracking-widest hover:text-brand-gold transition-colors flex items-center gap-2"
+          >
+            Ver todas <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {novedades.map((product: any) => (
+            <ProductCard {...product} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Navegación por categorías visuales -->
+  {
+    categories && categories.length > 0 && (
+      <section class="bg-slate-50 py-16 md:py-24">
+        <div class="max-w-7xl mx-auto px-6">
+          <div class="text-center mb-12 md:mb-16">
+            <h2 class="text-[10px] uppercase tracking-[0.3em] text-brand-gold font-bold mb-3">
+              Explora por tipo
+            </h2>
+            <p class="text-3xl md:text-4xl font-serif italic">Encuentra tu estilo</p>
+          </div>
+
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {categories.map((cat: any) => (
+              <a
+                href={`/catalogo?categoria=${cat.slug}`}
+                class="group relative aspect-[3/4] overflow-hidden bg-slate-200"
+              >
+                <CloudinaryImage
+                  src={
+                    categoryImages[cat.slug] ||
+                    "https://images.unsplash.com/photo-1594932224010-756643c71df5?q=80&w=600"
+                  }
+                  alt={cat.name}
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div class="absolute bottom-0 left-0 right-0 p-6">
+                  <h3 class="text-white font-serif text-2xl italic group-hover:text-brand-gold transition-colors">
+                    {cat.name}
+                  </h3>
+                  <span class="text-white/70 text-sm font-medium uppercase tracking-widest flex items-center gap-2 mt-2">
+                    Explorar{" "}
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Destacados -->
+  {
+    destacados.length > 0 && (
+      <section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-12">
+          <div>
+            <span class="text-[10px] uppercase tracking-[0.3em] text-brand-gold font-bold mb-3 block">
+              Selección curada
+            </span>
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-serif italic">
+              Piezas Destacadas
+            </h2>
+          </div>
+          <a
+            href="/mas-vendidos"
+            class="mt-4 md:mt-0 text-brand-navy font-bold text-sm uppercase tracking-widest hover:text-brand-gold transition-colors flex items-center gap-2"
+          >
+            Ver más vendidos <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {destacados.map((product: any) => (
+            <ProductCard {...product} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Brand Story -->
+  <section class="bg-brand-navy text-white py-16 md:py-24">
+    <div class="max-w-4xl mx-auto text-center px-6">
+      <span
+        class="text-brand-gold text-[10px] uppercase tracking-[0.4em] font-bold mb-6 block"
+        >Nuestra Filosofía</span
+      >
+      <h2 class="text-3xl md:text-4xl lg:text-5xl font-serif mb-8 italic leading-tight">
+        "La sencillez es la máxima sofisticación"
+      </h2>
+      <p class="text-slate-400 leading-relaxed text-lg mb-10">
+        En Aurum, creemos que la moda masculina no se trata de seguir
+        tendencias efímeras, sino de construir un armario sólido basado en la
+        calidad excepcional y el diseño inteligente. Cada prenda es seleccionada
+        bajo los más altos estándares de sastrería europea.
+      </p>
+      <a
+        href="/catalogo"
+        class="inline-block border-2 border-brand-gold text-brand-gold px-10 py-4 font-bold tracking-[0.2em] uppercase text-sm hover:bg-brand-gold hover:text-white transition-all duration-300"
+      >
+        Descubrir la colección
+      </a>
+    </div>
+  </section>
+</PublicLayout>

@@ -1,0 +1,175 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react';
+
+export const prerender = true;
+---
+
+<PublicLayout title="Contacto | Aurum" description="Ponte en contacto con nuestro equipo de atención al cliente">
+  <div class="pt-20">
+    <!-- Hero Section -->
+    <div class="bg-brand-navy text-white py-20 px-6 relative overflow-hidden">
+      <div class="max-w-7xl mx-auto relative z-10 text-center">
+        <h1 class="text-4xl md:text-5xl font-serif italic mb-6">Estamos a tu disposición</h1>
+        <p class="text-brand-offwhite/70 max-w-2xl mx-auto text-lg">
+          Para consultas sobre pedidos, devoluciones o información sobre nuestros productos, nuestro equipo está aquí para ayudarte.
+        </p>
+      </div>
+      <!-- Background elements -->
+      <div class="absolute top-0 left-0 w-full h-full opacity-10">
+        <div class="absolute top-[-10%] right-[-5%] w-96 h-96 bg-brand-gold rounded-full blur-3xl"></div>
+      </div>
+    </div>
+
+    <!-- Contact Content -->
+    <div class="max-w-7xl mx-auto px-6 py-20">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        
+        <!-- Info Columns -->
+        <div class="space-y-12">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-widest text-brand-navy mb-8">Canales Directos</h2>
+            <div class="space-y-8">
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 bg-brand-offwhite rounded-full flex items-center justify-center flex-shrink-0 text-brand-navy">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 class="font-bold text-sm uppercase tracking-wider mb-1">Email</h3>
+                  <p class="text-slate-600">atencion@aurum.com</p>
+                  <p class="text-xs text-slate-400 mt-1">Respuesta en menos de 24h laborables</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 bg-brand-offwhite rounded-full flex items-center justify-center flex-shrink-0 text-brand-navy">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 class="font-bold text-sm uppercase tracking-wider mb-1">Teléfono</h3>
+                  <p class="text-slate-600">+34 900 123 456</p>
+                  <p class="text-xs text-slate-400 mt-1">Lunes a Viernes, 09:00 - 18:00</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 bg-brand-offwhite rounded-full flex items-center justify-center flex-shrink-0 text-brand-navy">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 class="font-bold text-sm uppercase tracking-wider mb-1">Sede Central</h3>
+                  <p class="text-slate-600">Paseo de la Castellana, 120<br />28046 Madrid, España</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-brand-offwhite p-8 rounded-lg border border-slate-100">
+            <h3 class="font-serif italic text-xl text-brand-navy mb-4">¿Es sobre una devolución?</h3>
+            <p class="text-slate-600 text-sm mb-4 leading-relaxed">
+              Si deseas iniciar un proceso de devolución, puedes hacerlo directamente desde tu área de cliente para una gestión más rápida.
+            </p>
+            <a href="/mi-cuenta/pedidos" class="text-xs font-bold uppercase tracking-widest text-brand-navy border-b border-brand-navy pb-1 hover:text-brand-gold hover:border-brand-gold transition-colors">
+              Ir a mis pedidos ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="bg-white p-8 md:p-12 shadow-xl border border-slate-100 rounded-sm">
+          <h2 class="text-xs font-bold uppercase tracking-widest text-brand-navy mb-8">Envíanos un mensaje</h2>
+          
+          <form id="contactForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label for="name" class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Nombre Completo</label>
+                <input type="text" id="name" name="name" required class="w-full px-4 py-3 border border-slate-200 focus:border-brand-navy outline-none transition-colors text-sm" placeholder="Tu nombre" />
+              </div>
+              <div class="space-y-2">
+                <label for="email" class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Email de contacto</label>
+                <input type="email" id="email" name="email" required class="w-full px-4 py-3 border border-slate-200 focus:border-brand-navy outline-none transition-colors text-sm" placeholder="tu@email.com" />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label for="subject" class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Asunto</label>
+              <select id="subject" name="subject" class="w-full px-4 py-3 border border-slate-200 focus:border-brand-navy outline-none transition-colors text-sm bg-white">
+                <option value="Consulta General">Consulta General</option>
+                <option value="Estado de Pedido">Estado de Pedido</option>
+                <option value="Devoluciones">Devoluciones y Cambios</option>
+                <option value="Feedback">Sugerencias</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label for="message" class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Mensaje</label>
+              <textarea id="message" name="message" required rows="5" class="w-full px-4 py-3 border border-slate-200 focus:border-brand-navy outline-none transition-colors text-sm resize-none" placeholder="¿Cómo podemos ayudarte?"></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-brand-navy text-white py-4 font-bold text-xs uppercase tracking-[0.3em] hover:bg-brand-charcoal transition-all flex items-center justify-center gap-2 group">
+              <span>Enviar Mensaje</span>
+              <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            </button>
+            <div id="formMsg" class="text-xs text-center mt-4"></div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</PublicLayout>
+
+<script>
+  const form = document.getElementById('contactForm') as HTMLFormElement;
+  const btn = document.getElementById('submitBtn') as HTMLButtonElement;
+  const msg = document.getElementById('formMsg');
+
+  // Pre-seleccionar asunto si viene en la URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const subjectParam = urlParams.get('subject');
+  if (subjectParam) {
+    const select = document.getElementById('subject') as HTMLSelectElement;
+    if (select) {
+        // Intentar emparejar el valor
+        if (subjectParam.toLowerCase() === 'devolucion' || subjectParam.toLowerCase() === 'devoluciones') {
+            select.value = 'Devoluciones';
+        }
+    }
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Enviando...';
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const resp = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await resp.json();
+      
+      if (resp.ok) {
+        msg!.textContent = result.message;
+        msg!.className = 'text-xs text-center mt-4 text-green-600 font-medium';
+        form.reset();
+      } else {
+        msg!.textContent = result.error || 'Error al enviar el mensaje';
+        msg!.className = 'text-xs text-center mt-4 text-red-600 font-medium';
+      }
+    } catch (err) {
+      msg!.textContent = 'Error de conexión';
+      msg!.className = 'text-xs text-center mt-4 text-red-600 font-medium';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  });
+</script>

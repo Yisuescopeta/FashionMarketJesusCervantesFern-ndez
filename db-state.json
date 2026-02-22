@@ -1,0 +1,148 @@
+{
+  "orders": [
+    {
+      "id": "bd0f26b6-20b8-4957-bbfb-68c1da98006d",
+      "status": "paid"
+    },
+    {
+      "id": "4ede3ff6-ff7c-48e1-b38e-6ee89053a799",
+      "status": "cancelled"
+    },
+    {
+      "id": "0f7f8af1-fe37-42b5-9f91-1e7c9af51eeb",
+      "status": "paid"
+    },
+    {
+      "id": "6edee6cf-fd4f-4fae-93d3-64ed97fe365c",
+      "status": "paid"
+    },
+    {
+      "id": "daa1db82-3b3f-46f9-8490-6594049fa7d7",
+      "status": "paid"
+    }
+  ],
+  "ordersError": null,
+  "items": [
+    {
+      "id": "7f218be1-050b-448a-8f25-d49381b4f6ce",
+      "order_id": "92a091f5-88f0-427e-b8bc-bcdbb0889b18",
+      "product_name": "Camiseta Básica Negra - Talla S (Talla: S)",
+      "quantity": 2,
+      "price_at_purchase": 1900,
+      "size": null,
+      "product_id": null
+    },
+    {
+      "id": "ffc73385-418b-42be-80b8-180c22511479",
+      "order_id": "9b156002-8914-4d93-b4d9-e2e276dfc30f",
+      "product_name": "Camiseta Básica Negra",
+      "quantity": 2,
+      "price_at_purchase": 1900,
+      "size": null,
+      "product_id": null
+    },
+    {
+      "id": "1636e704-04cb-40c9-baf7-3448ce1bbcab",
+      "order_id": "0280244c-cdb7-4ecb-81a4-63fd9bc6e3e6",
+      "product_name": "Camiseta Básica Negra",
+      "quantity": 1,
+      "price_at_purchase": 1900,
+      "size": null,
+      "product_id": null
+    },
+    {
+      "id": "78664d5a-fc40-442b-8a94-327277c076e2",
+      "order_id": "3899fe36-a5f0-482b-985a-7af5e2850ca9",
+      "product_name": "Pantalón Azul Marino",
+      "quantity": 1,
+      "price_at_purchase": 6500,
+      "size": null,
+      "product_id": null
+    },
+    {
+      "id": "36602017-738b-49a9-81bb-935317376e7e",
+      "order_id": "5b36173e-e106-44b5-9850-bb343ff0ec20",
+      "product_name": "Camiseta Básica Negra",
+      "quantity": 1,
+      "price_at_purchase": 1900,
+      "size": null,
+      "product_id": null
+    },
+    {
+      "id": "104d5f7f-3084-4e6a-815e-99fb4a1241d0",
+      "order_id": "dc77b036-a5a1-4033-af89-3b0208e8e9cd",
+      "product_name": "Chaleco Casual Marrón",
+      "quantity": 15,
+      "price_at_purchase": 6500,
+      "size": null,
+      "product_id": null
+    },
+    {
+      "id": "7d68a7d8-588c-411c-b524-0b147eee16b8",
+      "order_id": "307c9c29-dcab-461d-b464-a0afce17ddad",
+      "product_name": "Camiseta Básica Negra",
+      "quantity": 1,
+      "price_at_purchase": 1900,
+      "size": null,
+      "product_id": null
+    },
+    {
+      "id": "1d6d928b-5733-4d02-8cbe-8300c559525f",
+      "order_id": "b42e47ef-1e23-461e-ae7e-63c60451190a",
+      "product_name": "Camiseta Básica Negra",
+      "quantity": 24,
+      "price_at_purchase": 1900,
+      "size": null,
+      "product_id": null
+    }
+  ],
+  "itemsError": null,
+  "variants": [
+    {
+      "id": "b03f5a86-2dbf-471a-b95f-4dc248cc7f1f",
+      "product_id": "4f5977c8-b0cb-4f4f-bbf3-6b5f606a7ab5",
+      "size": "S",
+      "stock": 14,
+      "sku_variant": null,
+      "created_at": "2026-01-12T10:36:54.729548+00:00",
+      "updated_at": "2026-01-12T10:36:54.729548+00:00"
+    },
+    {
+      "id": "61b40f7d-2c87-42c3-9593-fc4a57fe0e57",
+      "product_id": "4f5977c8-b0cb-4f4f-bbf3-6b5f606a7ab5",
+      "size": "M",
+      "stock": 12,
+      "sku_variant": null,
+      "created_at": "2026-01-12T10:36:54.729548+00:00",
+      "updated_at": "2026-01-12T10:36:54.729548+00:00"
+    },
+    {
+      "id": "6d002195-a9dd-40e1-9063-ce1d94d005fd",
+      "product_id": "4f5977c8-b0cb-4f4f-bbf3-6b5f606a7ab5",
+      "size": "L",
+      "stock": 12,
+      "sku_variant": null,
+      "created_at": "2026-01-12T10:36:54.729548+00:00",
+      "updated_at": "2026-01-12T10:36:54.729548+00:00"
+    },
+    {
+      "id": "b970ab46-441f-4fd7-8d79-fc6ee97c863a",
+      "product_id": "4f5977c8-b0cb-4f4f-bbf3-6b5f606a7ab5",
+      "size": "XL",
+      "stock": 12,
+      "sku_variant": null,
+      "created_at": "2026-01-12T10:36:54.729548+00:00",
+      "updated_at": "2026-01-12T10:36:54.729548+00:00"
+    },
+    {
+      "id": "a5b7ad29-2c3e-45f1-a0e7-7e594703d2a4",
+      "product_id": "922c0505-0641-4e8a-ab86-e405a74e186a",
+      "size": "S",
+      "stock": 7,
+      "sku_variant": null,
+      "created_at": "2026-01-12T10:36:54.729548+00:00",
+      "updated_at": "2026-01-12T10:36:54.729548+00:00"
+    }
+  ],
+  "variantsError": null
+}

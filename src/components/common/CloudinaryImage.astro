@@ -1,0 +1,53 @@
+---
+import { CldImage } from "astro-cloudinary";
+import { getCloudinaryUrl } from "../../lib/cloudinary";
+
+interface Props {
+    src: string;
+    alt: string;
+    width?: number;
+    height?: number;
+    class?: string;
+    priority?: boolean;
+}
+
+const {
+    src,
+    alt,
+    width = 800,
+    height = 800,
+    class: className,
+    priority = false,
+} = Astro.props;
+
+const isFullUrl = src?.startsWith("http") || src?.startsWith("https");
+const isCloudinaryPublicId = !isFullUrl && src && !src.startsWith("/");
+
+// For full URLs, use Cloudinary fetch URL for optimization
+const optimizedSrc = isFullUrl ? getCloudinaryUrl(src, { width, height, crop: 'fill', gravity: 'auto' }) : src;
+---
+
+{
+    isCloudinaryPublicId ? (
+        <CldImage
+            src={src}
+            width={width}
+            height={height}
+            alt={alt}
+            class={className}
+            loading={priority ? "eager" : "lazy"}
+            crop="fill"
+            gravity="auto"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+    ) : (
+        <img
+            src={optimizedSrc}
+            alt={alt}
+            width={width}
+            height={height}
+            class={className}
+            loading={priority ? "eager" : "lazy"}
+        />
+    )
+}

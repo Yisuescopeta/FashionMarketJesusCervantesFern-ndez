@@ -1,0 +1,633 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { supabaseAdmin } from "../../lib/supabase-admin";
+import {
+  FileBarChart,
+  Clock,
+  Calendar,
+  Send,
+  Settings,
+  ShoppingCart,
+  Users,
+  RotateCcw,
+  AlertTriangle,
+  Trophy,
+  ToggleLeft,
+  ToggleRight,
+  Info,
+  CheckCircle,
+} from "lucide-react";
+
+export const prerender = false;
+---
+
+<AdminLayout title="Informes Automáticos">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-xl sm:text-2xl font-bold text-slate-800 font-serif italic">
+      Informes Automáticos
+    </h1>
+    <p class="text-[10px] sm:text-sm text-slate-500">
+      Configura y programa tus informes por correo.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Panel Principal de Configuración -->
+    <div class="lg:col-span-2 space-y-8">
+      <!-- Toggle General -->
+      <div
+        id="toggle-container"
+        class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md transition-all border-t-4 border-t-slate-200"
+      >
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div
+              id="toggle-icon-bg"
+              class="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center bg-slate-100 transition-all flex-shrink-0"
+            >
+              <FileBarChart
+                id="toggle-icon"
+                className="w-5 h-5 sm:w-7 sm:h-7 text-slate-400 transition-all"
+              />
+            </div>
+            <div>
+              <h3 class="text-base sm:text-xl font-bold text-slate-800">
+                Informes por Email
+              </h3>
+              <p
+                id="toggle-label"
+                class="text-[10px] sm:text-sm text-slate-400 font-medium"
+              >
+                Cargando...
+              </p>
+            </div>
+          </div>
+          <div id="toggle-switch" class="relative flex-shrink-0">
+            <div
+              class="w-12 h-6 sm:w-16 sm:h-8 bg-slate-200 rounded-full transition-all duration-300"
+              id="toggle-track"
+            >
+            </div>
+            <div
+              class="absolute top-1 left-1 w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transition-all duration-300"
+              id="toggle-dot"
+            >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tipos de Informe -->
+      <div
+        id="report-types-section"
+        class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm transition-all"
+      >
+        <div class="flex items-center gap-3 mb-6">
+          <div
+            class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0"
+          >
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-800">
+              Contenido del Informe
+            </h3>
+            <p class="text-[10px] sm:text-xs text-slate-400">
+              Selecciona los datos que quieres recibir
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-3 sm:space-y-4">
+          <!-- Ventas -->
+          <label
+            class="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-pointer group"
+          >
+            <input
+              type="checkbox"
+              id="report_sales"
+              checked
+              class="w-4 h-4 sm:w-5 sm:h-5 rounded-lg border-2 border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+            />
+            <div
+              class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0"
+            >
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-slate-800 text-[11px] sm:text-sm">
+                Resumen de Ventas
+              </p>
+              <p
+                class="text-[9px] sm:text-xs text-slate-400 truncate sm:whitespace-normal"
+              >
+                Ventas, ingresos y valor medio
+              </p>
+            </div>
+          </label>
+
+          <!-- Nuevos Clientes -->
+          <label
+            class="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all cursor-pointer group"
+          >
+            <input
+              type="checkbox"
+              id="report_new_customers"
+              checked
+              class="w-4 h-4 sm:w-5 sm:h-5 rounded-lg border-2 border-slate-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer"
+            />
+            <div
+              class="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0"
+            >
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-slate-800 text-[11px] sm:text-sm">
+                Nuevos Clientes
+              </p>
+              <p
+                class="text-[9px] sm:text-xs text-slate-400 truncate sm:whitespace-normal"
+              >
+                Registros recientes de usuarios
+              </p>
+            </div>
+          </label>
+
+          <!-- Devoluciones -->
+          <label
+            class="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-slate-100 hover:border-orange-200 hover:bg-orange-50/30 transition-all cursor-pointer group"
+          >
+            <input
+              type="checkbox"
+              id="report_returns"
+              checked
+              class="w-4 h-4 sm:w-5 sm:h-5 rounded-lg border-2 border-slate-300 text-orange-600 focus:ring-orange-500 focus:ring-offset-0 cursor-pointer"
+            />
+            <div
+              class="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0"
+            >
+              <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-slate-800 text-[11px] sm:text-sm">
+                Devoluciones
+              </p>
+              <p
+                class="text-[9px] sm:text-xs text-slate-400 truncate sm:whitespace-normal"
+              >
+                Pedidos cancelados o devueltos
+              </p>
+            </div>
+          </label>
+
+          <!-- Stock Bajo -->
+          <label
+            class="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50/30 transition-all cursor-pointer group"
+          >
+            <input
+              type="checkbox"
+              id="report_low_stock"
+              checked
+              class="w-4 h-4 sm:w-5 sm:h-5 rounded-lg border-2 border-slate-300 text-amber-600 focus:ring-amber-500 focus:ring-offset-0 cursor-pointer"
+            />
+            <div
+              class="w-8 h-8 sm:w-10 sm:h-10 bg-amber-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0"
+            >
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-slate-800 text-[11px] sm:text-sm">
+                Stock Bajo
+              </p>
+              <p
+                class="text-[9px] sm:text-xs text-slate-400 truncate sm:whitespace-normal"
+              >
+                Alertas de inventario crítico
+              </p>
+            </div>
+          </label>
+
+          <!-- Top Productos -->
+          <label
+            class="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition-all cursor-pointer group"
+          >
+            <input
+              type="checkbox"
+              id="report_top_products"
+              checked
+              class="w-4 h-4 sm:w-5 sm:h-5 rounded-lg border-2 border-slate-300 text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+            />
+            <div
+              class="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0"
+            >
+              <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-slate-800 text-[11px] sm:text-sm">
+                Top Productos
+              </p>
+              <p
+                class="text-[9px] sm:text-xs text-slate-400 truncate sm:whitespace-normal"
+              >
+                Top 10 productos más vendidos
+              </p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Lateral -->
+    <div class="space-y-8">
+      <!-- Programación -->
+      <div
+        id="schedule-section"
+        class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm"
+      >
+        <div class="flex items-center gap-3 mb-6">
+          <div
+            class="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0"
+          >
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
+          </div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-800">
+            Programación
+          </h3>
+        </div>
+
+        <div class="space-y-6">
+          <!-- Hora de envío -->
+          <div>
+            <label
+              class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+              >Hora de envío</label
+            >
+            <div class="relative">
+              <select
+                id="send_hour"
+                class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all cursor-pointer"
+              >
+                {
+                  Array.from({ length: 24 }, (_, i) => (
+                    <option value={i} selected={i === 8}>
+                      {i.toString().padStart(2, "0")}:00
+                    </option>
+                  ))
+                }
+              </select>
+              <Clock
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+              />
+            </div>
+          </div>
+
+          <!-- Frecuencia -->
+          <div>
+            <label
+              class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+              >Frecuencia</label
+            >
+            <div class="relative">
+              <select
+                id="frequency_days"
+                class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all cursor-pointer"
+              >
+                <option value="1" selected>Cada día</option>
+                <option value="2">Cada 2 días</option>
+                <option value="3">Cada 3 días</option>
+                <option value="7">Cada semana</option>
+                <option value="14">Cada 2 semanas</option>
+                <option value="30">Cada mes</option>
+              </select>
+              <Calendar
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+              />
+            </div>
+          </div>
+
+          <!-- Último envío -->
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <p
+              class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1"
+            >
+              Último envío
+            </p>
+            <p id="last-sent-label" class="text-sm font-bold text-slate-600">
+              Nunca
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="space-y-3">
+        <button
+          id="save-btn"
+          class="w-full bg-slate-900 text-white px-6 py-3.5 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] sm:text-xs hover:bg-black transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 sm:gap-3 active:scale-95 group"
+        >
+          <span class="save-default">Guardar Cambios</span>
+          <CheckCircle
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform save-default"
+          />
+          <span class="save-loading hidden">Guardando...</span>
+        </button>
+
+        <button
+          id="send-now-btn"
+          class="w-full border-2 border-brand-gold text-brand-gold px-6 py-3.5 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] sm:text-xs hover:bg-brand-gold hover:text-white transition-all flex items-center justify-center gap-2 sm:gap-3 active:scale-95 group"
+        >
+          <span class="send-default">Enviar Ahora</span>
+          <Send
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform send-default"
+          />
+          <span class="send-loading hidden">Enviando...</span>
+        </button>
+      </div>
+
+      <!-- Estado -->
+      <div
+        id="action-status"
+        class="hidden p-4 rounded-2xl text-xs font-bold uppercase tracking-widest text-center"
+      >
+      </div>
+
+      <!-- Info -->
+      <div
+        class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl shadow-slate-900/20 italic"
+      >
+        <div class="absolute -right-2 -bottom-2 opacity-10 hidden sm:block">
+          <Info className="w-24 h-24" />
+        </div>
+        <h3
+          class="text-sm sm:text-base font-bold mb-3 sm:mb-4 flex items-center gap-2"
+        >
+          <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-gold" />
+          Envío Automático
+        </h3>
+        <p class="text-[11px] sm:text-xs text-slate-400 leading-relaxed mb-3">
+          Los informes se envían a la hora configurada. Prueba con "Enviar
+          Ahora" para una previsualización inmediata.
+        </p>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  import { supabase } from "../../lib/supabase";
+
+  // State
+  let enabled = false;
+  let isLoading = true;
+
+  // DOM elements
+  const toggleContainer = document.getElementById("toggle-container")!;
+  const toggleTrack = document.getElementById("toggle-track")!;
+  const toggleDot = document.getElementById("toggle-dot")!;
+  const toggleLabel = document.getElementById("toggle-label")!;
+  const toggleIconBg = document.getElementById("toggle-icon-bg")!;
+  const container = toggleContainer;
+
+  const saveBtn = document.getElementById("save-btn") as HTMLButtonElement;
+  const sendNowBtn = document.getElementById(
+    "send-now-btn",
+  ) as HTMLButtonElement;
+  const statusDiv = document.getElementById("action-status")!;
+  const lastSentLabel = document.getElementById("last-sent-label")!;
+
+  // Checkboxes
+  const reportSales = document.getElementById(
+    "report_sales",
+  ) as HTMLInputElement;
+  const reportNewCustomers = document.getElementById(
+    "report_new_customers",
+  ) as HTMLInputElement;
+  const reportReturns = document.getElementById(
+    "report_returns",
+  ) as HTMLInputElement;
+  const reportLowStock = document.getElementById(
+    "report_low_stock",
+  ) as HTMLInputElement;
+  const reportTopProducts = document.getElementById(
+    "report_top_products",
+  ) as HTMLInputElement;
+
+  // Selects
+  const sendHour = document.getElementById("send_hour") as HTMLSelectElement;
+  const frequencyDays = document.getElementById(
+    "frequency_days",
+  ) as HTMLSelectElement;
+
+  // Update toggle visuals
+  function updateToggleUI() {
+    if (enabled) {
+      toggleTrack.className =
+        "w-12 h-6 sm:w-16 sm:h-8 bg-emerald-500 rounded-full transition-all duration-300";
+      toggleDot.className =
+        "absolute top-1 left-7 sm:left-9 w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transition-all duration-300";
+      toggleLabel.textContent = "Activados — recibes informes";
+      toggleLabel.className =
+        "text-[10px] sm:text-sm text-emerald-600 font-bold";
+      toggleIconBg.className =
+        "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center bg-emerald-100 transition-all";
+      container.className =
+        "bg-white rounded-3xl p-6 sm:p-8 border border-emerald-200 shadow-sm cursor-pointer hover:shadow-md transition-all border-t-4 border-t-emerald-500";
+    } else {
+      toggleTrack.className =
+        "w-12 h-6 sm:w-16 sm:h-8 bg-slate-200 rounded-full transition-all duration-300";
+      toggleDot.className =
+        "absolute top-1 left-1 w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transition-all duration-300";
+      toggleLabel.textContent = "Desactivados — sin informes";
+      toggleLabel.className =
+        "text-[10px] sm:text-sm text-slate-400 font-medium";
+      toggleIconBg.className =
+        "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center bg-slate-100 transition-all";
+      container.className =
+        "bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md transition-all border-t-4 border-t-slate-200";
+    }
+  }
+
+  // Toggle handler
+  toggleContainer.addEventListener("click", () => {
+    enabled = !enabled;
+    updateToggleUI();
+  });
+
+  // Get auth token
+  async function getToken() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.access_token;
+  }
+
+  // Show status message
+  function showStatus(message: string, type: "success" | "error") {
+    statusDiv.classList.remove("hidden");
+    if (type === "success") {
+      statusDiv.className =
+        "p-4 rounded-2xl text-xs font-bold uppercase tracking-widest text-center bg-emerald-50 text-emerald-600 border border-emerald-100";
+    } else {
+      statusDiv.className =
+        "p-4 rounded-2xl text-xs font-bold uppercase tracking-widest text-center bg-rose-50 text-rose-600 border border-rose-100";
+    }
+    statusDiv.textContent = message;
+    setTimeout(() => statusDiv.classList.add("hidden"), 5000);
+  }
+
+  // Load preferences
+  async function loadPreferences() {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      const res = await fetch("/api/admin/report-preferences", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        const prefs = await res.json();
+        enabled = prefs.enabled ?? false;
+        reportSales.checked = prefs.report_sales ?? true;
+        reportNewCustomers.checked = prefs.report_new_customers ?? true;
+        reportReturns.checked = prefs.report_returns ?? true;
+        reportLowStock.checked = prefs.report_low_stock ?? true;
+        reportTopProducts.checked = prefs.report_top_products ?? true;
+        sendHour.value = String(prefs.send_hour ?? 8);
+        frequencyDays.value = String(prefs.frequency_days ?? 1);
+
+        if (prefs.last_sent_at) {
+          const date = new Date(prefs.last_sent_at);
+          lastSentLabel.textContent = date.toLocaleString("es-ES", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+
+        updateToggleUI();
+      }
+    } catch (e) {
+      console.error("Error loading preferences:", e);
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  // Save preferences
+  saveBtn?.addEventListener("click", async () => {
+    saveBtn.disabled = true;
+    saveBtn
+      .querySelectorAll(".save-default")
+      .forEach((el) => el.classList.add("hidden"));
+    saveBtn.querySelector(".save-loading")?.classList.remove("hidden");
+
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("No autenticado");
+
+      const res = await fetch("/api/admin/report-preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          enabled,
+          report_sales: reportSales.checked,
+          report_new_customers: reportNewCustomers.checked,
+          report_returns: reportReturns.checked,
+          report_low_stock: reportLowStock.checked,
+          report_top_products: reportTopProducts.checked,
+          send_hour: parseInt(sendHour.value),
+          send_minute: 0,
+          frequency_days: parseInt(frequencyDays.value),
+        }),
+      });
+
+      if (res.ok) {
+        showStatus("¡Configuración guardada correctamente!", "success");
+      } else {
+        const text = await res.text();
+        let err;
+        try {
+          err = JSON.parse(text);
+        } catch (e) {
+          throw new Error(
+            `Error ${res.status}: Respuesta no válida del servidor.`,
+          );
+        }
+        throw new Error(err.error || "Error guardando");
+      }
+    } catch (e: any) {
+      showStatus(e.message || "Error al guardar", "error");
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn
+        .querySelectorAll(".save-default")
+        .forEach((el) => el.classList.remove("hidden"));
+      saveBtn.querySelector(".save-loading")?.classList.add("hidden");
+    }
+  });
+
+  // Send now
+  sendNowBtn?.addEventListener("click", async () => {
+    sendNowBtn.disabled = true;
+    sendNowBtn
+      .querySelectorAll(".send-default")
+      .forEach((el) => el.classList.add("hidden"));
+    sendNowBtn.querySelector(".send-loading")?.classList.remove("hidden");
+
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("No autenticado");
+
+      const res = await fetch("/api/admin/send-reports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ force: true }),
+      });
+
+      const text = await res.text();
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        throw new Error(
+          `Error ${res.status}: El servidor no devolvió una respuesta válida.`,
+        );
+      }
+
+      if (res.ok) {
+        showStatus(result.message || "¡Informe enviado!", "success");
+        // Update last sent
+        lastSentLabel.textContent = new Date().toLocaleString("es-ES", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } else {
+        throw new Error(result.error || "Error enviando");
+      }
+    } catch (e: any) {
+      showStatus(e.message || "Error al enviar", "error");
+    } finally {
+      sendNowBtn.disabled = false;
+      sendNowBtn
+        .querySelectorAll(".send-default")
+        .forEach((el) => el.classList.remove("hidden"));
+      sendNowBtn.querySelector(".send-loading")?.classList.add("hidden");
+    }
+  });
+
+  // Init
+  loadPreferences();
+</script>

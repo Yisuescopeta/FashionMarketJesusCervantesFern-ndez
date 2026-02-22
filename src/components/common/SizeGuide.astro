@@ -1,0 +1,79 @@
+---
+
+---
+
+<!-- Modal Guía de Tallas - Fondo claro como en la referencia -->
+<div
+    id="size-guide-modal"
+    class="fixed inset-0 z-[999] flex items-start justify-center pt-16 overflow-auto"
+    style="display: none; background: rgba(255,255,255,0.95);"
+>
+    <!-- Contenido del Modal -->
+    <div class="bg-white w-[90%] max-w-2xl shadow-2xl border border-gray-200">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-8 py-6">
+            <h2
+                class="text-sm font-bold uppercase tracking-widest text-gray-900"
+            >
+                SIZE GUIDE
+            </h2>
+            <button
+                onclick="document.getElementById('size-guide-modal').style.display='none'; document.body.style.overflow='';"
+                class="text-gray-400 hover:text-black text-3xl leading-none font-light"
+            >
+                ×
+            </button>
+        </div>
+
+        <!-- Tabla de Tallas -->
+        <div class="px-8 pb-8 overflow-x-auto">
+            <table class="w-full text-center text-sm border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 border-y border-gray-200">
+                        <th class="py-5 px-4 text-left font-bold text-gray-900"
+                            >Size</th
+                        >
+                        <th class="py-5 px-3 font-bold text-gray-900">XS</th>
+                        <th class="py-5 px-3 font-bold text-gray-900">S</th>
+                        <th class="py-5 px-3 font-bold text-gray-900">M</th>
+                        <th class="py-5 px-3 font-bold text-gray-900">L</th>
+                        <th class="py-5 px-3 font-bold text-gray-900">XL</th>
+                        <th class="py-5 px-3 font-bold text-gray-900">XXL</th>
+                        <th class="py-5 px-3 font-bold text-gray-900">XXXL</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600">
+                    <tr class="border-b border-gray-200">
+                        <td
+                            class="py-5 px-4 text-left font-medium text-gray-500"
+                            >UK/US/AU</td
+                        >
+                        <td class="py-5 px-3">34</td>
+                        <td class="py-5 px-3">36</td>
+                        <td class="py-5 px-3">38</td>
+                        <td class="py-5 px-3">40</td>
+                        <td class="py-5 px-3">42</td>
+                        <td class="py-5 px-3">44</td>
+                        <td class="py-5 px-3">46</td>
+                    </tr>
+                    <tr class="border-b border-gray-200">
+                        <td
+                            class="py-5 px-4 text-left font-medium text-gray-500"
+                            >EU/FR</td
+                        >
+                        <td class="py-5 px-3">44</td>
+                        <td class="py-5 px-3">46</td>
+                        <td class="py-5 px-3">48</td>
+                        <td class="py-5 px-3">50</td>
+                        <td class="py-5 px-3">52</td>
+                        <td class="py-5 px-3">54</td>
+                        <td class="py-5 px-3">56</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Línea negra decorativa como en la referencia -->
+            <div class="h-1 bg-black w-full mt-0"></div>
+        </div>
+    </div>
+</div>

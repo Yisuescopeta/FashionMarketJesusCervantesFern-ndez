@@ -1,0 +1,167 @@
+---
+import { getCloudinaryUrl } from "../../lib/cloudinary";
+
+interface Props {
+  images: string[];
+  alt: string;
+}
+
+const { images = [], alt = "" } = Astro.props;
+// Optimizar para alta calidad en el carrusel
+const optimizedImages = images.map(img => getCloudinaryUrl(img, { width: 1600, height: 1600 }));
+---
+
+<!-- Modal de Galería de Imágenes -->
+<div
+  id="gallery-modal"
+  class="fixed inset-0 z-[1000] bg-white flex flex-col overflow-hidden h-[100vh] w-[100vw]"
+  style="display: none;"
+>
+  <!-- Barra Superior - Posicionada por encima para no empujar el contenido -->
+  <div class="absolute top-0 left-0 right-0 z-[1010] flex justify-between items-center px-4 md:px-8 py-4 bg-white/90 backdrop-blur-md border-b border-gray-100/50">
+    <div class="text-[10px] font-black uppercase tracking-[0.2em] text-brand-navy">
+      Galería de producto — <span id="gallery-current" class="text-brand-gold">1</span> / {optimizedImages.length}
+    </div>
+    
+    <div class="flex items-center gap-4 md:gap-8">
+      <span class="hidden lg:block text-[9px] font-bold uppercase tracking-widest text-slate-400">Presiona Esc para salir</span>
+      <button
+        onclick="document.getElementById('gallery-modal').style.display='none'; document.body.style.overflow='';"
+        class="group flex items-center gap-3 px-6 py-2.5 bg-black text-white rounded-full hover:bg-brand-gold transition-all duration-300 shadow-xl active:scale-95"
+        aria-label="Cerrar galería"
+      >
+        <span class="text-[10px] font-bold uppercase tracking-[0.2em]">CERRAR</span>
+        <div class="w-px h-4 bg-white/20"></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="group-hover:rotate-90 transition-transform duration-300">
+          <path d="M18 6L6 18M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenedor Principal de Imágenes - Ocupa TODO el espacio -->
+  <div class="w-full h-full relative flex items-center justify-center bg-[#fcfcfc]">
+    <div
+      id="gallery-images"
+      class="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+    >
+      {
+        optimizedImages.map((img, index) => (
+          <div
+            class="gallery-item shrink-0 w-full h-full snap-center flex items-center justify-center p-4 md:p-12 lg:p-14"
+          >
+            <!-- Contenedor relativo para asegurar que la imagen se mantenga dentro y centrada -->
+            <div class="w-full h-full flex items-center justify-center relative">
+              <img
+                src={img}
+                alt={`${alt} - Vista ${index + 1}`}
+                class="max-w-full max-h-full object-contain shadow-2xl bg-white"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- Controles Flotantes - Reposicionados para máxima visibilidad -->
+    <button
+      id="gallery-prev"
+      class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-4 bg-white/90 backdrop-blur rounded-full shadow-2xl hover:bg-white hover:scale-110 active:scale-90 transition-all hidden md:flex items-center justify-center text-brand-navy border border-black/5 z-[1020]"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <button
+      id="gallery-next"
+      class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-4 bg-white/90 backdrop-blur rounded-full shadow-2xl hover:bg-white hover:scale-110 active:scale-90 transition-all hidden md:flex items-center justify-center text-brand-navy border border-black/5 z-[1020]"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+  </div>
+</div>
+
+<style>
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<script is:inline>
+  window.openCarrusel = function (index) {
+    const modal = document.getElementById("gallery-modal");
+    const container = document.getElementById("gallery-images");
+    if (!modal || !container) return;
+
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+
+    // Timeout para asegurar que el display:flex se ha procesado
+    setTimeout(() => {
+      const items = container.querySelectorAll(".gallery-item");
+      if (items[index]) {
+        // Scrolling preciso usando scrollTo en lugar de scrollIntoView
+        // Esto evita saltos verticales indeseados
+        const scrollLeft = items[index].offsetLeft;
+        container.scrollTo({ left: scrollLeft, behavior: "auto" });
+        
+        window._currentGalleryIndex = index;
+        const el = document.getElementById("gallery-current");
+        if (el) el.textContent = index + 1;
+      }
+    }, 10);
+  };
+
+  function updateIndicator(num) {
+    const el = document.getElementById("gallery-current");
+    if (el) el.textContent = num;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("gallery-images");
+    if (!container) return;
+
+    // Actualizar indicador al hacer scroll
+    let scrollTimeout;
+    container.addEventListener("scroll", () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const index = Math.round(container.scrollLeft / container.clientWidth);
+        updateIndicator(index + 1);
+        window._currentGalleryIndex = index;
+      }, 50);
+    }, { passive: true });
+
+    // Navegación con botones
+    document.getElementById("gallery-prev")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      container.scrollBy({ left: -container.clientWidth, behavior: "smooth" });
+    });
+    document.getElementById("gallery-next")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      container.scrollBy({ left: container.clientWidth, behavior: "smooth" });
+    });
+
+    // Cerrar con Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        const modal = document.getElementById("gallery-modal");
+        if (modal && modal.style.display !== "none") {
+          modal.style.display = "none";
+          document.body.style.overflow = "";
+        }
+      }
+    });
+
+    // Cerrar clickeando fuera (en el fondo de la galería)
+    container.addEventListener("click", (e) => {
+      if (e.target === container) {
+        document.getElementById("gallery-modal").style.display = "none";
+        document.body.style.overflow = "";
+      }
+    });
+  });
+</script>

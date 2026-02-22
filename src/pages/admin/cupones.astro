@@ -1,0 +1,443 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { supabaseAdmin } from "../../lib/supabase-admin";
+import { Tag, Trash2, Plus, Calendar, Settings } from "lucide-react";
+
+export const prerender = false;
+
+// Obtener cupones
+const { data: coupons, error } = await supabaseAdmin
+    .from("coupons")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+if (error) {
+    console.error("Error fetching coupons:", error);
+}
+
+// Form logic handling (server-side for simplicity or client-side below)
+// We'll use client-side script for interactions
+---
+
+<AdminLayout title="Gestión de Cupones">
+    <div
+        class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+    >
+        <div>
+            <h1
+                class="text-xl sm:text-2xl font-bold text-slate-800 font-serif italic"
+            >
+                Cupones de Descuento
+            </h1>
+            <p class="text-[10px] sm:text-sm text-slate-500">
+                Gestiona los códigos promocionales y descuentos.
+            </p>
+        </div>
+        <button
+            id="open-modal-btn"
+            class="w-full sm:w-auto bg-slate-900 text-white px-4 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2"
+        >
+            <Plus className="w-4 h-4" />
+            Nuevo Cupón
+        </button>
+    </div>
+
+    <!-- Lista de Cupones -->
+    <div
+        class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden"
+    >
+        <div class="overflow-x-auto w-full">
+            <table
+                class="w-full text-left border-collapse min-w-[500px] sm:min-w-full"
+            >
+                <thead>
+                    <tr
+                        class="bg-slate-50 text-slate-500 text-[9px] sm:text-[10px] uppercase tracking-widest font-bold"
+                    >
+                        <th class="p-3 sm:p-4 border-b border-slate-100"
+                            >Código</th
+                        >
+                        <th class="p-3 sm:p-4 border-b border-slate-100"
+                            >Dto.</th
+                        >
+                        <th class="p-3 sm:p-4 border-b border-slate-100"
+                            >Estado</th
+                        >
+                        <th
+                            class="p-3 sm:p-4 border-b border-slate-100 hidden sm:table-cell"
+                            >Uso</th
+                        >
+                        <th class="p-3 sm:p-4 border-b border-slate-100"
+                            >Expira</th
+                        >
+                        <th
+                            class="p-3 sm:p-4 border-b border-slate-100 text-right"
+                            >Acción</th
+                        >
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {
+                        coupons?.map((coupon) => (
+                            <tr class="hover:bg-slate-50/50 transition-colors group">
+                                <td class="p-3 sm:p-4">
+                                    <div class="flex items-center gap-2 sm:gap-3">
+                                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 flex-shrink-0">
+                                            <Tag className="w-3.5 h-3.5" />
+                                        </div>
+                                        <span class="text-xs sm:text-sm font-bold text-slate-700 font-mono truncate max-w-[60px] xs:max-w-[100px] sm:max-w-none">
+                                            {coupon.code}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="p-3 sm:p-4">
+                                    <span class="text-[10px] sm:text-xs font-bold bg-amber-50 text-amber-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md">
+                                        {coupon.discount_type === "percent"
+                                            ? `-${coupon.discount_value}%`
+                                            : `-${coupon.discount_value}€`}
+                                    </span>
+                                </td>
+                                <td class="p-3 sm:p-4">
+                                    <span
+                                        class={`text-[9px] sm:text-[10px] uppercase font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ${coupon.is_active ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"}`}
+                                    >
+                                        {coupon.is_active ? "Activo" : "Off"}
+                                    </span>
+                                </td>
+                                <td class="p-3 sm:p-4 text-[10px] sm:text-xs text-slate-500 hidden sm:table-cell">
+                                    {coupon.is_single_use ? "Único" : "Mult"}
+                                </td>
+                                <td class="p-3 sm:p-4 text-[10px] sm:text-xs text-slate-500 whitespace-nowrap">
+                                    {coupon.expiration_date
+                                        ? new Date(
+                                              coupon.expiration_date,
+                                          ).toLocaleDateString("es-ES", {
+                                              day: "2-digit",
+                                              month: "2-digit",
+                                          })
+                                        : "∞"}
+                                </td>
+                                <td class="p-3 sm:p-4 text-right">
+                                    <div class="flex items-center justify-end gap-1 sm:gap-2">
+                                        <button
+                                            class="p-1 text-slate-400 hover:text-brand-gold transition-colors edit-btn"
+                                            data-id={coupon.id}
+                                            data-code={coupon.code}
+                                            data-type={coupon.discount_type}
+                                            data-value={coupon.discount_value}
+                                            data-expiration={
+                                                coupon.expiration_date
+                                            }
+                                            data-single={
+                                                coupon.is_single_use
+                                                    ? "true"
+                                                    : "false"
+                                            }
+                                        >
+                                            <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                        </button>
+                                        <button
+                                            class="p-1 text-slate-400 hover:text-rose-500 transition-colors delete-btn"
+                                            data-id={coupon.id}
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))
+                    }
+                    {
+                        (!coupons || coupons.length === 0) && (
+                            <tr>
+                                <td
+                                    colspan="6"
+                                    class="p-12 text-center text-slate-400 italic text-sm"
+                                >
+                                    No hay cupones creados aún.
+                                </td>
+                            </tr>
+                        )
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Cupón -->
+    <div
+        id="modal"
+        class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 backdrop-blur-sm"
+    >
+        <div
+            class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl transform transition-all scale-100"
+        >
+            <h3
+                id="modal-title"
+                class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"
+            >
+                <Settings className="w-5 h-5 text-brand-gold" />
+                Crear Nuevo Cupón
+            </h3>
+
+            <form id="create-coupon-form" class="space-y-4">
+                <div>
+                    <label
+                        class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                    >
+                        Código
+                    </label>
+                    <input
+                        type="text"
+                        name="code"
+                        id="coupon_code_input"
+                        required
+                        placeholder="Ej: BIENVENIDA10"
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-gold uppercase font-mono"
+                    />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label
+                            class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                        >
+                            Tipo
+                        </label>
+                        <select
+                            name="type"
+                            id="coupon_type"
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-gold"
+                        >
+                            <option value="percent">Porcentaje (%)</option>
+                            <option value="fixed">Fijo (€)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                        >
+                            Valor
+                        </label>
+                        <input
+                            type="number"
+                            name="value"
+                            id="coupon_value"
+                            required
+                            placeholder="10"
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-gold mb-2"
+                        />
+                        <div class="flex gap-2">
+                            <button
+                                type="button"
+                                class="preset-btn bg-slate-100 text-[10px] px-2 py-1 rounded-md font-bold text-slate-600 hover:bg-slate-200"
+                                data-value="10">10%</button
+                            >
+                            <button
+                                type="button"
+                                class="preset-btn bg-slate-100 text-[10px] px-2 py-1 rounded-md font-bold text-slate-600 hover:bg-slate-200"
+                                data-value="15">15%</button
+                            >
+                            <button
+                                type="button"
+                                class="preset-btn bg-slate-100 text-[10px] px-2 py-1 rounded-md font-bold text-slate-600 hover:bg-slate-200"
+                                data-value="20">20%</button
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label
+                        class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                    >
+                        Expiración (Opcional)
+                    </label>
+                    <input
+                        type="date"
+                        name="expiration"
+                        id="coupon_expiration"
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-gold"
+                    />
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="single_use"
+                        name="single_use"
+                        class="w-4 h-4 accent-brand-gold"
+                    />
+                    <label for="single_use" class="text-xs text-slate-600">
+                        Limitar a un solo uso por usuario (Recomendado)
+                    </label>
+                </div>
+
+                <input type="hidden" name="coupon_id" id="edit_coupon_id" />
+
+                <div class="flex items-center gap-3 pt-4">
+                    <button
+                        type="button"
+                        id="close-modal-btn"
+                        class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold text-xs uppercase hover:bg-slate-200 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        id="save-coupon-btn"
+                        class="flex-1 bg-slate-900 text-white py-3 rounded-xl font-bold text-xs uppercase hover:bg-black transition-colors shadow-lg shadow-slate-900/10"
+                    >
+                        Crear Cupón
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</AdminLayout>
+
+<script>
+    import { supabase } from "../../lib/supabase";
+
+    // Modal logic
+    const modal = document.getElementById("modal");
+    const openBtn = document.getElementById("open-modal-btn");
+    const closeBtn = document.getElementById("close-modal-btn");
+    const form = document.getElementById(
+        "create-coupon-form",
+    ) as HTMLFormElement;
+    const modalTitle = document.getElementById("modal-title");
+    const saveBtn = document.getElementById("save-coupon-btn");
+
+    // Inputs
+    const codeInput = document.getElementById(
+        "coupon_code_input",
+    ) as HTMLInputElement;
+    const typeSelect = document.getElementById(
+        "coupon_type",
+    ) as HTMLSelectElement;
+    const valueInput = document.getElementById(
+        "coupon_value",
+    ) as HTMLInputElement;
+    const expirationInput = document.getElementById(
+        "coupon_expiration",
+    ) as HTMLInputElement;
+    const singleUseCheckbox = document.getElementById(
+        "single_use",
+    ) as HTMLInputElement;
+    const editIdInput = document.getElementById(
+        "edit_coupon_id",
+    ) as HTMLInputElement;
+
+    function openModal(editing = false) {
+        modal?.classList.remove("hidden", "flex");
+        modal?.classList.add("flex");
+        if (editing) {
+            modalTitle!.textContent = "Editar Cupón";
+            saveBtn!.textContent = "Guardar Cambios";
+            codeInput.disabled = true;
+            codeInput.classList.add("bg-slate-100", "text-slate-500");
+        } else {
+            modalTitle!.textContent = "Crear Nuevo Cupón";
+            saveBtn!.textContent = "Crear Cupón";
+            form.reset();
+            editIdInput.value = "";
+            codeInput.disabled = false;
+            codeInput.classList.remove("bg-slate-100", "text-slate-500");
+        }
+    }
+
+    openBtn?.addEventListener("click", () => openModal(false));
+    closeBtn?.addEventListener("click", () => modal?.classList.add("hidden"));
+
+    // Preset Buttons
+    document.querySelectorAll(".preset-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            valueInput.value = (btn as HTMLButtonElement).dataset.value || "";
+        });
+    });
+
+    // Edit Logic
+    document.querySelectorAll(".edit-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const button = btn as HTMLButtonElement;
+            const data = button.dataset;
+
+            editIdInput.value = data.id || "";
+            codeInput.value = data.code || "";
+            typeSelect.value = data.type || "percent";
+            valueInput.value = data.value || "";
+            if (data.expiration) {
+                // Format to YYYY-MM-DD
+                const date = new Date(data.expiration);
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, "0");
+                const dd = String(date.getDate()).padStart(2, "0");
+                expirationInput.value = `${yyyy}-${mm}-${dd}`;
+            } else {
+                expirationInput.value = "";
+            }
+            singleUseCheckbox.checked = data.single === "true"; // data attributes are strings
+
+            openModal(true);
+        });
+    });
+
+    // Create/Update Coupon logic
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const data = {
+            code: formData.get("code")?.toString().toUpperCase(),
+            discount_type: formData.get("type"),
+            discount_value: parseFloat(formData.get("value") as string),
+            expiration_date: formData.get("expiration")
+                ? new Date(formData.get("expiration") as string).toISOString()
+                : null,
+            is_single_use: formData.get("single_use") === "on",
+            is_active: true,
+        };
+
+        const id = editIdInput.value;
+        let error;
+
+        if (id) {
+            const { error: updateError } = await supabase
+                .from("coupons")
+                .update(data)
+                .eq("id", id);
+            error = updateError;
+        } else {
+            const { error: insertError } = await supabase
+                .from("coupons")
+                .insert(data);
+            error = insertError;
+        }
+
+        if (error) {
+            alert("Error: " + error.message);
+        } else {
+            alert(id ? "Cupón actualizado" : "Cupón creado con éxito");
+            window.location.reload();
+        }
+    });
+
+    // Delete Logic
+    document.querySelectorAll(".delete-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+            if (!confirm("¿Estás seguro de eliminar este cupón?")) return;
+            const id = (btn as HTMLButtonElement).dataset.id;
+
+            const { error } = await supabase
+                .from("coupons")
+                .delete()
+                .eq("id", id);
+
+            if (error) {
+                alert("Error al eliminar: " + error.message);
+            } else {
+                window.location.reload();
+            }
+        });
+    });
+</script>

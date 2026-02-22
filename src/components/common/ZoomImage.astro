@@ -1,0 +1,65 @@
+---
+import { X, ZoomIn, ZoomOut } from "lucide-react";
+import { getCloudinaryUrl } from "../../lib/cloudinary";
+
+interface Props {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  class?: string;
+  priority?: boolean;
+  images?: string[];
+  index?: number; // Nueva prop para el índice directo
+}
+
+const {
+  src,
+  alt,
+  width = 800,
+  height = 800,
+  class: className,
+  priority = false,
+  images = [],
+  index = 0,
+} = Astro.props;
+
+// Optimizar todas las imágenes con Cloudinary
+const optimizedSrc = getCloudinaryUrl(src, { width, height });
+// Asegurar que el array de imágenes esté optimizado consistentemente
+const allOptimizedImages = images.map(img => getCloudinaryUrl(img, { width: 1200, height: 1200 }));
+---
+
+<div
+  class="zoom-image-container relative group cursor-zoom-in overflow-hidden"
+  data-index={index}
+  onclick={`window.openCarrusel && window.openCarrusel(${index})`}
+>
+  <img
+    src={optimizedSrc}
+    alt={alt}
+    width={width}
+    height={height}
+    class={`${className} transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90`}
+    loading={priority ? "eager" : "lazy"}
+  />
+
+  <div
+    class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 bg-black/20 backdrop-blur-[2px] pointer-events-none"
+  >
+    <div class="bg-white/95 text-brand-navy rounded-full p-5 shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 ease-out">
+      <ZoomIn className="w-6 h-6" />
+    </div>
+    <span class="absolute bottom-6 text-[10px] font-bold text-white uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-100">
+      Click para ampliar
+    </span>
+  </div>
+
+  {
+    images.length > 1 && (
+      <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-brand-navy text-[10px] font-bold uppercase tracking-widest px-3 py-1 shadow-sm">
+        {images.length} fotos
+      </div>
+    )
+  }
+</div>

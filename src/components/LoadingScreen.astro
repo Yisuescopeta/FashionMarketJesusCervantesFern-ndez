@@ -1,0 +1,228 @@
+---
+// Componente de pantalla de carga con logo de Aurum y animación
+---
+
+<div id="loading-screen" class="loading-screen">
+  <div class="loading-content">
+    <!-- Logo de la app -->
+    <div class="loading-logo-container">
+      <img src="/logo-aurum.jpg" alt="Aurum" class="loading-logo" />
+      <div class="loading-ring"></div>
+    </div>
+    
+    <!-- Texto de carga -->
+    <div class="loading-text">
+      <span class="loading-letter" style="--delay: 0">C</span>
+      <span class="loading-letter" style="--delay: 1">A</span>
+      <span class="loading-letter" style="--delay: 2">R</span>
+      <span class="loading-letter" style="--delay: 3">G</span>
+      <span class="loading-letter" style="--delay: 4">A</span>
+      <span class="loading-letter" style="--delay: 5">N</span>
+      <span class="loading-letter" style="--delay: 6">D</span>
+      <span class="loading-letter" style="--delay: 7">O</span>
+      <span class="loading-dots">
+        <span class="dot" style="--delay: 0">.</span>
+        <span class="dot" style="--delay: 1">.</span>
+        <span class="dot" style="--delay: 2">.</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Pantalla de carga principal */
+  .loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+  }
+
+  .loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  /* Contenedor del logo con anillo de carga */
+  .loading-logo-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .loading-logo {
+    width: 80px;
+    height: auto;
+    animation: pulse-logo 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+    border-radius: 8px;
+  }
+
+  /* Anillo de carga giratorio */
+  .loading-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 3px solid transparent;
+    border-top-color: #d4af37;
+    border-right-color: #d4af37;
+    border-radius: 50%;
+    animation: spin 1.2s linear infinite;
+  }
+
+  .loading-ring::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border: 2px solid transparent;
+    border-bottom-color: rgba(212, 175, 55, 0.5);
+    border-left-color: rgba(212, 175, 55, 0.5);
+    border-radius: 50%;
+    animation: spin 2s linear infinite reverse;
+  }
+
+  /* Texto de carga con animación por letra */
+  .loading-text {
+    display: flex;
+    align-items: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    color: #d4af37;
+  }
+
+  .loading-letter {
+    animation: bounce-letter 1.4s ease-in-out infinite;
+    animation-delay: calc(var(--delay) * 0.1s);
+  }
+
+  .loading-dots {
+    display: flex;
+    margin-left: 0.2rem;
+  }
+
+  .dot {
+    animation: bounce-dot 1.4s ease-in-out infinite;
+    animation-delay: calc(var(--delay) * 0.3s + 0.8s);
+  }
+
+  /* Animaciones */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes pulse-logo {
+    0%, 100% { 
+      transform: scale(1);
+      filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+    }
+    50% { 
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.8));
+    }
+  }
+
+  @keyframes bounce-letter {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  @keyframes bounce-dot {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(-8px); opacity: 1; }
+  }
+</style>
+
+<script>
+  // Variables para controlar el tiempo de carga
+  let startTime = Date.now();
+  let minLoadingTime = 800; // Tiempo mínimo de carga: 800ms
+  let maxLoadingTime = 3000; // Tiempo máximo de carga: 3s
+  
+  // Ocultar la pantalla de carga solo si tarda mucho
+  document.addEventListener('DOMContentLoaded', () => {
+    const loadingScreen = document.getElementById('loading-screen');
+    const elapsedTime = Date.now() - startTime;
+    
+    // Si la carga fue rápida, ocultar inmediatamente
+    if (elapsedTime < minLoadingTime) {
+      if (loadingScreen) {
+        loadingScreen.classList.add('hidden');
+        setTimeout(() => {
+          loadingScreen.remove();
+        }, 300);
+      }
+    } else {
+      // Si tardó más, mostrar un poco más la animación
+      const remainingTime = Math.min(500, maxLoadingTime - elapsedTime);
+      setTimeout(() => {
+        if (loadingScreen) {
+          loadingScreen.classList.add('hidden');
+          setTimeout(() => {
+            loadingScreen.remove();
+          }, 600);
+        }
+      }, remainingTime);
+    }
+  });
+
+  // También ocultar cuando todo esté completamente cargado
+  window.addEventListener('load', () => {
+    const loadingScreen = document.getElementById('loading-screen');
+    const elapsedTime = Date.now() - startTime;
+    
+    if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+      // Si la carga total fue rápida, ocultar inmediatamente
+      if (elapsedTime < minLoadingTime) {
+        loadingScreen.classList.add('hidden');
+        setTimeout(() => {
+          loadingScreen.remove();
+        }, 300);
+      } else {
+        // Si tardó mucho, ocultar con un pequeño delay
+        setTimeout(() => {
+          if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+              loadingScreen.remove();
+            }, 600);
+          }
+        }, 200);
+      }
+    }
+  });
+
+  // Forzar ocultar si pasa el tiempo máximo (por seguridad)
+  setTimeout(() => {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+      loadingScreen.classList.add('hidden');
+      setTimeout(() => {
+        loadingScreen.remove();
+      }, 300);
+    }
+  }, maxLoadingTime);
+</script>

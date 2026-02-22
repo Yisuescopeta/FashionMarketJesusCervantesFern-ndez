@@ -1,0 +1,272 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import {
+  ShoppingBag,
+  LogOut,
+  Package,
+  Tag,
+  Users,
+  Eye,
+  BarChart3,
+  Settings,
+  PlusCircle,
+  Zap,
+  FileBarChart,
+  Mail,
+} from "lucide-react";
+
+interface Props {
+  title: string;
+  activeSection?: string;
+}
+
+const { title, activeSection = "" } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+// Determinar qué sección está activa
+const isActive = (path: string) =>
+  currentPath === path || currentPath.startsWith(path + "/");
+---
+
+<BaseLayout title={`Admin | ${title}`}>
+  <!-- Sidebar Minimalista y Elegante -->
+  <aside
+    id="admin-sidebar"
+    class="w-52 bg-white text-slate-600 flex flex-col fixed h-full border-r border-slate-200 z-50 transition-all duration-300 shadow-sm -translate-x-full lg:translate-x-0"
+  >
+    <!-- Logo y Branding -->
+    <div class="p-6 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-8 h-8 bg-gradient-to-br from-brand-gold to-amber-600 rounded-lg flex items-center justify-center shadow-md shadow-brand-gold/10"
+        >
+          <Settings className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h1
+            class="text-base font-bold tracking-tight text-slate-800 font-serif italic"
+          >
+            Aurum
+          </h1>
+          <p
+            class="text-[8px] uppercase tracking-[0.2em] text-slate-400 font-bold"
+          >
+            Admin
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegación Principal -->
+    <nav class="flex-1 px-3 space-y-0.5 mt-6 overflow-y-auto custom-scrollbar">
+      <p
+        class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-bold px-3 pb-2 opacity-80"
+      >
+        Principal
+      </p>
+
+      <a
+        href="/admin"
+        class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin") && !isActive("/admin/productos") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
+      >
+        <BarChart3
+          className={`w-4 h-4 ${isActive("/admin") && !isActive("/admin/productos") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+        />
+        <span class="text-sm font-medium focus:text-slate-900">Dashboard</span>
+      </a>
+
+      <p
+        class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-bold px-3 pt-6 pb-2 opacity-80"
+      >
+        Catálogo
+      </p>
+
+      <a
+        href="/admin/productos"
+        class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/productos") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
+      >
+        <Package
+          className={`w-4 h-4 ${isActive("/admin/productos") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+        />
+        <span class="text-sm font-medium">Productos</span>
+      </a>
+
+      <a
+        href="/admin/ofertas"
+        class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/ofertas") ? "bg-orange-50 text-orange-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
+      >
+        <Zap
+          className={`w-4 h-4 ${isActive("/admin/ofertas") ? "text-orange-500" : "text-slate-400 group-hover:text-slate-600"}`}
+        />
+        <span class="text-sm font-medium">Ofertas</span>
+      </a>
+
+      <p
+        class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-bold px-3 pt-6 pb-2 opacity-80"
+      >
+        Ventas
+      </p>
+
+      <a
+        href="/admin/pedidos"
+        class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/pedidos") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
+      >
+        <ShoppingBag
+          className={`w-4 h-4 ${isActive("/admin/pedidos") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+        />
+        <span class="text-sm font-medium">Pedidos</span>
+      </a>
+
+      <a
+        href="/admin/clientes"
+        class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/clientes") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
+      >
+        <Users
+          className={`w-4 h-4 ${isActive("/admin/clientes") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+        />
+        <span class="text-sm font-medium">Clientes</span>
+      </a>
+
+      <p
+        class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-bold px-3 pt-6 pb-2 opacity-80"
+      >
+        Marketing
+      </p>
+
+      <a
+        href="/admin/cupones"
+        class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/cupones") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
+      >
+        <Tag
+          className={`w-4 h-4 ${isActive("/admin/cupones") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+        />
+        <span class="text-sm font-medium">Cupones</span>
+      </a>
+
+      <a
+        href="/admin/correos"
+        class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/correos") ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
+      >
+        <Mail
+          className={`w-4 h-4 ${isActive("/admin/correos") ? "text-amber-600" : "text-slate-400 group-hover:text-slate-600"}`}
+        />
+        <span class="text-sm font-medium">Correos</span>
+      </a>
+
+      <a
+        href="/admin/informes"
+        class={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive("/admin/informes") ? "bg-indigo-50 text-indigo-700" : "hover:bg-slate-50 text-slate-500 hover:text-slate-800"}`}
+      >
+        <FileBarChart
+          className={`w-4 h-4 ${isActive("/admin/informes") ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`}
+        />
+        <span class="text-sm font-medium">Informes</span>
+      </a>
+    </nav>
+
+    <!-- Footer del Sidebar -->
+    <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+      <a
+        href="/"
+        target="_blank"
+        class="flex items-center gap-2 px-3 py-2 text-[11px] text-slate-400 hover:text-amber-600 transition-colors mb-4 group"
+      >
+        <Eye
+          className="w-3.5 h-3.5 group-hover:scale-110 transition-transform"
+        />
+        <span>Ver Tienda Pública</span>
+      </a>
+
+      <button
+        id="logout-btn"
+        class="flex items-center justify-center gap-2 w-full py-2 px-4 rounded-lg bg-red-50 hover:bg-red-500 hover:text-white text-red-500 text-xs font-bold transition-all border border-red-100"
+      >
+        <LogOut className="w-3.5 h-3.5" />
+        <span>Salir</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="flex min-h-screen bg-[#f8fafc]">
+    <!-- Mobile Overlay -->
+    <div
+      id="sidebar-overlay"
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden opacity-0 transition-opacity duration-300"
+    >
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-52 bg-[#f8fafc] min-h-screen min-w-0">
+      <!-- Header Superior -->
+      <header
+        class="sticky top-0 z-30 bg-white/70 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-4"
+      >
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-4">
+            <!-- Botón Hamburger para Móvil -->
+            <button
+              id="toggle-sidebar"
+              class="lg:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors"
+              aria-label="Abrir menú"
+            >
+              <Users className="w-5 h-5" />
+            </button>
+            <h2 class="text-xl font-bold text-slate-800 font-serif italic">
+              {title}
+            </h2>
+            <p
+              class="text-[10px] uppercase tracking-widest text-slate-400 font-bold"
+            >
+              Resumen de Gestión
+            </p>
+          </div>
+          <div class="flex items-center gap-4">
+            <a
+              href="/admin/productos/nuevo"
+              class="flex items-center gap-2 px-3 sm:px-4 py-2 bg-brand-gold hover:bg-black text-white rounded-full font-bold text-[10px] sm:text-xs transition-all shadow-lg shadow-brand-gold/10"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span class="hidden xs:inline">Nuevo Producto</span>
+              <span class="xs:hidden">Nuevo</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <!-- Contenido Principal -->
+      <div class="p-4 sm:p-6 lg:p-8">
+        <slot />
+      </div>
+    </main>
+  </div>
+</BaseLayout>
+
+<script>
+  import { supabase } from "../lib/supabase";
+
+  // Lógica del Sidebar Móvil
+  const sidebar = document.getElementById("admin-sidebar");
+  const toggleBtn = document.getElementById("toggle-sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+
+  const toggleMenu = () => {
+    sidebar?.classList.toggle("-translate-x-full");
+    overlay?.classList.toggle("hidden");
+    setTimeout(() => overlay?.classList.toggle("opacity-0"), 0);
+    document.body.classList.toggle("overflow-hidden");
+  };
+
+  toggleBtn?.addEventListener("click", toggleMenu);
+  overlay?.addEventListener("click", toggleMenu);
+
+  document.getElementById("logout-btn")?.addEventListener("click", async () => {
+    // Borrar cookies manuales
+    document.cookie =
+      "sb-access-token=; path=/; max-age=0; SameSite=Lax; Secure";
+    document.cookie =
+      "sb-refresh-token=; path=/; max-age=0; SameSite=Lax; Secure";
+
+    await supabase.auth.signOut();
+    window.location.href = "/admin/login";
+  });
+</script>

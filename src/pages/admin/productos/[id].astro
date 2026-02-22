@@ -1,0 +1,711 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseAdmin } from "../../../lib/supabase-admin";
+
+import {
+    ArrowLeft,
+    Save,
+    Trash2,
+    Eye,
+    Upload,
+    X,
+    Zap,
+    Package,
+} from "lucide-react";
+
+export const prerender = false;
+
+const { id } = Astro.params;
+
+const { data: product } = await supabaseAdmin
+    .from("products")
+    .select("*, categories(name)")
+    .eq("id", id)
+    .single();
+
+if (!product) {
+    return Astro.redirect("/admin/productos");
+}
+
+const { data: variants } = await supabaseAdmin
+    .from("product_variants")
+    .select("*")
+    .eq("product_id", id)
+    .order("size", { ascending: true });
+
+const { data: categories } = await supabaseAdmin.from("categories").select("*");
+---
+
+<AdminLayout title={`Editar: ${product.name}`}>
+    <!-- Header con navegación -->
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+            <a
+                href="/admin/productos"
+                class="p-2 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all shadow-sm group"
+            >
+                <ArrowLeft
+                    className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors"
+                />
+            </a>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 font-serif italic">
+                    {product.name}
+                </h1>
+                <p
+                    class="text-[10px] uppercase tracking-widest text-slate-400 font-bold italic"
+                >
+                    Ref: {product.sku || product.id.split("-")[0]}
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <a
+                href={`/productos/${product.slug}`}
+                target="_blank"
+                class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-slate-600 hover:bg-slate-50 transition-all text-xs font-bold shadow-sm"
+            >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Ver en tienda</span>
+            </a>
+        </div>
+    </div>
+
+    <form
+        id="edit-form"
+        data-id={id}
+        data-images={JSON.stringify(product.images || [])}
+        class="grid grid-cols-1 lg:grid-cols-3 gap-8"
+    >
+        <!-- Formulario Principal -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Información Básica -->
+            <div
+                class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm border-t-2 border-t-brand-gold"
+            >
+                <h3
+                    class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"
+                >
+                    <Package className="w-5 h-5 text-brand-gold" />
+                    Información Básica
+                </h3>
+
+                <div class="space-y-6">
+                    <div>
+                        <label
+                            class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                            >Nombre del Producto *</label
+                        >
+                        <input
+                            name="name"
+                            type="text"
+                            required
+                            value={product.name}
+                            class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all"
+                        />
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label
+                                class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                                >Categoría *</label
+                            >
+                            <select
+                                name="category_id"
+                                class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none bg-white transition-all appearance-none cursor-pointer"
+                            >
+                                {
+                                    categories?.map((cat) => (
+                                        <option
+                                            value={cat.id}
+                                            selected={
+                                                cat.id === product.category_id
+                                            }
+                                        >
+                                            {cat.name}
+                                        </option>
+                                    ))
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                                >Material</label
+                            >
+                            <input
+                                name="material"
+                                type="text"
+                                value={product.material || ""}
+                                placeholder="Ej: Algodón 100%"
+                                class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                            >Descripción</label
+                        >
+                        <textarea
+                            name="description"
+                            rows="6"
+                            class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none transition-all resize-none"
+                            >{product.description}</textarea
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventario y Tallas -->
+            <div
+                class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm border-t-2 border-t-brand-gold"
+            >
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <Package className="w-5 h-5 text-brand-gold" />
+                        Inventario por Tallas
+                    </h3>
+                    <button type="button" id="add-variant-btn" class="text-[10px] bg-slate-900 text-white px-3 py-1.5 rounded-full hover:bg-black transition-all font-bold uppercase tracking-wider flex items-center gap-1.5">
+                        <Package className="w-3 h-3" />
+                        Añadir Talla
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Precio (cts) *</label>
+                        <input
+                            name="price"
+                            type="number"
+                            step="1"
+                            required
+                            value={product.price}
+                            class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">SKU Base</label>
+                        <input
+                            name="sku"
+                            type="text"
+                            value={product.sku || ""}
+                            placeholder="Referencia"
+                            class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none transition-all"
+                        />
+                    </div>
+                </div>
+
+                <div id="variants-container" class="space-y-3 pt-4 border-t border-slate-50">
+                    {
+                        variants?.map((v) => (
+                            <div class="variant-row grid grid-cols-12 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 items-end" data-variant-id={v.id}>
+                                <div class="col-span-6 md:col-span-5">
+                                    <label class="block text-[9px] uppercase font-bold text-slate-400 mb-1">Talla</label>
+                                    <input type="text" name="variant_size[]" value={v.size} required class="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-brand-gold outline-none" />
+                                </div>
+                                <div class="col-span-4 md:col-span-5">
+                                    <label class="block text-[9px] uppercase font-bold text-slate-400 mb-1">Stock</label>
+                                    <input type="number" name="variant_stock[]" value={v.stock} min="0" required class="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-brand-gold outline-none" />
+                                </div>
+                                <div class="col-span-2">
+                                    <button type="button" class="remove-variant-btn w-full h-9 flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors">
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <input type="hidden" name="variant_id[]" value={v.id} />
+                            </div>
+                        ))
+                    }
+                    {
+                        (!variants || variants.length === 0) && (
+                            <div class="variant-row grid grid-cols-12 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 items-end">
+                                <div class="col-span-6 md:col-span-5">
+                                    <label class="block text-[9px] uppercase font-bold text-slate-400 mb-1">Talla</label>
+                                    <input type="text" name="variant_size[]" value="Única" required class="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-brand-gold outline-none" />
+                                </div>
+                                <div class="col-span-4 md:col-span-5">
+                                    <label class="block text-[9px] uppercase font-bold text-slate-400 mb-1">Stock</label>
+                                    <input type="number" name="variant_stock[]" value="0" min="0" required class="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-brand-gold outline-none" />
+                                </div>
+                                <div class="col-span-2 text-slate-300">
+                                     <button type="button" class="remove-variant-btn w-full h-9 flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors">
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <input type="hidden" name="variant_id[]" value="new" />
+                            </div>
+                        )
+                    }
+                </div>
+            </div>
+
+            <!-- Oferta Flash -->
+            <div
+                class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100 shadow-sm relative overflow-hidden group"
+            >
+                <div
+                    class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity"
+                >
+                    <Zap className="w-32 h-32 text-brand-gold" />
+                </div>
+
+                <div
+                    class="flex items-center justify-between mb-6 relative z-10"
+                >
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20"
+                        >
+                            <Zap className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">
+                                Oferta Flash
+                            </h3>
+                            <p
+                                class="text-[10px] uppercase tracking-widest text-slate-500 font-bold"
+                            >
+                                Estado Promocional
+                            </p>
+                        </div>
+                    </div>
+                    <label
+                        class="relative inline-flex items-center cursor-pointer"
+                    >
+                        <input
+                            type="checkbox"
+                            name="is_on_sale"
+                            class="sr-only peer"
+                            checked={product.is_on_sale}
+                        />
+                        <div
+                            class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-gold"
+                        >
+                        </div>
+                    </label>
+                </div>
+
+                <div class="relative z-10">
+                    <label
+                        class="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2"
+                        >Precio de Oferta (céntimos)</label
+                    >
+                    <div class="relative max-w-xs">
+                        <input
+                            name="sale_price"
+                            type="number"
+                            value={product.sale_price || ""}
+                            placeholder="Precio rebajado..."
+                            class="w-full border border-white rounded-xl p-3 focus:ring-2 focus:ring-brand-gold outline-none bg-white/90 focus:bg-white transition-all pr-12"
+                        />
+                        <span
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold"
+                            >cts</span
+                        >
+                    </div>
+                    {
+                        product.sale_price && (
+                            <p class="text-[10px] text-orange-600 mt-2 font-bold uppercase tracking-widest">
+                                Activo a:{" "}
+                                {(product.sale_price / 100).toFixed(2)}€
+                            </p>
+                        )
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Lateral -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Multimedia -->
+            <div
+                class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm"
+            >
+                <h3
+                    class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"
+                >
+                    <Upload className="w-5 h-5 text-brand-gold" />
+                    Multimedia
+                </h3>
+
+                <div id="images-grid" class="grid grid-cols-2 gap-3 mb-6">
+                    {
+                        product.images?.map((img: string, index: number) => (
+                            <div
+                                class="relative aspect-square bg-slate-50 rounded-xl overflow-hidden group shadow-sm border border-slate-100"
+                                data-url={img}
+                            >
+                                <img
+                                    src={img}
+                                    alt=""
+                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                />
+                                <button
+                                    type="button"
+                                    class="remove-image-btn absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-lg active:scale-90"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        ))
+                    }
+                </div>
+
+                <div
+                    id="drop-zone"
+                    class="group border-2 border-dashed border-slate-100 rounded-2xl p-8 text-center hover:border-brand-gold hover:bg-amber-50/30 transition-all cursor-pointer"
+                >
+                    <div
+                        class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 group-hover:bg-amber-100 transition-all"
+                    >
+                        <Upload
+                            className="w-5 h-5 text-slate-300 group-hover:text-brand-gold"
+                        />
+                    </div>
+                    <p
+                        class="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 uppercase tracking-widest"
+                    >
+                        Añadir Fotos
+                    </p>
+                    <input
+                        type="file"
+                        id="file-input"
+                        multiple
+                        accept="image/*"
+                        class="hidden"
+                    />
+                </div>
+                <div id="new-previews" class="grid grid-cols-2 gap-3 mt-4">
+                </div>
+            </div>
+
+            <!-- Publicación -->
+            <div
+                class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm"
+            >
+                <h3
+                    class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"
+                >
+                    <Zap className="w-5 h-5 text-brand-gold" />
+                    Visibilidad
+                </h3>
+
+                <div class="space-y-4">
+                    <div
+                        class="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
+                    >
+                        <div>
+                            <p class="text-xs font-bold text-slate-700">
+                                Canal de Venta
+                            </p>
+                            <p class="text-[10px] text-slate-400 font-medium">
+                                Online Store
+                            </p>
+                        </div>
+                        <label
+                            class="relative inline-flex items-center cursor-pointer"
+                        >
+                            <input
+                                type="checkbox"
+                                name="is_active"
+                                class="sr-only peer"
+                                checked={product.is_active}
+                            />
+                            <div
+                                class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"
+                            >
+                            </div>
+                        </label>
+                    </div>
+
+                    <div
+                        class="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
+                    >
+                        <div>
+                            <p class="text-xs font-bold text-slate-700">
+                                Producto Destacado
+                            </p>
+                            <p class="text-[10px] text-slate-400 font-medium">
+                                Home Page
+                            </p>
+                        </div>
+                        <label
+                            class="relative inline-flex items-center cursor-pointer"
+                        >
+                            <input
+                                type="checkbox"
+                                name="is_featured"
+                                class="sr-only peer"
+                                checked={product.is_featured}
+                            />
+                            <div
+                                class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-gold"
+                            >
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-6 space-y-3">
+                    <button
+                        type="submit"
+                        id="submit-btn"
+                        form="edit-form"
+                        class="w-full flex items-center justify-center gap-2 bg-slate-900 border-2 border-slate-900 hover:bg-black text-white py-3.5 rounded-full font-bold text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-900/10 active:scale-95"
+                    >
+                        <Save className="w-4 h-4" />
+                        <span>Actualizar</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        id="delete-btn"
+                        class="w-full flex items-center justify-center gap-2 py-3.5 text-red-500 hover:text-white hover:bg-red-500 border border-red-100 hover:border-red-500 rounded-full font-bold text-xs uppercase tracking-widest transition-all active:scale-95"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Eliminar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</AdminLayout>
+
+<script>
+    import { supabase } from "../../../lib/supabase";
+
+    const form = document.getElementById("edit-form") as HTMLFormElement;
+    const deleteBtn = document.getElementById("delete-btn");
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("file-input") as HTMLInputElement;
+    const newPreviews = document.getElementById("new-previews");
+    const submitBtn = document.getElementById("submit-btn");
+    const productId = form?.dataset.id;
+
+    let currentImages: string[] = JSON.parse(form?.dataset.images || "[]");
+    let newFiles: File[] = [];
+    let variantsToDelete: string[] = [];
+
+    const addVariantBtn = document.getElementById("add-variant-btn");
+    const variantsContainer = document.getElementById("variants-container");
+
+    // Variants Logic
+    addVariantBtn?.addEventListener("click", () => {
+        const row = document.createElement("div");
+        row.className = "variant-row grid grid-cols-12 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 items-end animate-fadeIn";
+        row.innerHTML = `
+            <div class="col-span-6 md:col-span-5">
+                <label class="block text-[9px] uppercase font-bold text-slate-400 mb-1">Talla</label>
+                <input type="text" name="variant_size[]" placeholder="Ej: M, L, 42..." required class="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-brand-gold outline-none" />
+            </div>
+            <div class="col-span-4 md:col-span-5">
+                <label class="block text-[9px] uppercase font-bold text-slate-400 mb-1">Stock</label>
+                <input type="number" name="variant_stock[]" value="0" min="0" required class="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-brand-gold outline-none" />
+            </div>
+            <div class="col-span-2">
+                <button type="button" class="remove-variant-btn w-full h-9 flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <input type="hidden" name="variant_id[]" value="new" />
+        `;
+        variantsContainer?.appendChild(row);
+        
+        row.querySelector(".remove-variant-btn")?.addEventListener("click", () => {
+            row.remove();
+        });
+    });
+
+    // Attach listeners to existing rows
+    document.querySelectorAll(".remove-variant-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            const row = (e.currentTarget as HTMLElement).closest(".variant-row") as HTMLElement;
+            const variantId = row.querySelector('input[name="variant_id[]"]')?.getAttribute("value");
+            
+            if (variantId && variantId !== "new") {
+                variantsToDelete.push(variantId);
+            }
+            row.remove();
+        });
+    });
+
+    // Eliminar imagen existente
+    document.querySelectorAll(".remove-image-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const container = (btn as HTMLElement).closest("[data-url]");
+            const url = container?.getAttribute("data-url");
+            if (url) {
+                currentImages = currentImages.filter((img) => img !== url);
+                container?.remove();
+            }
+        });
+    });
+
+    // Drag & Drop
+    dropZone?.addEventListener("click", () => fileInput?.click());
+    dropZone?.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("border-brand-gold", "bg-amber-50/30");
+    });
+    dropZone?.addEventListener("dragleave", () => {
+        dropZone.classList.remove("border-brand-gold", "bg-amber-50/30");
+    });
+    dropZone?.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("border-brand-gold", "bg-amber-50/30");
+        handleFiles(Array.from(e.dataTransfer?.files || []));
+    });
+    fileInput?.addEventListener("change", () => {
+        handleFiles(Array.from(fileInput.files || []));
+    });
+
+    function handleFiles(files: File[]) {
+        newFiles = [...newFiles, ...files];
+        renderNewPreviews();
+    }
+
+    function renderNewPreviews() {
+        if (!newPreviews) return;
+        newPreviews.innerHTML = "";
+        newFiles.forEach((file, index) => {
+            const url = URL.createObjectURL(file);
+            const div = document.createElement("div");
+            div.className =
+                "group relative aspect-square bg-slate-50 rounded-xl overflow-hidden border border-slate-100 shadow-sm";
+            div.innerHTML = `
+                <img src="${url}" class="w-full h-full object-cover" />
+                <button type="button" class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center" onclick="window.removeNewImage(${index})">×</button>
+                <div class="absolute bottom-0 left-0 right-0 bg-emerald-500 text-[8px] text-white text-center py-0.5 font-bold uppercase tracking-wider">Nueva</div>
+            `;
+            newPreviews.appendChild(div);
+        });
+    }
+
+    (window as any).removeNewImage = (index: number) => {
+        newFiles.splice(index, 1);
+        renderNewPreviews();
+    };
+
+    // Guardar cambios
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+
+        if (submitBtn) {
+            submitBtn.innerHTML = `<svg class="animate-spin h-4 w-4 text-white" ...></svg> <span>Guardando...</span>`;
+            (submitBtn as HTMLButtonElement).disabled = true;
+        }
+
+        try {
+            // 1. Subir nuevas imágenes
+            const uploadedUrls: string[] = [];
+            for (const file of newFiles) {
+                const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+                const { data, error } = await supabase.storage
+                    .from("products-images")
+                    .upload(fileName, file);
+
+                if (data) {
+                    const {
+                        data: { publicUrl },
+                    } = supabase.storage
+                        .from("products-images")
+                        .getPublicUrl(fileName);
+                    uploadedUrls.push(publicUrl);
+                }
+            }
+
+            const allImages = [...currentImages, ...uploadedUrls];
+            const salePrice = formData.get("sale_price");
+
+            const { error: productError } = await supabase
+                .from("products")
+                .update({
+                    name: formData.get("name"),
+                    description: formData.get("description"),
+                    price: parseInt(formData.get("price") as string),
+                    // Stock field is managed by trigger, we don't update it manually anymore
+                    category_id: formData.get("category_id"),
+                    material: formData.get("material") || null,
+                    sku: formData.get("sku") || null,
+                    compare_at_price: formData.get("compare_at_price")
+                        ? parseInt(formData.get("compare_at_price") as string)
+                        : null,
+                    is_on_sale: formData.get("is_on_sale") === "on",
+                    sale_price: salePrice
+                        ? parseInt(salePrice as string)
+                        : null,
+                    is_active: formData.get("is_active") === "on",
+                    is_featured: formData.get("is_featured") === "on",
+                    images: allImages,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", productId);
+
+            if (productError) throw productError;
+
+            // 2. Manage Variants
+            if (variantsToDelete.length > 0) {
+                const { error: deleteError } = await supabase
+                    .from("product_variants")
+                    .delete()
+                    .in("id", variantsToDelete);
+                if (deleteError) throw deleteError;
+            }
+
+            const variantIds = formData.getAll("variant_id[]") as string[];
+            const sizes = formData.getAll("variant_size[]") as string[];
+            const stocks = formData.getAll("variant_stock[]") as string[];
+
+            const variantsToUpsert = sizes.map((size, index) => {
+                const variantData: any = {
+                    product_id: productId,
+                    size: size,
+                    stock: parseInt(stocks[index]) || 0
+                };
+                if (variantIds[index] !== "new") {
+                    variantData.id = variantIds[index];
+                }
+                return variantData;
+            }).filter(v => v.size.trim() !== "");
+
+            if (variantsToUpsert.length > 0) {
+                const { error: upsertError } = await supabase
+                    .from("product_variants")
+                    .upsert(variantsToUpsert, { onConflict: 'product_id,size' });
+                if (upsertError) throw upsertError;
+            }
+
+            window.location.href = "/admin/productos";
+        } catch (error: any) {
+            alert("Error: " + error.message);
+            if (submitBtn) {
+                submitBtn.innerHTML = `<span>Actualizar</span>`;
+                (submitBtn as HTMLButtonElement).disabled = false;
+            }
+        }
+    });
+
+    // Eliminar producto
+    deleteBtn?.addEventListener("click", async () => {
+        if (
+            confirm(
+                "¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.",
+            )
+        ) {
+            const { error } = await supabase
+                .from("products")
+                .delete()
+                .eq("id", productId);
+            if (!error) {
+                window.location.href = "/admin/productos";
+            } else {
+                alert("Error al eliminar: " + error.message);
+            }
+        }
+    });
+</script>
